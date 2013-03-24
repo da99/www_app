@@ -27,5 +27,6 @@
     , "special-html" : "x.x.x"
     , "underscore.string" : "x.x.x"
     , "entities" : "x.x.x"
+    , "uri-js" : "x.x.x"
   }
 }
