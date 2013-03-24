@@ -1,0 +1,31 @@
+{
+  "name": "ok_slang",
+  "version": "0.0.0",
+  "description": "A DSL using just JSON.",
+  "main": "lib/ok_slang.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/da99/ok_slang.git"
+  },
+  "keywords": [
+    "okdoki",
+    "da99"
+  ],
+  "author": "da99",
+  "license": "MIT",
+  "readmeFilename": "README.md",
+  "gitHead": "67da1d0f9210556c7c7252997750bf8157f70810"
+  , "dependencies" : {
+    "underscore" : "1.x.x"
+    , "unhtml" : "x.x.x"
+    , "special-html" : "x.x.x"
+    , "underscore.string" : "x.x.x"
+    , "entities" : "x.x.x"
+  }
+}

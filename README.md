@@ -11,9 +11,12 @@ Install & Use
     npm install ok_slang
 
     var Ok = require('ok_slang').Ok;
-    Ok.to_html({form: [
-      ["text_box", "my_name", "INPUT YOUR NAME", "one line"]
-    ]});
+
+    Ok.to_html({
+      form: [
+        ["text_box", "my_name", "INPUT YOUR NAME", "one line"]
+      ]
+    });
 
     // --> outputs:
     //    <form>
