@@ -1,7 +1,8 @@
 
-var _ = require('underscore')
-, assert = require('assert')
-, Ok = require('ok_slang').Ok
+var _     = require('underscore')
+, assert  = require('assert')
+, Ok      = require('ok_slang').Ok
+, cheerio = require('cheerio');
 ;
 
 
@@ -60,27 +61,28 @@ describe( 'ok_slang', function () {
     it( 'accepts 3 args: name, link, text', function () {
       var html = [{link: ['my_link', 'http://www.test.com/', 'My Link']}];
       var r    = Ok.to_html(html);
-      assert.equal(r, '<a id="my_button" href="http://www.test.com/">My Link</a>');
+      var a    = cheerio.load(r)('a');
+      assert.equal( a.attr('id')   , 'my_link');
+      assert.equal( a.attr('href') , "http://www.test.com/");
+      assert.equal( a.text()       , "My Link" );
     });
 
     it( 'accepts 2 args: link, text', function () {
       var html = [{link: ['http://www.test.com/', 'My Link']}];
-      var r    = Ok.to_html(html);
-      assert.equal(r, '<a href="http://www.test.com/">My Link</a>');
+      assert.equal(Ok.to_html(html), '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'normalizes href', function () {
       var html = [{link: ['hTTp://www.test.com/', 'My Link']}];
-      var r    = Ok.to_html(html);
-      assert.equal(r, '<a href="http://www.test.com/">My Link</a>');
+      assert.equal(Ok.to_html(html), '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'raises error if link is invalid', function () {
-      var html = [{link: ['http://www. test .com/', 'My Link']}];
+      var html = [{link: ['http://www.te\x3Cst.com/', 'My Link']}];
       var err  = null;
       try { Ok.to_html(html); }
       catch (e) { err = e; }
-      assert.equal(err.message, 'Invalid link address: http://www. test .com/');
+      assert.equal(err.message, 'Invalid link address: http://www.te<st.com/');
     });
 
   }); // === end desc
