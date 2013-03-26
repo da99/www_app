@@ -5,6 +5,19 @@ var _     = require('underscore')
 , cheerio = require('cheerio');
 ;
 
+var to_html = function (str) {
+  var r = Ok.to_app(str);
+  if (r.error)
+    throw r.error;
+  return r.html;
+};
+
+var to_js = function (str) {
+  var r = Ok.to_app(str);
+  if (r.error)
+    throw r.error;
+  return r.js;
+};
 
 describe( 'ok_slang', function () {
 
@@ -19,30 +32,22 @@ describe( 'ok_slang', function () {
       assert.equal(r, "<form><input id=\"my_name\" name=\"my_name\" type=\"text\">enter name</input></form>");
     });
 
-    it( 'throws error if invalid chars in name', function () {
-      var err = null;
+    it( 'returns error if invalid chars in name', function () {
       var html = [{
         form: [
           {text_box: ['my name', "enter wrong name", "one line"] } ]
       }];
 
-      try { Ok.to_app(html).html; }
-      catch (e) { err = e; }
-
-      assert.equal(err.message, "Invalid chars in text_box id: my name");
+      assert.equal(Ok.to_app(html).error.message, "Invalid chars in text_box id: my name");
     });
 
-    it( 'throws error if unknown element', function () {
-      var err = null;
+    it( 'returns error if unknown element', function () {
       var html = [{
         form: [
           {text_boxy: ['my_name', "enter name", "one line"] } ]
       }];
 
-      try { Ok.to_app(html).html; }
-      catch (e) { err = e; }
-
-      assert.equal(err.message, "Unknown element: text_boxy");
+      assert.equal(Ok.to_app(html).error.message, "Unknown element: text_boxy");
     });
 
   }); // === end desc
@@ -77,12 +82,10 @@ describe( 'ok_slang', function () {
       assert.equal(Ok.to_app(html).html, '<a href="http://www.test.com/">My Link</a>');
     });
 
-    it( 'raises error if link is invalid', function () {
+    it( 'returns error if link is invalid', function () {
       var html = [{link: ['http://www.te\x3Cst.com/', 'My Link']}];
       var err  = null;
-      try { Ok.to_app(html).html; }
-      catch (e) { err = e; }
-      assert.equal(err.message, 'Invalid link address: http://www.te<st.com/');
+      assert.equal(Ok.to_app(html).error.message, 'Invalid link address: http://www.te<st.com/');
     });
 
   }); // === end desc
