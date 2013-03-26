@@ -17,9 +17,9 @@ describe( 'Ok.escape', function () {
     assert.equal(Ok.escape(o), _s.escapeHTML(h + h));
   });
 
-  it( 'escapes special chars: "Hello ©"', function () {
-    var s = "Hello & World ©";
-    var t = "Hello &amp; World &#169;";
+  it( 'escapes special chars: "Hello ©®∆"', function () {
+    var s = "Hello & World ©®∆";
+    var t = "Hello &amp; World &#169;&#174;&#8710;";
     assert.equal(Ok.escape(s), t);
   });
 
@@ -32,7 +32,7 @@ describe( 'Ok.escape', function () {
 describe( 'Ok.escape_uri', function () {
 
   it( 'normalizes address', function () {
-    var s = "hTTp://wWw.test.com/"
+    var s = "hTTp://wWw.test.com/";
     assert.equal(Ok.escape_uri(s), s.toLowerCase());
   });
 
