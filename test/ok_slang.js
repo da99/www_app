@@ -22,7 +22,7 @@ describe( 'ok_slang', function () {
       var err = null;
       var html = [{
         form: [
-          {text_box: ['my name', "enter name", "one line"] } ]
+          {text_box: ['my name', "enter wrong name", "one line"] } ]
       }];
 
       try { Ok.to_html(html); }

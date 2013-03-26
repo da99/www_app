@@ -28,5 +28,6 @@
     , "underscore.string" : "x.x.x"
     , "entities" : "x.x.x"
     , "uri-js" : "x.x.x"
+    , "cheerio" : "x.x.x"
   }
 }
