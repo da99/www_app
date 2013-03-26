@@ -14,7 +14,7 @@ describe( 'ok_slang', function () {
         form: [
           {text_box: ['my_name', "enter name", "one line"] } ]
       }];
-      var r = Ok.new(html).to_html();
+      var r = Ok.to_html(html);
       assert.equal(r, "<form><input id=\"my_name\" name=\"my_name\" type=\"text\">enter name</input></form>");
     });
 
@@ -25,7 +25,7 @@ describe( 'ok_slang', function () {
           {text_box: ['my name', "enter name", "one line"] } ]
       }];
 
-      try { Ok.new(html).to_html(); }
+      try { Ok.to_html(html); }
       catch (e) { err = e; }
 
       assert.equal(err.message, "Invalid chars in text_box id: my name");
@@ -38,7 +38,7 @@ describe( 'ok_slang', function () {
           {text_boxy: ['my_name', "enter name", "one line"] } ]
       }];
 
-      try { Ok.new(html).to_html(); }
+      try { Ok.to_html(html); }
       catch (e) { err = e; }
 
       assert.equal(err.message, "Unknown element: text_boxy");
@@ -50,9 +50,41 @@ describe( 'ok_slang', function () {
 
     it( 'creates a HTML button tag', function () {
       var html = [{button: ['my_button', 'Send']}];
-      var r    = Ok.new(html).to_html();
+      var r    = Ok.to_html(html);
       assert.equal(r, '<button id="my_button">Send</button>');
     });
   }); // === end desc
 
+  describe( '{link: ["name", "link", "text"]}', function () {
+
+    it( 'accepts 3 args: name, link, text', function () {
+      var html = [{link: ['my_link', 'http://www.test.com/', 'My Link']}];
+      var r    = Ok.to_html(html);
+      assert.equal(r, '<a id="my_button" href="http://www.test.com/">My Link</a>');
+    });
+
+    it( 'accepts 2 args: link, text', function () {
+      var html = [{link: ['http://www.test.com/', 'My Link']}];
+      var r    = Ok.to_html(html);
+      assert.equal(r, '<a href="http://www.test.com/">My Link</a>');
+    });
+
+    it( 'normalizes href', function () {
+      var html = [{link: ['hTTp://www.test.com/', 'My Link']}];
+      var r    = Ok.to_html(html);
+      assert.equal(r, '<a href="http://www.test.com/">My Link</a>');
+    });
+
+    it( 'raises error if link is invalid', function () {
+      var html = [{link: ['http://www. test .com/', 'My Link']}];
+      var err  = null;
+      try { Ok.to_html(html); }
+      catch (e) { err = e; }
+      assert.equal(err.message, 'Invalid link address: http://www. test .com/');
+    });
+
+  }); // === end desc
+
 }); // === end desc
+
+
