@@ -59,10 +59,10 @@ describe( 'ok_slang', function () {
 
     it( 'creates a HTML button tag', function () {
       var slang = [{button: ['my_button', 'Send']}];
-      assert.equal(Ok.to_app(slang).html, '<button id="my_button">Send</button>');
+      assert.equal(to_html(slang), '<button id="my_button">Send</button>');
     });
 
-    describe( '{button: ..} {on_click: [...]}', function () {
+    describe( '{on_click: [...]}', function () {
 
       it( 'generates JavaScript', function (done) {
         var slang = [
