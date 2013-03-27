@@ -25,7 +25,7 @@ describe( 'ok_slang', function () {
 
     it( 'returns error if invalid chars in name', function () {
       var html = [
-        { text_box: ['my name', "enter wrong name", "one line"] }
+        text_box, ['my name', "one line"], "enter wrong name"
       ];
 
       assert.equal(Ok.to_app(html).error.message, "Invalid chars in text_box id: my name");
@@ -33,7 +33,7 @@ describe( 'ok_slang', function () {
 
     it( 'returns error if unknown element', function () {
       var slang = [
-          { text_boxy: ['my_name', "enter name", "one line"] }
+        text_boxy, ['my_name', "one line"], "enter name"
       ];
 
       assert.equal(Ok.to_app(slang).error.message, "Unknown element: text_boxy");
@@ -44,12 +44,11 @@ describe( 'ok_slang', function () {
   describe( '{childs: [ ele, ele, ele ]}', function () {
 
     it( 'creates children on previously defined element', function (done) {
-      var slang = [{
-        form: ['my_form', 'http://www.text.com/'],
-        childs: [
-          {button: ['my_button', 'Hello']}
+      var slang = [
+        'form', ['my_form', 'http://www.text.com/'], [
+          'button', 'my_button', 'Hello'
         ]
-      }];
+      ];
       assert.equal(to_html(slang), '<form id="my_form" action="http://www.text.com"><button id="my_button">Hello</button></form>');
     });
 
@@ -58,7 +57,9 @@ describe( 'ok_slang', function () {
   describe( '{button: ["name", "text", ...]}', function () {
 
     it( 'creates a HTML button tag', function () {
-      var slang = [{button: ['my_button', 'Send']}];
+      var slang = [
+        'button', 'my_button', 'Send'
+      ];
       assert.equal(to_html(slang), '<button id="my_button">Send</button>');
     });
 
@@ -66,8 +67,8 @@ describe( 'ok_slang', function () {
 
       it.skip( 'generates JavaScript', function (done) {
         var slang = [
-          {button: ['my', 'Send']},
-          {on_click: {alert: 'It worked.'}}
+          'button', 'my', 'Send',
+          'on_click', ['alert', 'It worked.']
         ];
         assert.equal(to_js(slang), 'ok_slang.on_click("my", "alert", "It worked.")');
       });
@@ -79,7 +80,9 @@ describe( 'ok_slang', function () {
   describe( '{link: ["name", "link", "text"]}', function () {
 
     it( 'accepts 3 args: name, link, text', function () {
-      var html = [{link: ['my_link', 'http://www.test.com/', 'My Link']}];
+      var html = [
+        'link', ['my_link', 'http://www.test.com/'], 'My Link'
+      ];
       var r    = Ok.to_app(html).html;
       var a    = cheerio.load(r)('a');
       assert.equal( a.attr('id')   , 'my_link');
@@ -88,17 +91,17 @@ describe( 'ok_slang', function () {
     });
 
     it( 'accepts 2 args: link, text', function () {
-      var html = [{link: ['http://www.test.com/', 'My Link']}];
+      var html = ['link', ['http://www.test.com/'], 'My Link'];
       assert.equal(Ok.to_app(html).html, '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'normalizes href', function () {
-      var html = [{link: ['hTTp://www.test.com/', 'My Link']}];
+      var html = ['link', ['hTTp://www.test.com/'], 'My Link'];
       assert.equal(Ok.to_app(html).html, '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'returns error if link is invalid', function () {
-      var html = [{link: ['http://www.te\x3Cst.com/', 'My Link']}];
+      var html = ['link', ['http://www.te\x3Cst.com/'], 'My Link'];
       var err  = null;
       assert.equal(Ok.to_app(html).error.message, 'Invalid link address: http://www.te<st.com/');
     });
