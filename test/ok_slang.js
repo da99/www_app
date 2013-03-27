@@ -23,31 +23,34 @@ describe( 'ok_slang', function () {
 
   describe( '.to_app', function () {
 
-    it( 'returns a string', function () {
-      var html = [{
-        form: [
-          {text_box: ['my_name', "enter name", "one line"] } ]
-      }];
-      var r = Ok.to_app(html).html;
-      assert.equal(r, "<form><input id=\"my_name\" name=\"my_name\" type=\"text\">enter name</input></form>");
-    });
-
     it( 'returns error if invalid chars in name', function () {
-      var html = [{
-        form: [
-          {text_box: ['my name', "enter wrong name", "one line"] } ]
-      }];
+      var html = [
+        { text_box: ['my name', "enter wrong name", "one line"] }
+      ];
 
       assert.equal(Ok.to_app(html).error.message, "Invalid chars in text_box id: my name");
     });
 
     it( 'returns error if unknown element', function () {
-      var html = [{
-        form: [
-          {text_boxy: ['my_name', "enter name", "one line"] } ]
-      }];
+      var slang = [
+          { text_boxy: ['my_name', "enter name", "one line"] }
+      ];
 
-      assert.equal(Ok.to_app(html).error.message, "Unknown element: text_boxy");
+      assert.equal(Ok.to_app(slang).error.message, "Unknown element: text_boxy");
+    });
+
+  }); // === end desc
+
+  describe( '{childs: [ ele, ele, ele ]}', function () {
+
+    it( 'creates children on previously defined element', function (done) {
+      var slang = [{
+        form: ['my_form', 'http://www.text.com/'],
+        childs: [
+          {button: ['my_button', 'Hello']}
+        ]
+      }];
+      assert.equal(to_html(slang), '<form id="my_form" action="http://www.text.com"><button id="my_button">Hello</button></form>');
     });
 
   }); // === end desc
@@ -55,10 +58,20 @@ describe( 'ok_slang', function () {
   describe( '{button: ["name", "text", ...]}', function () {
 
     it( 'creates a HTML button tag', function () {
-      var html = [{button: ['my_button', 'Send']}];
-      var r    = Ok.to_app(html).html;
-      assert.equal(r, '<button id="my_button">Send</button>');
+      var slang = [{button: ['my_button', 'Send']}];
+      assert.equal(Ok.to_app(slang).html, '<button id="my_button">Send</button>');
     });
+
+    describe( '{button: ..} {on_click: [...]}', function () {
+
+      it( 'generates JavaScript', function (done) {
+        var slang = [
+          {button: ['my', 'Send']},
+          {on_click: {alert: 'It worked.'}}
+        ];
+        assert.equal(to_js(slang), 'ok_slang.on_click("my", "alert", "It worked.")');
+      });
+    }); // === end desc
   }); // === end desc
 
   describe( '{link: ["name", "link", "text"]}', function () {
@@ -86,13 +99,6 @@ describe( 'ok_slang', function () {
       var html = [{link: ['http://www.te\x3Cst.com/', 'My Link']}];
       var err  = null;
       assert.equal(Ok.to_app(html).error.message, 'Invalid link address: http://www.te<st.com/');
-    });
-
-  }); // === end desc
-
-  describe( 'generating JavaScript', function () {
-
-    it( 'generates JavaScript', function () {
     });
 
   }); // === end desc
