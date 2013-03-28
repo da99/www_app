@@ -6,14 +6,14 @@ var _     = require('underscore')
 ;
 
 var to_html = function (str) {
-  var r = Ok.to_app(str);
+  var r = Ok(str);
   if (r.error)
     throw r.error;
   return r.html;
 };
 
 var to_js = function (str) {
-  var r = Ok.to_app(str);
+  var r = Ok(str);
   if (r.error)
     throw r.error;
   return r.js;
@@ -21,14 +21,14 @@ var to_js = function (str) {
 
 describe( 'ok_slang', function () {
 
-  describe( '.to_app', function () {
+  describe( 'to app', function () {
 
     it( 'returns error if invalid chars in name', function () {
       var html = [
         text_box, ['my name', "one line"], "enter wrong name"
       ];
 
-      assert.equal(Ok.to_app(html).error.message, "Invalid chars in text_box id: my name");
+      assert.equal(Ok(html).error.message, "Invalid chars in text_box id: my name");
     });
 
     it( 'returns error if unknown element', function () {
@@ -36,12 +36,12 @@ describe( 'ok_slang', function () {
         text_boxy, ['my_name', "one line"], "enter name"
       ];
 
-      assert.equal(Ok.to_app(slang).error.message, "Unknown element: text_boxy");
+      assert.equal(Ok(slang).error.message, "Unknown element: text_boxy");
     });
 
   }); // === end desc
 
-  describe( '{childs: [ ele, ele, ele ]}', function () {
+  describe( '[ "tag", [],  [ ele, ele, ele ] ]', function () {
 
     it( 'creates children on previously defined element', function () {
       var slang = [
@@ -83,7 +83,7 @@ describe( 'ok_slang', function () {
       var html = [
         'link', ['my_link', 'http://www.test.com/'], 'My Link'
       ];
-      var r    = Ok.to_app(html).html;
+      var r    = Ok(html).html;
       var a    = cheerio.load(r)('a');
       assert.equal( a.attr('id')   , 'my_link');
       assert.equal( a.attr('href') , "http://www.test.com/");
@@ -92,18 +92,18 @@ describe( 'ok_slang', function () {
 
     it( 'accepts 2 args: link, text', function () {
       var html = ['link', ['http://www.test.com/'], 'My Link'];
-      assert.equal(Ok.to_app(html).html, '<a href="http://www.test.com/">My Link</a>');
+      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'normalizes href', function () {
       var html = ['link', ['hTTp://www.test.com/'], 'My Link'];
-      assert.equal(Ok.to_app(html).html, '<a href="http://www.test.com/">My Link</a>');
+      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'returns error if link is invalid', function () {
       var html = ['link', ['http://www.te\x3Cst.com/'], 'My Link'];
       var err  = null;
-      assert.equal(Ok.to_app(html).error.message, 'Invalid link address: http://www.te<st.com/');
+      assert.equal(Ok(html).error.message, 'Invalid link address: http://www.te<st.com/');
     });
 
   }); // === end desc
