@@ -43,5 +43,13 @@ Variable declaration:
        "add()", [ 4, "my_form.posX()", "px" ]
     ]
 
+Escaping:
+
+    [
+       "my_string=", "!! add()",
+    ]
+
+    // ==> equal to my_string = "add()";
+    //  the "!! " are ignored, including space after "!!"
 
 
