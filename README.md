@@ -13,13 +13,13 @@ Install & Use
     var Applet = require('json_applet').Applet;
 
     Applet([
-      "<form>", ["my_form"], [
-        "<text_box>", [ "my_name", {lines: 1} ], [
+      "form ()", ["my_form"], [
+        "text_box ()", [ "my_name", {lines: 1} ], [
           "Input your name here."
         ],
-        "<button>", [], "Save",
-        "on_click()", [
-          "submit_form()"
+        "button ()", [], "Save",
+        "on_click ()", [
+          "submit_form ()"
         ]
       ]
     ]);
@@ -39,42 +39,49 @@ The Future
 Function calls:
 
     [
-       "remove()" , ["my_form", "my_spouse"]
+       "remove ()" , ["my_form", "my_spouse"]
+    ]
+
+Function calls w/o parameters: Don't put any array following it.
+
+    [
+       "my_func ()" , "my_other_func ()", ["my string", ":my_var"]
+    ]
+
+Method calls:
+
+    [
+       ":an_obj some_meth ()", [":my_var"]
     ]
 
 Variable declaration:
 
     [
-       "my_pet=", "Captain Snuggles",
+       ":my_pet =", "Captain Snuggles",
 
-       "new_width=",
-       "add()", [ 4, "my_form.posX()", "px" ]
+       "new_width =",
+       "add ()", [ 4, ":my_form posX ()", "px" ]
     ]
 
 Using variables:
 
     [
-       "max=", 4
-       "min=", s
-       "add()", [ ":max", ":min" ]
-       "add()", [ ":max", "my_var.posX()" ]
+       ":max =", 4
+       ":min =", s
+       "add:", [ ":max", ":min" ]
+       "add:", [ ":max", ":my_var posX ()" ]
     ]
 
 
 Escaping:
 
     [
-       "my_string=", "!! add()",
+       ":a_string    =", "!! add:",
+       ":another_str =", "!! :my_var"
     ]
 
-    // ==> equal to my_string = "add()";
     //  the "!! " are ignored, including space after "!!"
 
-Special format for HTML elements:
-
-    [
-       "<form>",
-    ]
 
 History
 -------
