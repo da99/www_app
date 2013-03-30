@@ -13,13 +13,13 @@ Install & Use
     var Applet = require('json_applet').Applet;
 
     Applet([
-      "form ()", ["my_form"], [
-        "text_box ()", [ "my_name", {lines: 1} ], [
-          "Input your name here."
+      "form", ["! my_form"], [
+        "text_box", [ "! my_name", {lines: 1} ], [
+          "! Input your name here."
         ],
-        "button ()", [], "Save",
-        "on_click ()", [
-          "submit_form ()"
+        "button", [], "! Save",
+        "on_click", [
+          "submit_form", []
         ]
       ]
     ]);
@@ -36,51 +36,52 @@ Install & Use
 The Future
 -------------------------
 
-Function calls:
+Function calls: A string followed by an array.
 
     [
-       "remove ()" , ["my_form", "my_spouse"]
+       "remove" , ["my_form", "my_spouse"]
     ]
 
-Function calls w/o parameters: Don't put any array following it.
+Function calls w/o parameters: Put '()' after it.
 
     [
-       "my_func ()" , "my_other_func ()", ["my string", ":my_var"]
+       "my_func_with_no_args ()",
+       "my_func_with_args", [ 1, 2, 3 ]
     ]
 
 Method calls:
 
     [
-       ":an_obj some_meth ()", [":my_var"]
+       "an_obj some_meth", [":my_var"]
     ]
 
 Variable declaration:
 
     [
-       ":my_pet =", "Captain Snuggles",
+       "my_pet =", "Captain Snuggles",
 
        "new_width =",
-       "add ()", [ 4, ":my_form posX ()", "px" ]
+       "add", [ 4, ":my_form posX ()", "px" ]
     ]
 
 Using variables:
 
     [
-       ":max =", 4
-       ":min =", s
-       "add:", [ ":max", ":min" ]
-       "add:", [ ":max", ":my_var posX ()" ]
+       "max =", 4
+       "min =", s
+       "add ()", [ "max", "min" ]
+       "add ()", [ "max", "my_var posX ()" ]
     ]
 
 
-Escaping:
+Strings:
 
     [
-       ":a_string    =", "!! add:",
-       ":another_str =", "!! :my_var"
+       "a_string    =", "! add",
+       "another_str =", "! my_var"
     ]
 
-    //  the "!! " are ignored, including space after "!!"
+    //  the "! " are ignored, including space after "!".
 
 
 History
