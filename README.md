@@ -31,20 +31,27 @@ The Future
 Function calls:
 
     [
-       "remove:" , ["my_form", "my_spouse"]
+       "remove()" , ["my_form", "my_spouse"]
     ]
 
 Variables:
 
     [
-       "var:" , ["my_pet", "Captain Snuggles"]
+       "my_pet.=()", ["Captain Snuggles"]
+    ]
+
+Traditional Alternative w/o square brackets:
+
+    [
+       "my_pet=", "Captain Snuggles"
     ]
 
 Running code:
 
     [
-        "var:", [
-          "new_width",
-          "add:", [ 4, "my_form.posX:[]", "px" ]
-        ]
+        "new_width=",
+        "add()", [ 4, "my_form.posX()", "px" ]
     ]
+
+
+
