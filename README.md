@@ -8,11 +8,11 @@ Not ready yet for human consumption.
 Install & Use
 ------------
 
-    npm install ok_slang
+    npm install json_applet
 
-    var Ok = require('ok_slang').Ok;
+    var Applet = require('json_applet').Applet;
 
-    Ok({
+    Applet({
       form: [
         ["text_box", "my_name", "INPUT YOUR NAME", "one line"]
       ]
@@ -53,3 +53,7 @@ Escaping:
     //  the "!! " are ignored, including space after "!!"
 
 
+History
+-------
+
+Formerly called: ok\_slang.

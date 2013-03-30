@@ -1,7 +1,7 @@
 {
-  "name": "ok_slang",
+  "name": "json_applet",
   "version": "0.0.0",
-  "description": "A DSL using just JSON.",
+  "description": "Mini-apps in your JS web-apps.",
   "main": "lib/ok_slang.js",
   "directories": {
     "test": "test"
@@ -11,7 +11,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git://github.com/da99/ok_slang.git"
+    "url": "http://github.com/da99/json_applet"
   },
   "keywords": [
     "okdoki",
