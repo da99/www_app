@@ -12,8 +12,8 @@ var HTML = {
   'parent form': function (scope) {
     return "<form>" + scope.app.run(scope.args[0]).join("") + "</form>";
   },
-  'form . text_input' : function (call) {
-    return '<input>' + _.flatten(call.args)[0] + '</input>';
+  'form . text_input' : function (call, args) {
+    return '<input>' + args[0] + '</input>';
   }
 };
 
