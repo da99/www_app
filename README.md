@@ -54,13 +54,13 @@ The nodejs/npm implementation:
 
     var HTML = Applet(source);
 
-    HTML.def('form', function (this_call) {
-      this_call.name   // 'form'
-      this_call.prev   // the previous func call and args: [name, array1, array2, ...]
-      this_call.curr   // the current func call: ['form', array1, array2]
-      this_call.data   // an object you can use to save and pass around data to other
+    HTML.def('form', function (args_array, call_meta) {
+      call_meta.name   // 'form'
+      call_meta.prev   // the previous func call and args: [name, array1, array2, ...]
+      call_meta.curr   // the current func call: ['form', array1, array2]
+      call_meta.data   // an object you can use to save and pass around data to other
                        //   func calls.
-      this_call.app.run(this_call.curr[2]); // compile args as if it were a sub-this_call.
+      call_meta.app.run(call_meta.curr[2]); // compile args as if it were a sub-call_meta.
       return "<form> ... </form>";
     });
 

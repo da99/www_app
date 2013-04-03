@@ -6,13 +6,13 @@ var _     = require('underscore')
 ;
 
 var HTML = {
-  'block' : function (app) {
+  'block' : function (args, app) {
     return "<div></div>";
   },
-  'parent form': function (scope) {
-    return "<form>" + scope.app.run(scope.args[0]).join("") + "</form>";
+  'parent form': function (args, scope) {
+    return "<form>" + scope.app.run(args).join("") + "</form>";
   },
-  'form . text_input' : function (call, args) {
+  'form . text_input' : function (args, meta) {
     return '<input>' + args[0] + '</input>';
   }
 };
