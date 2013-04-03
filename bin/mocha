@@ -8,6 +8,6 @@ set -u -e -o pipefail
 # -*- js   -*-
 #
 
-mocha -b \
+mocha --colors -b \
   test/json_applet.js \
   "$@"
