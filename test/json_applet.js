@@ -9,11 +9,11 @@ var HTML = {
   'block' : function (app) {
     return "<div></div>";
   },
-  'parent form': function (app) {
-    return "<form></form>";
+  'parent form': function (scope) {
+    return "<form>" + scope.app.run(scope.args[0]).join("") + "</form>";
   },
-  'form . text_input' : function (app) {
-    return '<input></input>';
+  'form . text_input' : function (call) {
+    return '<input>' + _.flatten(call.args)[0] + '</input>';
   }
 };
 
@@ -25,14 +25,14 @@ var to_html = function (str) {
   var r = (Ok.run) ? Ok.run(str) : Ok(str);
   if (r.error)
     throw r.error;
-  return r.html;
+  return r.join("");
 };
 
 var to_js = function (str) {
   var r = (Ok.run) ? Ok.run(str) : Ok(str);
   if (r.error)
     throw r.error;
-  return r.js;
+  return r;
 };
 
 describe( 'Applet', function () {
