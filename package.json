@@ -2,7 +2,7 @@
   "name": "json_applet",
   "version": "0.0.0",
   "description": "Mini-apps in your JS web-apps.",
-  "main": "lib/ok_slang.js",
+  "main": "lib/json_applet.js",
   "directories": {
     "test": "test"
   },

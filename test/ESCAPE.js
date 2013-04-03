@@ -4,7 +4,7 @@ var _     = require('underscore')
 , unhtml  = require('unhtml')
 , special = require('special-html')
 , assert  = require('assert')
-, Ok      = require('ok_slang').Ok
+, Ok      = require('json_applet').Ok
 , BRACKET = "";
 ;
 

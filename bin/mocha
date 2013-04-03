@@ -1,0 +1,13 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+set -u -e -o pipefail
+
+
+#!/usr/bin/env node
+# -*- js   -*-
+#
+
+mocha -b \
+  test/json_applet.js \
+  "$@"
