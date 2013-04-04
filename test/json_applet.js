@@ -17,12 +17,14 @@ var HTML = {
   }
 };
 
-var Ok = function (source) {
-  return Applet(source, HTML).run();
-};
-
-var RESULTS = function (source) { return Ok(source).results; };
+var Ok      = function (source) { return Applet(source, HTML).run(); };
 var ERROR   = function (source) { return Ok(source).error; };
+var RESULTS = function (source) {
+  var results = Ok(source);
+  if (results.error)
+    throw error;
+  return results.results;
+};
 
 var err_check = function (results) {
   if (results && results.error)
