@@ -21,6 +21,9 @@ var Ok = function (source) {
   return Applet(source, HTML).run();
 };
 
+var RESULTS = function (source) { return Ok(source).results; };
+var ERROR   = function (source) { return Ok(source).error; };
+
 var err_check = function (results) {
   if (results && results.error)
     return [results.error.message];
@@ -37,7 +40,7 @@ describe( 'Applet', function () {
         'text_boxs', ['my name', "something else"]
       ];
 
-      assert.equal(Ok(html).error.message, "Func not found: text_boxs");
+      assert.equal(ERROR(html).message, "Func not found: text_boxs");
     });
 
   }); // === end desc
@@ -48,7 +51,7 @@ describe( 'Applet', function () {
       var html = [
         'text_input', ['my name', "something else"]
       ];
-      assert.equal(Ok(html).error.message, "text_input: can only be used within \"form\".");
+      assert.equal(ERROR(html).message, "text_input: can only be used within \"form\".");
     });
 
   }); // === end desc
@@ -61,21 +64,21 @@ describe( 'Applet', function () {
           'text_input', [ "hello world" ]
         ]
       ];
-      assert.equal(Ok(slang).results.join(""), '<form><input>hello world</input></form>');
+      assert.equal(RESULTS(slang).join(""), '<form><input>hello world</input></form>');
     });
 
     it( 'returns error if parent element is used as a child within another parent: form > form', function () {
       var html = [
         'form', [ 'form', [ 'text_input', ['my_name', 'some text']] ]
       ];
-      assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
+      assert.equal(ERROR(html).message, "form: can not be used within another \"form\".");
     });
 
     it( 'returns error if parent element is used as a nested child: form > block > form', function () {
       var html = [
         'form', [ 'block', [ 'form', ['my_name', 'some text']] ]
       ];
-      assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
+      assert.equal(ERROR(html).message, "form: can not be used within another \"form\".");
     });
 
   }); // === end desc
