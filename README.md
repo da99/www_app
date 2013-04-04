@@ -3,7 +3,23 @@ Why should I love JSON applets?
 -------------------------------
 
 Do you want to allow others to script your apps? In other words: turn your apps into a
-platform the "quick & dirty" way? And... you want them sandboxed? Then try JSON applets.
+platform the quick & easy way? And... you want them sandboxed? Then try JSON applets.
+
+Do you want to create a simple to use declarative language and pass it around
+using JSON? Then try JSON applets.
+
+Example:
+---------
+
+    [
+      "form", ["my_form"], [
+        "text_input", [ "my_name", {lines: 1} ], [
+          "Input your name here."
+        ],
+        "button", [], [ "Save" ],
+        "on_click", [ "submit_form" ]
+      ]
+    ];
 
 
 Alternatives:
