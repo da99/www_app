@@ -27,19 +27,6 @@ var err_check = function (results) {
   return results.results;
 };
 
-var to_html = function (str) {
-  var r = (Ok.run) ? Ok.run(str) : Ok(str);
-  if (r.error)
-    throw r.error;
-  return r.results.join("");
-};
-
-var to_js = function (str) {
-  var r = (Ok.run) ? Ok.run(str) : Ok(str);
-  if (r.error)
-    throw r.error;
-  return r;
-};
 
 describe( 'Applet', function () {
 
@@ -74,7 +61,7 @@ describe( 'Applet', function () {
           'text_input', [ "hello world" ]
         ]
       ];
-      assert.equal(to_html(slang), '<form><input>hello world</input></form>');
+      assert.equal(Ok(slang).results.join(""), '<form><input>hello world</input></form>');
     });
 
     it( 'returns error if parent element is used as a child within another parent: form > form', function () {
