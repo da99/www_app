@@ -11,16 +11,19 @@ using JSON? Then try JSON applets.
 Example:
 ---------
 
+Your app users send you this JSON:
+
     [
-      "form", ["my_form"], [
-        "text_input", [ "my_name", {lines: 1} ], [
+      "form", ["my_dom_id", "post", "http://my_url.something/"], [
+        "text_input", [ "dom_id_2", {lines: 1} ], [
           "Input your name here."
         ],
-        "button", [], [ "Save" ],
+        "button", [ "Save" ],
         "on_click", [ "submit_form" ]
       ]
-    ];
+    ]
 
+You then process the above into HTML and JS... using Ruby, Python, [Factor](http://factorcode.org/), etc.
 
 Alternatives:
 -------------
@@ -76,14 +79,17 @@ The nodejs/npm implementation:
       call_meta.curr   // the current func call: ['form', array1, array2]
       call_meta.data   // an object you can use to save and pass around data to other
                        //   func calls.
-      call_meta.app.run(call_meta.curr[2]); // compile args as if it were a sub-call_meta.
+      call_meta.app.run(args_array); // compile args as if it were a sub-call_meta.
       return "<form> ... </form>";
     });
 
-    HTML.def_in('form', 'text_input', function () {}) // text_input only allowed inside form.
-    HTML.def_parent('form', function () {})           // A form can not be inside another form.
-    HTML.run(source);                                 // The returns of the ".def" functions.
+    HTML.def_in('form', 'text_input', my_func) // "text_input" only allowed inside a "form".
+    HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
+    HTML.run(source);                          // The returns of the ".def" functions.
 
+If there are any errors, they are returned in `.run` as:
+
+    { error: new Error("the msg") }
 
 History
 -------
