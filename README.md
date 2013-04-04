@@ -85,6 +85,7 @@ The nodejs/npm implementation:
 
     HTML.def_in('form', 'text_input', my_func) // "text_input" only allowed inside a "form".
     HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
+    HTML.after_run(some_func);                 // See below: "Events".
     HTML.run();                                // returns itself.
     HTML.run().results                         // the results of your applet.
     HTML.run().error                           // any error.
@@ -92,6 +93,31 @@ The nodejs/npm implementation:
 If there are any errors, they are returned from `.run` as:
 
     { error: new Error("the msg") }
+
+
+Events
+------
+
+If you want to process your results after calling `.run()`, just add different
+callbacks using `.after_run()`
+
+    My_Applet.after_run(function (app) {
+      var results = app.results;
+      // do something...
+      app.results = my_new_results;
+    });
+
+    My_Applet.after_run(function (app) {
+      // do something...
+      app.results = my_other_new_results;
+    });
+
+Now, when you call `.run()`, the results are run through the callbacks
+you defined in `.after_run`:
+
+    My_Applet.run().results; // results are processed through the callbacks.
+
+There are no more "events" other than `after_run`.
 
 History
 -------

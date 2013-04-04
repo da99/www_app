@@ -85,6 +85,20 @@ describe( 'Applet', function () {
 
   }); // === end desc
 
+  describe( '.after_run', function () {
+
+    it( 'runs all funcs in order defined', function () {
+      var source = [
+        'form', [ 'text_input', [ "hello world" ] ]
+      ];
+      var app = Applet(source, HTML);
+      app.after_run(function (app) { app.results.push('1'); });
+      app.after_run(function (app) { app.results.push('2'); });
+      assert.deepEqual(app.run().results, ["<form><input>hello world</input></form>","1","2"]);
+    });
+
+  }); // === end desc
+
 }); // === end desc
 
 
