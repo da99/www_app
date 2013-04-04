@@ -9,8 +9,8 @@ var HTML = {
   'block' : function (args, scope) {
     return "<div>" + scope.app.run(args).join("") + "</div>";
   },
-  'parent form': function (args, scope) {
-    return "<form>" + scope.app.run(args).join("") + "</form>";
+  'parent form': function (args, meta) {
+    return "<form>" + meta.app.run(args).join("") + "</form>";
   },
   'form . text_input' : function (args, meta) {
     return '<input>' + args[0] + '</input>';
@@ -53,9 +53,9 @@ describe( 'Applet', function () {
 
     it( 'returns error if child element is used as a parent', function (done) {
       var html = [
-        'text_box', ['my name', "something else"]
+        'text_input', ['my name', "something else"]
       ];
-      assert.equal(Ok(html).error.message, "text_box: can only be used within \"form\".");
+      assert.equal(Ok(html).error.message, "text_input: can only be used within \"form\".");
     });
 
   }); // === end desc
@@ -73,7 +73,7 @@ describe( 'Applet', function () {
 
     it( 'returns error if parent element is used as a child within another parent: form > form', function (done) {
       var html = [
-        'form', [ 'form', [ 'text_box', ['my_name', 'some text']] ]
+        'form', [ 'form', [ 'text_input', ['my_name', 'some text']] ]
       ];
       assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
     });
