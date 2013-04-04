@@ -101,12 +101,12 @@ A better way:
 ------------
 
 You have a client (PC, virtual machine, tablet, etc.). You want to
-script it using Scheme, but the machine only partys with JavaScript.
+script it using Haskell, but the machine only partys with JavaScript.
 How do you solve it?
 Make the problem more complicated... What if you have 1 billion people who all use
 1 million different languages... and they all want to run code on the machine...
 
-The Alan Kay Way: Let the client run
+`The Alan Kay Way`: Let the client run
 binary code using a sandbox. Then, collect the output
 and present the result to the USER or to another process/VM.
 
@@ -115,12 +115,12 @@ access to the screen/speakers/etc it gets, etc.
 
 This way, you can run almost any past/present/future language on the client securely.
 This is of course too
-radical and not common. Which is why no one listens to poor Alan Kay. (And no... JS
-ByteArray is not the answer. It's better than nothing, but not what AK was thinking
+radical and not common (despite being Oper. Sys 101).
+(And no... JS
+ByteArray/ASM.js is not the answer. It's better than nothing, but not what AK was thinking
 about.)
 
 For more on Alan Kay, go to youtube and vimeo. His 30+ min lectures are heavenly.
-
 
 
 The End
