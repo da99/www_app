@@ -6,11 +6,17 @@ var _     = require('underscore')
 ;
 
 var HTML = {
-  'block' : function (args, scope) {
-    return "<div>" + scope.app.run(args).join("") + "</div>";
+  'block' : function (args, meta) {
+    var results = meta.app.run(args);
+    if (results.error)
+      return results;
+    return "<div>" + results.join("") + "</div>";
   },
   'parent form': function (args, meta) {
-    return "<form>" + meta.app.run(args).join("") + "</form>";
+    var results = meta.app.run(args);
+    if (results.error)
+      return results;
+    return "<form>" + results.join("") + "</form>";
   },
   'form . text_input' : function (args, meta) {
     return '<input>' + args[0] + '</input>';
@@ -51,7 +57,7 @@ describe( 'Applet', function () {
 
   describe( 'in parent', function () {
 
-    it( 'returns error if child element is used as a parent', function (done) {
+    it( 'returns error if child element is used as a parent', function () {
       var html = [
         'text_input', ['my name', "something else"]
       ];
@@ -71,14 +77,14 @@ describe( 'Applet', function () {
       assert.equal(to_html(slang), '<form><input>hello world</input></form>');
     });
 
-    it( 'returns error if parent element is used as a child within another parent: form > form', function (done) {
+    it( 'returns error if parent element is used as a child within another parent: form > form', function () {
       var html = [
         'form', [ 'form', [ 'text_input', ['my_name', 'some text']] ]
       ];
       assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
     });
 
-    it( 'returns error if parent element is used as a nested child: form > block > form', function (done) {
+    it( 'returns error if parent element is used as a nested child: form > block > form', function () {
       var html = [
         'form', [ 'block', [ 'form', ['my_name', 'some text']] ]
       ];
