@@ -97,32 +97,36 @@ History
 Formerly called: ok\_slang.
 
 
-Genius Time!
+A better way:
 ------------
 
 You have a client (PC, virtual machine, tablet, etc.). You want to
-script it using Forth, but the machine only partys with JavaScript.
+script it using Scheme, but the machine only partys with JavaScript.
 How do you solve it?
 Make the problem more complicated... What if you have 1 billion people who all use
 1 million different languages... and they all want to run code on the machine...
 
-The Alan "Process Science Genius" Kay Way: Let the client run
+The Alan Kay Way: Let the client run
 binary code using a sandbox. Then, collect the output
 and present the result to the USER or to another process/VM.
 
-You have to decide how much CPU/RAM/etc. the sandbox is allowed to have, how much
+The sandbox can decide how much CPU/RAM/etc the binary code can have, how much
 access to the screen/speakers/etc it gets, etc.
 
-This way, you can run almost any past/present/future language on the client. This is of course too
-radical and not common. Which is why no one listens to poor Alan Kay.
-
-Ignore Alan Kay at your peril!
+This way, you can run almost any past/present/future language on the client securely.
+This is of course too
+radical and not common. Which is why no one listens to poor Alan Kay. (And no... JS
+ByteArray is not the answer. It's better than nothing, but not what AK was thinking
+about.)
 
 For more on Alan Kay, go to youtube and vimeo. His 30+ min lectures are heavenly.
 
 
 
+The End
+-------
 
+... for now.
 
 
 
