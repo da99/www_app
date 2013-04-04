@@ -7,16 +7,10 @@ var _     = require('underscore')
 
 var HTML = {
   'block' : function (args, meta) {
-    var results = meta.app.run(args);
-    if (results.error)
-      return results;
-    return "<div>" + results.join("") + "</div>";
+    return "<div>" + err_check(meta.app.run(args)).join("") + "</div>";
   },
   'parent form': function (args, meta) {
-    var results = meta.app.run(args);
-    if (results.error)
-      return results;
-    return "<form>" + results.join("") + "</form>";
+    return "<form>" + err_check(meta.app.run(args)).join("") + "</form>";
   },
   'form . text_input' : function (args, meta) {
     return '<input>' + args[0] + '</input>';
@@ -27,11 +21,17 @@ var Ok = function (source) {
   return Applet(source, HTML).run();
 };
 
+var err_check = function (results) {
+  if (results && results.error)
+    return [results.error.message];
+  return results.results;
+};
+
 var to_html = function (str) {
   var r = (Ok.run) ? Ok.run(str) : Ok(str);
   if (r.error)
     throw r.error;
-  return r.join("");
+  return r.results.join("");
 };
 
 var to_js = function (str) {

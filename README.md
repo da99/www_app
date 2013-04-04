@@ -85,7 +85,9 @@ The nodejs/npm implementation:
 
     HTML.def_in('form', 'text_input', my_func) // "text_input" only allowed inside a "form".
     HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
-    HTML.run();                                // The returns of the ".def" functions.
+    HTML.run();                                // returns itself.
+    HTML.run().results                         // the results of your applet.
+    HTML.run().error                           // any error.
 
 If there are any errors, they are returned from `.run` as:
 
