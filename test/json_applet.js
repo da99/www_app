@@ -6,8 +6,8 @@ var _     = require('underscore')
 ;
 
 var HTML = {
-  'block' : function (args, app) {
-    return "<div></div>";
+  'block' : function (args, scope) {
+    return "<div>" + scope.app.run(args).join("") + "</div>";
   },
   'parent form': function (args, scope) {
     return "<form>" + scope.app.run(args).join("") + "</form>";
@@ -51,6 +51,17 @@ describe( 'Applet', function () {
 
   describe( 'in parent', function () {
 
+    it( 'returns error if child element is used as a parent', function (done) {
+      var html = [
+        'text_box', ['my name', "something else"]
+      ];
+      assert.equal(Ok(html).error.message, "text_box: can only be used within \"form\".");
+    });
+
+  }); // === end desc
+
+  describe( 'parent ', function () {
+
     it( 'runs funcs defined for parent', function () {
       var slang = [
         'form', [
@@ -60,58 +71,18 @@ describe( 'Applet', function () {
       assert.equal(to_html(slang), '<form><input>hello world</input></form>');
     });
 
-  }); // === end desc
-
-  describe( 'parent ', function () {
-
-    it( 'creates a HTML button tag', function () {
-      var slang = [
-        'button', 'my_button', 'Send'
-      ];
-      assert.equal(to_html(slang), '<button id="my_button">Send</button>');
-    });
-
-    describe( '{on_click: [...]}', function () {
-
-      it.skip( 'generates JavaScript', function (done) {
-        var slang = [
-          'button', 'my', 'Send',
-          'on_click', ['alert', 'It worked.']
-        ];
-        assert.equal(to_js(slang), 'ok_slang.on_click("my", "alert", "It worked.")');
-      });
-
-    }); // === end desc
-
-  }); // === end desc
-
-  describe( '{link: ["name", "link", "text"]}', function () {
-
-    it( 'accepts 3 args: name, link, text', function () {
+    it( 'returns error if parent element is used as a child within another parent: form > form', function (done) {
       var html = [
-        'link', ['my_link', 'http://www.test.com/'], 'My Link'
+        'form', [ 'form', [ 'text_box', ['my_name', 'some text']] ]
       ];
-      var r    = Ok(html).html;
-      var a    = cheerio.load(r)('a');
-      assert.equal( a.attr('id')   , 'my_link');
-      assert.equal( a.attr('href') , "http://www.test.com/");
-      assert.equal( a.text()       , "My Link" );
+      assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
     });
 
-    it( 'accepts 2 args: link, text', function () {
-      var html = ['link', ['http://www.test.com/'], 'My Link'];
-      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
-    });
-
-    it( 'normalizes href', function () {
-      var html = ['link', ['hTTp://www.test.com/'], 'My Link'];
-      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
-    });
-
-    it( 'returns error if link is invalid', function () {
-      var html = ['link', ['http://www.te\x3Cst.com/'], 'My Link'];
-      var err  = null;
-      assert.equal(Ok(html).error.message, 'Invalid link address: http://www.te<st.com/');
+    it( 'returns error if parent element is used as a nested child: form > block > form', function (done) {
+      var html = [
+        'form', [ 'block', [ 'form', ['my_name', 'some text']] ]
+      ];
+      assert.equal(Ok(html).error.message, "form: can not be used within another \"form\".");
     });
 
   }); // === end desc
