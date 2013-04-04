@@ -85,9 +85,9 @@ The nodejs/npm implementation:
 
     HTML.def_in('form', 'text_input', my_func) // "text_input" only allowed inside a "form".
     HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
-    HTML.run(source);                          // The returns of the ".def" functions.
+    HTML.run();                                // The returns of the ".def" functions.
 
-If there are any errors, they are returned in `.run` as:
+If there are any errors, they are returned from `.run` as:
 
     { error: new Error("the msg") }
 
@@ -100,7 +100,7 @@ Formerly called: ok\_slang.
 Genius Time!
 ------------
 
-You have a client (PC, virtual machine, tablet, etc.) You want to
+You have a client (PC, virtual machine, tablet, etc.). You want to
 script it using Forth, but the machine only partys with JavaScript.
 How do you solve it?
 Make the problem more complicated... What if you have 1 billion people who all use
