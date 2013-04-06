@@ -6,13 +6,13 @@ var _     = require('underscore')
 ;
 
 var HTML = {
-  'block' : function (args, meta) {
+  'block' : function (meta, args) {
     return "<div>" + err_check(meta.app.run(args)).join("") + "</div>";
   },
-  'parent form': function (args, meta) {
+  'parent form': function (meta, args) {
     return "<form>" + err_check(meta.app.run(args)).join("") + "</form>";
   },
-  'form . text_input' : function (args, meta) {
+  'form . text_input' : function (meta, args) {
     return '<input>' + args[0] + '</input>';
   }
 };
@@ -43,6 +43,22 @@ describe( 'Applet', function () {
       ];
 
       assert.equal(ERROR(html).message, "Func not found: text_boxs");
+    });
+
+    it( 'accepts a KV object as an argument instead of array', function () {
+      var args = {val: "anything"};
+      var results = null;
+
+      var app = Applet(['box', args, []], {'box': function (m, a1, a2) {
+        results = a1;
+      }});
+      app.run();
+
+      assert.equal(results, args);
+    });
+
+    it( 'returns error if arguments are numbers instead of array/object', function () {
+      assert.equal(false, true);
     });
 
   }); // === end desc

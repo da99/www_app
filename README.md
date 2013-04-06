@@ -39,10 +39,11 @@ The starting point is an array:
 
 You have to define what "print" does.
 
-Function calls: A string followed by one or more arrays.
+Function calls: A string followed by one or more arrays or object (ie {name: vale}).
 
     [
-       "remove" , ["my_form", "my_spouse"], ["some", "other", "args", [ 1, 2, 3 ]]
+       "remove" , ["my_form", "my_spouse"], ["some", "other", "args", [ 1, 2, 3 ]],
+       "add"    , {right: 1, left: "2"}
     ]
 
 Any string followed by another string is considered a function call without arguments:
@@ -73,7 +74,7 @@ The nodejs/npm implementation:
 
     var HTML = Applet(source);
 
-    HTML.def('form', function (args_array, call_meta) {
+    HTML.def('form', function (call_meta, args) {
       call_meta.name   // 'form'
       call_meta.prev   // the previous func call and args: [name, array1, array2, ...]
       call_meta.curr   // the current func call: ['form', array1, array2]
