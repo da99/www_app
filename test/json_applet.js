@@ -49,16 +49,18 @@ describe( 'Applet', function () {
       var args = {val: "anything"};
       var results = null;
 
-      var app = Applet(['box', args, []], {'box': function (m, a1, a2) {
-        results = a1;
-      }});
+      var app = Applet(['box', args, []], {'box': function (m, a1, a2) { results = a1; }});
       app.run();
 
       assert.equal(results, args);
     });
 
     it( 'returns error if arguments are numbers instead of array/object', function () {
-      assert.equal(false, true);
+
+      var app = Applet(['box', 100, []], {'box': function (m, a1, a2) {}});
+      app.run();
+
+      assert.equal(app.error.message, "Invalid input: 100");
     });
 
   }); // === end desc
