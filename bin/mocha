@@ -10,5 +10,5 @@ set -u -e -o pipefail
 
 mocha --colors -b \
   test/escape.js  \
+  test/www_applet.js \
   "$@"
-  # test/www_applet.js \
