@@ -4,11 +4,11 @@ var _     = require('underscore')
 , unhtml  = require('unhtml')
 , special = require('special-html')
 , assert  = require('assert')
-, E       = require('www_applet/lib/escape').Escape
+, E       = require('www_applet/lib/sanitize').Sanitize
 , BRACKET = "";
 ;
 
-describe( 'Escape', function () {
+describe( 'Sanitize', function () {
 
   it( 'does not re-escape already escaped text mixed with HTML', function () {
     var h = "<p>Hi</p>";
@@ -29,7 +29,7 @@ describe( 'Escape', function () {
 
 }); // === end desc
 
-describe( 'Escape.uri', function () {
+describe( 'Sanitize.uri', function () {
 
   it( 'normalizes address', function () {
     var s = "hTTp://wWw.test.com/";
