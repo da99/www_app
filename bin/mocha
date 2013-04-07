@@ -8,7 +8,7 @@ set -u -e -o pipefail
 # -*- js   -*-
 #
 
-mocha --colors -b \
-  test/escape.js  \
+mocha --colors -b    \
+  test/sanitize.js   \
   test/www_applet.js \
   "$@"
