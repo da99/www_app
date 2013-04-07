@@ -22,11 +22,11 @@ Example:
 Your app users send you this JSON:
 
     [
-      "form", ["my_dom_id", "post", "http://my_url.something/"], [
-        "text_input", [ "dom_id_2", {lines: 1} ], [
+      "form", {to: "http://my_url.something/"}, [
+        "text_input", [ {lines: 1} ], [
           "Input your name here."
         ],
-        "button", [ "Save" ],
+        "button", {}, [ "Save" ],
         "on_click", [ "submit_form" ]
       ]
     ]
@@ -51,12 +51,12 @@ The Standard
 
 The starting point is an array:
 
-    [ "form", [...], [ ... ] ]
+    [ "form", { ... }, [ ... ] ]
 
-Function calls: A string followed by one array (or object), followed by an array.
+Function calls: A string followed by object (holding attributes), followed by an array.
 
     [
-       "a", ['http://www.joelonsoftware.com', {title: "Joel Spolsky's home."}], [
+       "link", {to: "http://www.joelonsoftware.com"}, [
          "Eat at Joe's."
        ]
     ]
