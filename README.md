@@ -10,13 +10,14 @@ Intro:
 -------------------------------
 
 Do you want to allow others to script your apps?
-Do you want to turn those scripts into little applets of HTML/CSS/JS?
+Do you want to turn those scripts into little applets of HTML/JS?
 Do you wnat them to be sandboxed?
 Do you want to allow others to script your apps? In other words: turn your apps into a
 platform the quick & easy way?
 Do you want them sandboxed?
 Do you want to create a simple to use declarative language and pass it around
 using JSON?
+Do you *not* need CSS right now?
 
 Then try WWW applets.
 
@@ -34,7 +35,7 @@ Your app users send you this JSON:
       ]
     ]
 
-You then process the above into HTML/CSS/JS... using Ruby, Python, [Factor](http://factorcode.org/), etc.
+You then process the above into HTML/JS... using Ruby, Python, [Factor](http://factorcode.org/), etc.
 
 How?
 
@@ -188,7 +189,7 @@ For more on Alan Kay, go to youtube and vimeo. His 30+ min lectures are heavenly
 The End
 -------
 
-... for now. (Todo: async and css).
+... for now.
 
 
 
