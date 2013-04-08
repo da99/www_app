@@ -1,11 +1,17 @@
 
+Note:
+-----
 
-Why should I love WWW applets?
+This is still all very new and not yet for human or machine
+consumption.
+
+
+Intro:
 -------------------------------
 
 Do you want to allow others to script your apps?
 Do you want to turn those scripts into little applets of HTML/CSS/JS?
-Do you wnat them to be sandboxed? 
+Do you wnat them to be sandboxed?
 Do you want to allow others to script your apps? In other words: turn your apps into a
 platform the quick & easy way?
 Do you want them sandboxed?
@@ -13,15 +19,6 @@ Do you want to create a simple to use declarative language and pass it around
 using JSON?
 
 Then try WWW applets.
-
-Note:
------
-
-WWW applets are
-[JSON applets](https://github.com/da99/json_applet)
-with certain validations.  There is no pre-defined HTML
-tags/elements (eg a, form, p, etc.). Those are up to
-you to define.
 
 
 Example:
