@@ -32,7 +32,7 @@ describe( 'ok_slang', function () {
         'a', {id: 'my name'}, [ "enter wrong name" ]
       ];
 
-      assert.equal(run(html).error.message, "Invalid chars in text_input id: my name");
+      assert.equal(run(html).error.message, "id: invalid characters: \"my name\"");
     });
 
     it( 'returns error if unknown element', function () {
@@ -40,7 +40,7 @@ describe( 'ok_slang', function () {
         'text_inputy', {}, ["enter name"]
       ];
 
-      assert.equal(run(slang).error.message, "Unknown element: text_inputy");
+      assert.equal(run(slang).error.message, "Function not found: text_inputy");
     });
 
   }); // === end desc

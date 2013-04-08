@@ -184,10 +184,11 @@ about.)
 For more on Alan Kay, go to youtube and vimeo. His 30+ min lectures are heavenly.
 
 
+
 The End
 -------
 
-... for now.
+... for now. (Todo: async and css).
 
 
 
