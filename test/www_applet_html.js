@@ -57,11 +57,11 @@ describe( 'ok_slang', function () {
 
     it( 'creates children on previously defined element', function () {
       var slang = [
-        'form', ['my_form', 'http://www.text.com/'], [
-          'button', 'my_button', 'Hello'
+        'form', {action: 'http://www.text.com/'}, [
+          'button', {}, ['Hello']
         ]
       ];
-      assert.equal(to_html(slang), '<form id="my_form" action="http://www.text.com/"><button id="my_button">Hello</button></form>');
+      assert.equal(to_html(slang), '<form action="http://www.text.com/"><button id="my_button">Hello</button></form>');
     });
 
   }); // === end desc
