@@ -51,6 +51,14 @@ describe( 'ok_slang', function () {
       assert.equal(run(slang).error.message, "Function not found: text_inputy");
     });
 
+    it( 'returns an error if content does not pass sanitization function', function () {
+      var slang = [
+        'button', {}, [["my text"]]
+      ];
+
+      assert.equal(run(slang).error.message, "button: String expected, instead got: [[\"my text\"]]");
+    });
+
   }); // === end desc
 
   describe( '[ "tag", [],  [ ele, ele, ele ] ]', function () {
