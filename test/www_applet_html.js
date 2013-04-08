@@ -61,7 +61,7 @@ describe( 'ok_slang', function () {
           'button', {}, ['Hello']
         ]
       ];
-      assert.equal(to_html(slang), '<form action="http://www.text.com/"><button id="my_button">Hello</button></form>');
+      assert.equal(to_html(slang), '<form action="http://www.text.com/"><button>Hello</button></form>');
     });
 
   }); // === end desc
