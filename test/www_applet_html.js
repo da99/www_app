@@ -27,6 +27,14 @@ describe( 'ok_slang', function () {
 
   describe( 'to app', function () {
 
+    it( 'returns error if unknown attrs', function () {
+      var html = [
+        'a', {ids: 'my name'}, [ "enter wrong name" ]
+      ];
+
+      assert.equal(run(html).error.message, "a: unknown attributes: \"ids\"");
+    });
+
     it( 'returns error if invalid chars in name', function () {
       var html = [
         'a', {id: 'my name'}, [ "enter wrong name" ]
