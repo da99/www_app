@@ -61,6 +61,32 @@ describe( 'Sanitize attrs:', function () {
     }); // === end desc
   });
 
+  // ****************************************************************
+  // ****************** END of Sanitize Attrs ***********************
+  // ****************************************************************
+
+  describe( '.opt(func)', function () {
+    it( 'returns a function where null returns null', function () {
+      assert.equal(E.opt(E.string)(null), null);
+    });
+
+    it( 'returns a function where undefined returns null', function () {
+      assert.equal(E.opt(E.string)(undefined), null);
+    });
+
+    it( 'returns a function that passes false to underlying function', function () {
+      assert.equal(E.opt(E.string)(false).constructor, Error);
+    });
+
+    it( 'returns a function that passes any Number to underlying function', function () {
+      assert.equal(E.opt(E.string)(1).constructor, Error);
+    });
+
+    it( 'returns a function that passes any String to underlying function', function () {
+      assert.equal(E.opt(E.string)("a"), "a");
+    });
+  }); // === end desc
+
 }); // === end desc
 
 
