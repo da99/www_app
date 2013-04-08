@@ -1,7 +1,7 @@
 {
   "name": "www_applet",
   "version": "0.0.0",
-  "description": "Extensions to json_applet for HTML/CSS/JS.",
+  "description": "Mini-apps using JSON.",
   "main": "lib/www_applet.js",
   "directories": {
     "test": "test"
@@ -15,8 +15,7 @@
   },
   "keywords": [
     "da99",
-    "okdoki",
-    "json_applet"
+    "okdoki"
   ],
   "dependencies": {
     "underscore": "1.x.x"
