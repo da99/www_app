@@ -28,7 +28,7 @@ Your app users send you this JSON:
 
     [
       "form", {action: "http://my_url.something/"}, [
-        "text_input", {}, [ "Input your name here." ],
+        "input_text", {}, [ "Input your name here." ],
         "button", {}, [ "Save" ],
         "on_click", [ "submit_form" ]
       ]
@@ -41,7 +41,7 @@ How?
      var Applet = require('www_applet').Applet;
      var app = Applet(my_source);
      app.def('form', my_func);
-     app.def_in('form', 'text_input', my_text_input_func);
+     app.def_in('form', 'input_text', my_text_input_func);
      ...
 
 Alternatives:
@@ -83,7 +83,7 @@ The nodejs/npm implementation:
     var Applet = require('json_applet').Applet;
     var source = [
       "form", ["my_form"], [
-        "text_input", [ "my_name", {lines: 1} ], [
+        "input_text", [ "my_name", {lines: 1} ], [
           "Input your name here."
         ],
         "button", [], [ "Save" ],
@@ -106,7 +106,7 @@ The nodejs/npm implementation:
       return "<form> ... </form>";
     });
 
-    HTML.def_in('form', 'text_input', my_func) // "text_input" only allowed inside a "form".
+    HTML.def_in('form', 'input_text', my_func) // "input_text" only allowed inside a "form".
     HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
     HTML.after_run(some_func);                 // See below: "Events".
     HTML.run();                                // returns itself.
@@ -146,6 +146,16 @@ History
 -------
 
 Formerly called: ok\_slang.
+
+Originally, there was going to be [json\_applet](https://github.com/da99/json_applet)
+for DSL creation, and `www_applet`
+would be built on top of `json_applet`. However, I merged the two since I thought it
+out as to why json/www applets were not created before: few programmers want others
+to script on top of their apps. Which explains why
+[greasemonkey](http://en.wikipedia.org/wiki/Greasemonkey)
+scripts (in Firefox) continue to be used. Site/web app owners could just add in scripting
+to their web apps, but there is not enough demand and business justification. In
+other words: programmers do not want to be industrial designers.
 
 
 A better way:
