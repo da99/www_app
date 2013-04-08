@@ -1,12 +1,23 @@
 
-var _     = require('underscore')
-, _s      = require('underscore.string')
-, unhtml  = require('unhtml')
-, special = require('special-html')
-, assert  = require('assert')
-, E       = require('www_applet/lib/sanitize').Sanitize
-, BRACKET = ""
+var _      = require('underscore')
+, _s       = require('underscore.string')
+, unhtml   = require('unhtml')
+, special  = require('special-html')
+, assert   = require('assert')
+, Sanitize = require('www_applet/lib/sanitize').Sanitize
+, E        = Sanitize.html
 ;
+var BRACKET = " < %3C &lt &lt; &LT &LT; &#60 &#060 &#0060  \
+&#00060 &#000060 &#0000060 &#60; &#060; &#0060; &#00060;  \
+&#000060; &#0000060; &#x3c &#x03c &#x003c &#x0003c &#x00003c  \
+&#x000003c &#x3c; &#x03c; &#x003c; &#x0003c; &#x00003c;  \
+&#x000003c; &#X3c &#X03c &#X003c &#X0003c &#X00003c &#X000003c  \
+&#X3c; &#X03c; &#X003c; &#X0003c; &#X00003c; &#X000003c;  \
+&#x3C &#x03C &#x003C &#x0003C &#x00003C &#x000003C &#x3C; &#x03C;  \
+&#x003C; &#x0003C; &#x00003C; &#x000003C; &#X3C &#X03C  \
+&#X003C &#X0003C &#X00003C &#X000003C &#X3C; &#X03C; &#X003C; &#X0003C;  \
+&#X00003C; &#X000003C; \x3c \x3C \u003c \u003C ";
+
 
 describe( 'Sanitize', function () {
 
@@ -29,43 +40,3 @@ describe( 'Sanitize', function () {
 
 }); // === end desc
 
-describe( 'Sanitize.uri', function () {
-
-  it( 'normalizes address', function () {
-    var s = "hTTp://wWw.test.com/";
-    assert.equal(E.uri(s), s.toLowerCase());
-  });
-
-  it( 'returns null if path contains: <', function () {
-    var s = "http://www.test.com/<something/";
-    assert.equal(E.uri(s), null);
-  });
-
-  it( 'returns null if path contains HTML entities', function () {
-    var s = "http://6&#9;6.000146.0x7.147/";
-    assert.equal(E.uri(s), null);
-  });
-
-  it( 'returns null if path contains HTML entities', function () {
-    var s = "http://www.test.com/&nbsp;s/";
-    assert.equal(E.uri(s), null);
-  });
-
-  it( 'returns null if query string contains HTML entities', function () {
-    var s = "http://www.test.com/s/test?t&nbsp;test";
-    assert.equal(E.uri(s), null);
-  });
-
-}); // === end desc
-
-
-BRACKET = " < %3C &lt &lt; &LT &LT; &#60 &#060 &#0060  \
-&#00060 &#000060 &#0000060 &#60; &#060; &#0060; &#00060;  \
-&#000060; &#0000060; &#x3c &#x03c &#x003c &#x0003c &#x00003c  \
-&#x000003c &#x3c; &#x03c; &#x003c; &#x0003c; &#x00003c;  \
-&#x000003c; &#X3c &#X03c &#X003c &#X0003c &#X00003c &#X000003c  \
-&#X3c; &#X03c; &#X003c; &#X0003c; &#X00003c; &#X000003c;  \
-&#x3C &#x03C &#x003C &#x0003C &#x00003C &#x000003C &#x3C; &#x03C;  \
-&#x003C; &#x0003C; &#x00003C; &#x000003C; &#X3C &#X03C  \
-&#X003C &#X0003C &#X00003C &#X000003C &#X3C; &#X03C; &#X003C; &#X0003C;  \
-&#X00003C; &#X000003C; \x3c \x3C \u003c \u003C ";

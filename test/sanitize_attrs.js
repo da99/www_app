@@ -4,6 +4,7 @@ var _     = require('underscore')
 , E       = require('www_applet/lib/sanitize').Sanitize
 ;
 
+
 describe( 'Sanitize attrs:', function () {
 
   // What if the value is null? undefined?
@@ -60,6 +61,35 @@ describe( 'Sanitize attrs:', function () {
       });
     }); // === end desc
   });
+
+  describe( 'uri', function () {
+
+    it( 'normalizes address', function () {
+      var s = "hTTp://wWw.test.com/";
+      assert.equal(E.uri(s), s.toLowerCase());
+    });
+
+    it( 'returns an Error if path contains: <', function () {
+      var s = "http://www.test.com/<something/";
+      assert.equal(E.uri(s).constructor, Error);
+    });
+
+    it( 'returns an Error if path contains HTML entities', function () {
+      var s = "http://6&#9;6.000146.0x7.147/";
+      assert.equal(E.uri(s).constructor, Error);
+    });
+
+    it( 'returns an Error if path contains HTML entities', function () {
+      var s = "http://www.test.com/&nbsp;s/";
+      assert.equal(E.uri(s).constructor, Error);
+    });
+
+    it( 'returns an Error if query string contains HTML entities', function () {
+      var s = "http://www.test.com/s/test?t&nbsp;test";
+      assert.equal(E.uri(s).constructor, Error);
+    });
+
+  }); // === end desc
 
   // ****************************************************************
   // ****************** END of Sanitize Attrs ***********************
