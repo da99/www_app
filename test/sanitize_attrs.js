@@ -40,6 +40,13 @@ describe( 'Sanitize attrs:', function () {
     });
   }); // === end desc
 
+  describe( 'string_in_array', function () {
+    it( 'returns value if string in array: [ my_string ]', function () {
+      var val = ["This is a string."];
+      assert.equal(E.string_in_array(val), val);
+    });
+  }); // === end desc
+
   describe( 'name', function () {
     it( 'returns value if valid string', function () {
       assert.equal(E.name("some_name"), "some_name");
