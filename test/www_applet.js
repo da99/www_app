@@ -6,21 +6,21 @@ var _     = require('underscore')
 ;
 
 var to_html = function (str) {
-  var r = WWW(str).run();
+  var r = WWW.new(str).run();
   if (r.error)
     throw r.error;
   return r.results.html;
 };
 
 var to_js = function (str) {
-  var r = WWW(str).run();
+  var r = WWW.new(str).run();
   if (r.error)
     throw r.error;
   return r.results.js;
 };
 
 var run = function (str) {
-  return WWW(str).run();
+  return WWW.new(str).run();
 };
 
 describe( 'ok_slang', function () {
@@ -29,7 +29,7 @@ describe( 'ok_slang', function () {
 
     it( 'returns error if invalid chars in name', function () {
       var html = [
-        'link', {id: 'my name'}, [ "enter wrong name" ]
+        'a', {id: 'my name'}, [ "enter wrong name" ]
       ];
 
       assert.equal(run(html).error.message, "Invalid chars in text_input id: my name");
