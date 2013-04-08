@@ -5,7 +5,7 @@ var _     = require('underscore')
 , special = require('special-html')
 , assert  = require('assert')
 , E       = require('www_applet/lib/sanitize').Sanitize
-, BRACKET = "";
+, BRACKET = ""
 ;
 
 describe( 'Sanitize', function () {
