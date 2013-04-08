@@ -1,7 +1,7 @@
 
 var _     = require('underscore')
 , assert  = require('assert')
-, Applet  = require('json_applet').Applet
+, Applet  = require('www_applet/lib/json_applet').Applet
 , cheerio = require('cheerio');
 ;
 

@@ -19,7 +19,6 @@
   ],
   "dependencies": {
     "underscore": "1.x.x"
-    , "json_applet": "x.x.x"
     , "unhtml": "x.x.x"
     , "special-html": "x.x.x"
     , "underscore.string": "x.x.x"
