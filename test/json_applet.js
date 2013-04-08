@@ -17,7 +17,7 @@ var HTML = {
   }
 };
 
-var Ok      = function (source) { return Applet(source, HTML).run(); };
+var Ok      = function (source) { return Applet.new(source, HTML).run(); };
 var ERROR   = function (source) { return Ok(source).error; };
 var RESULTS = function (source) {
   var results = Ok(source);
@@ -49,7 +49,7 @@ describe( 'Applet', function () {
       var args = {val: "anything"};
       var results = null;
 
-      var app = Applet(['box', args, []], {'box': function (m, a1, a2) { results = a1; }});
+      var app = Applet.new(['box', args, []], {'box': function (m, a1, a2) { results = a1; }});
       app.run();
 
       assert.equal(results, args);
@@ -57,7 +57,7 @@ describe( 'Applet', function () {
 
     it( 'returns error if arguments are numbers instead of array/object', function () {
 
-      var app = Applet(['box', 100, []], {'box': function (m, a1, a2) {}});
+      var app = Applet.new(['box', 100, []], {'box': function (m, a1, a2) {}});
       app.run();
 
       assert.equal(app.error.message, "Invalid input: 100");
@@ -109,7 +109,7 @@ describe( 'Applet', function () {
       var source = [
         'form', [ 'text_input', [ "hello world" ] ]
       ];
-      var app = Applet(source, HTML);
+      var app = Applet.new(source, HTML);
       app.after_run(function (app) { app.results.push('1'); });
       app.after_run(function (app) { app.results.push('2'); });
       assert.deepEqual(app.run().results, ["<form><input>hello world</input></form>","1","2"]);
