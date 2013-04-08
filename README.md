@@ -17,7 +17,7 @@ platform the quick & easy way?
 Do you want them sandboxed?
 Do you want to create a simple to use declarative language and pass it around
 using JSON?
-Do you *not* need CSS right now?
+Do you *not* need CSS in your applets right now?
 
 Then try WWW applets.
 
