@@ -11,6 +11,6 @@ set -u -e -o pipefail
 mocha --colors -b           \
   test/sanitize_html.js     \
   test/sanitize_attrs.js    \
-  test/www_applet_basic.js  \
+  test/www_applet_run.js  \
   test/www_applet_html.js   \
   "$@"
