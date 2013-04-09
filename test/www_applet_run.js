@@ -9,11 +9,11 @@ var HTML = [
   'block', function (meta, args) {
     return "<div>" + err_check(meta.app.run(args)).join("") + "</div>";
   },
-  'form', function (meta, args) {
-    return "<form>" + err_check(meta.app.run(args)).join("") + "</form>";
+  'form', function (meta, args, content) {
+    return "<form>" + err_check(meta.app.run(content)).join("") + "</form>";
   }, {is_parent: true},
-  'text_input', function (meta, args) {
-    return '<input>' + args[0] + '</input>';
+  'text_input', function (meta, args, content) {
+    return '<input>' + content[0] + '</input>';
   }, {child_of: 'form'}
 ];
 
@@ -92,9 +92,9 @@ describe( 'parent ', function () {
     var slang = [
       'form', {}, [
         'text_input', {}, [ "hello world" ]
-    ]
+      ]
     ];
-    assert.equal(RESULTS(slang).html, '<form><input>hello world</input></form>');
+    assert.equal(RESULTS(slang).results, '<form><input>hello world</input></form>');
   });
 
   it( 'returns error if parent element is used as a child within another parent: form > form', function () {
