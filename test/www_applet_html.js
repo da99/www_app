@@ -23,7 +23,7 @@ var run = function (str) {
   return WWW.new(str).run();
 };
 
-describe( 'ok_slang', function () {
+describe( 'www_applet', function () {
 
   describe( 'to app', function () {
 
@@ -61,7 +61,7 @@ describe( 'ok_slang', function () {
 
   }); // === end desc
 
-  describe( '[ "tag", [],  [ ele, ele, ele ] ]', function () {
+  describe( 'rendering of child elements', function () {
 
     it( 'creates children on previously defined element', function () {
       var slang = [
@@ -74,13 +74,13 @@ describe( 'ok_slang', function () {
 
   }); // === end desc
 
-  describe( '{button: ["name", "text", ...]}', function () {
+  describe( 'buttons', function () {
 
     it( 'creates a HTML button tag', function () {
       var slang = [
-        'button', 'my_button', 'Send'
+        'button', {}, ['Send']
       ];
-      assert.equal(to_html(slang), '<button id="my_button">Send</button>');
+      assert.equal(to_html(slang), '<button>Send</button>');
     });
 
     describe( '{on_click: [...]}', function () {
@@ -97,33 +97,32 @@ describe( 'ok_slang', function () {
 
   }); // === end desc
 
-  describe( '{link: ["name", "link", "text"]}', function () {
+  describe( 'links: a', function () {
 
-    it( 'accepts 3 args: name, link, text', function () {
+    it( 'creates a HTML a tag', function () {
       var html = [
-        'link', ['my_link', 'http://www.test.com/'], 'My Link'
+        'a', {href:'http://www.test.com/'}, ['My Link']
       ];
-      var r    = Ok(html).html;
+      var r    = to_html(html);
       var a    = cheerio.load(r)('a');
-      assert.equal( a.attr('id')   , 'my_link');
       assert.equal( a.attr('href') , "http://www.test.com/");
       assert.equal( a.text()       , "My Link" );
     });
 
     it( 'accepts 2 args: link, text', function () {
-      var html = ['link', ['http://www.test.com/'], 'My Link'];
-      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
+      var html = ['a', {href: 'http://www.test.com/'}, ['My Link']];
+      assert.equal(to_html(html), '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'normalizes href', function () {
-      var html = ['link', ['hTTp://www.test.com/'], 'My Link'];
-      assert.equal(Ok(html).html, '<a href="http://www.test.com/">My Link</a>');
+      var html = ['a', {href: 'hTTp://www.test.com/'}, ['My Link']];
+      assert.equal(to_html(html), '<a href="http://www.test.com/">My Link</a>');
     });
 
     it( 'returns error if link is invalid', function () {
-      var html = ['link', ['http://www.te\x3Cst.com/'], 'My Link'];
+      var html = ['a', {href: 'http://www.te\x3Cst.com/'}, ['My Link']];
       var err  = null;
-      assert.equal(Ok(html).error.message, 'Invalid link address: http://www.te<st.com/');
+      assert.equal(run(html).error.message, 'href: URI is not strictly valid.: http://www.te<st.com/');
     });
 
   }); // === end desc
