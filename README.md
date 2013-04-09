@@ -3,20 +3,23 @@
 The Standard: What you need to do to implement it on your fav. prog. lang.
 -------------------------
 
-1) The starting point is an array:
+1) All HTML attributes and content (text/inner HTML) must be escaped
+   by the library (ie implementation).
+
+2) The starting point is an array:
 
     [ "form", { ... }, [ ... ] ]
 
-2) Function calls: A string followed by object and/or array.
+3) Function calls: A string followed by object and/or array.
 
     [ "a", {href: "http://www.joelonsoftware.com"}, [ "Eat at Joe's." ] ]
 
 
-3) The obj. ({ k: v }) holds the attributes. The object is optional.
+4) The obj. ({ k: v }) holds the attributes. The object is optional.
 
     [ "button", [ "Eat at Joe's." ] ]
 
-4) A string followed by another string is considered a function call w/o
+5) A string followed by another string is considered a function call w/o
    arguments:
 
     [
