@@ -17,6 +17,7 @@ var HTML = [
   }, {child_of: 'form'}
 ];
 
+var anything = function (any) { return any; };
 var Ok      = function (source) { return Applet.new(source, HTML).run(); };
 var ERROR   = function (source) { return Ok(source).error; };
 var RESULTS = function (source) {
@@ -55,9 +56,9 @@ describe( '.run', function () {
     var results = null;
 
     var app = Applet.new(['box', args, ["some text"]]);
-    app.def_tag('box', null, null, function (m, a1, a2, a3) {
-      console.log(arguments)
-      results = a1; return ['box', a1, a2];
+    app.def_tag('box', {val: anything}, null, function (m, tag, attrs, content) {
+      results = attrs;
+      return [tag, attrs, content];
     });
     RUN(app);
 
@@ -69,7 +70,7 @@ describe( '.run', function () {
     var app = Applet.new(['box', 100, []], ['box', function (m, a1, a2) {}]);
     app.run();
 
-    assert.equal(app.error.message, "Invalid input: 100");
+    assert.equal(app.error.message, "box: invalid argument: 100");
   });
 
 }); // === end desc
