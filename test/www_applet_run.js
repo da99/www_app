@@ -40,41 +40,6 @@ var err_check = function (results) {
 };
 
 
-
-describe( '.run', function () {
-
-  it( 'returns error if func not defined', function () {
-    var html = [
-      'text_boxs', ['my name', "something else"]
-    ];
-
-    assert.equal(ERROR(html).message, "Function not found: text_boxs");
-  });
-
-  it( 'accepts a KV object as an argument instead of array', function () {
-    var args = {val: "anything"};
-    var results = null;
-
-    var app = Applet.new(['box', args, ["some text"]]);
-    app.def_tag('box', {val: anything}, null, function (m, tag, attrs, content) {
-      results = attrs;
-      return [tag, attrs, content];
-    });
-    RUN(app);
-
-    assert.equal(results, args);
-  });
-
-  it( 'returns error if arguments are numbers instead of array/object', function () {
-
-    var app = Applet.new(['box', 100, []], ['box', function (m, a1, a2) {}]);
-    app.run();
-
-    assert.equal(app.error.message, "box: invalid argument: 100");
-  });
-
-}); // === end desc
-
 describe( 'in parent', function () {
 
   it( 'returns error if child element is used as a parent', function () {
