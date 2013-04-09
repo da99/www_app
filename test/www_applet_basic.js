@@ -42,7 +42,7 @@ describe( 'Applet', function () {
         'text_boxs', ['my name', "something else"]
       ];
 
-      assert.equal(ERROR(html).message, "Func not found: text_boxs");
+      assert.equal(ERROR(html).message, "Function not found: text_boxs");
     });
 
     it( 'accepts a KV object as an argument instead of array', function () {
