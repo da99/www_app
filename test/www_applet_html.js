@@ -56,7 +56,7 @@ describe( 'ok_slang', function () {
         'button', {}, [["my text"]]
       ];
 
-      assert.equal(run(slang).error.message, "button: String expected, instead got: [[\"my text\"]]");
+      assert.equal(run(slang).error.message, "button: Must be a string within an array: [[\"my text\"]]");
     });
 
   }); // === end desc
