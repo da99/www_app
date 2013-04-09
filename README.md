@@ -1,12 +1,54 @@
 
-Note:
------
 
-This is still all very new and not yet for human or machine
-consumption.
+The Standard: What you need to do to implement it on your fav. prog. lang.
+-------------------------
+
+1) The starting point is an array:
+
+    [ "form", { ... }, [ ... ] ]
+
+2) Function calls: A string followed by object and/or array.
+
+    [ "a", {href: "http://www.joelonsoftware.com"}, [ "Eat at Joe's." ] ]
 
 
-Intro:
+3) The obj. ({ k: v }) holds the attributes. The object is optional.
+
+    [ "button", [ "Eat at Joe's." ] ]
+
+4) A string followed by another string is considered a function call w/o
+   arguments:
+
+    [
+       "my_func_with_no_args",
+       "my_func_with_args", [ 1, 2, 3 ],
+       "another_func_with_args", {}, [ 1, 2, 3 ]
+    ]
+
+
+Example:
+---------
+
+Your app users send you this JSON:
+
+    [
+      "form", {action: "http://my_url.something/"}, [
+        "input_text", [ "Input your name here." ],
+        "button", [ "Save" ],
+        "on_click", [ "submit_form" ]
+      ]
+    ]
+
+You then process the above into HTML/JS... using Ruby, Python, [Factor](http://factorcode.org/), etc.
+
+The Future Standard
+-------------------
+
+1) There are no plans for variables or methods because JSON applet because
+there are closer in pedigree to SQL/DSLs/POLs than to a full scripting/prog. lang.
+
+
+What can you do with WWW applets?
 -------------------------------
 
 Do you want to allow others to script your apps?
@@ -22,59 +64,22 @@ Do you *not* need CSS in your applets right now?
 Then try WWW applets.
 
 
-Example:
----------
-
-Your app users send you this JSON:
-
-    [
-      "form", {action: "http://my_url.something/"}, [
-        "input_text", {}, [ "Input your name here." ],
-        "button", {}, [ "Save" ],
-        "on_click", [ "submit_form" ]
-      ]
-    ]
-
-You then process the above into HTML/JS... using Ruby, Python, [Factor](http://factorcode.org/), etc.
-
-How?
-
-     var Applet = require('www_applet').Applet;
-     var app = Applet(my_source);
-     app.def('form', my_func);
-     app.def_in('form', 'input_text', my_text_input_func);
-     ...
 
 Alternatives:
 -------------
 
 * [Adsafe](http://www.adsafe.org/)
 
-The Standard
--------------------------
+The End... of the standard.
+----------------------------------
 
-The starting point is an array:
+From this point onward in this document, I will be talking about the
+nodejs/npm implementation that has nothing to do with your own
+implementation of the standard.
 
-    [ "form", { ... }, [ ... ] ]
 
-Function calls: A string followed by object or array:
-
-    [
-       "a", {href: "http://www.joelonsoftware.com"}, [
-         "Eat at Joe's."
-       ],
-       "remove" , ["my_form", "my_spouse"], ["some", "other", "args", [ 1, 2, 3 ]],
-       "add"    , {right: 1, left: "2"},
-       "my_func_with_no_args",
-       "my_func_with_args", [ 1, 2, 3 ]
-    ]
-
-    [ "print", ["hello", "world"] ]
-
-You have to define what "print" does.
-
-There are no plans for variables or methods because JSON applet because
-there are closer in pedigree to SQL/DSLs/POLs than to a full scripting/prog. lang.
+\* \* \*
+--------------------------------
 
 The nodejs/npm implementation:
 ------------------------------
@@ -95,24 +100,6 @@ The nodejs/npm implementation:
     var results = Applet.new(source).run().results;
     results.html;
     results.js;
-    var HTML = Applet(source);
-
-    HTML.def('form', function (call_meta, args) {
-      call_meta.name   // 'form'
-      call_meta.prev   // the previous func call and args: [name, array1, array2, ...]
-      call_meta.curr   // the current func call: ['form', array1, array2]
-      call_meta.data   // an object you can use to save and pass around data to other
-                       //   func calls.
-      call_meta.app.run(args_array); // compile args as if it were a sub-call_meta.
-      return "<form> ... </form>";
-    });
-
-    HTML.def_in('form', 'input_text', my_func) // "input_text" only allowed inside a "form".
-    HTML.def_parent('form', my_func)           // A "form" can not be inside another "form".
-    HTML.after_run(some_func);                 // See below: "Events".
-    HTML.run();                                // returns itself.
-    HTML.run().results                         // the results of your applet.
-    HTML.run().error                           // any error.
 
 If there are any errors, they are returned from `.run` as:
 
