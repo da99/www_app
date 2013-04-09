@@ -48,6 +48,16 @@ describe( 'Sanitize attrs:', function () {
     });
   }); // === end desc
 
+  describe( 'tag', function () {
+    it( 'returns value if valid string', function () {
+      assert.equal(E.tag("button"), "button");
+    });
+
+    it( 'returns error if string contains invalid chars', function () {
+      assert.equal(E.tag("my-tag").message, "tag: invalid characters: \"my-tag\"");
+    });
+  }); // === end desc
+
   describe( 'name', function () {
     it( 'returns value if valid string', function () {
       assert.equal(E.name("some_name"), "some_name");
