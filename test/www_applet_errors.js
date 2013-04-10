@@ -59,6 +59,11 @@ describe( 'Errors:', function () {
 
     assert.equal(app.run().message, "box: unknown attributes: \"val\"");
   });
+
+  it( 'returns error if .run has any arguments', function () {
+    var app = Applet.new(['box', []]);
+    assert.equal(app.run([]).message, ".run does not accept any arguments: [[]]");
+  });
 }); // === end desc
 
 
