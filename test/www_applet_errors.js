@@ -53,6 +53,12 @@ describe( 'Errors:', function () {
     assert.equal(app.run().message, msg);
   });
 
+  it( 'returns error if unknown attributers are used', function () {
+    var app = Applet.new(['box', {val: 'something'}, []]);
+    app.def_tag('box', [], function (m, a1, a2) {});
+
+    assert.equal(app.run().message, "box: unknown attributes: \"val\"");
+  });
 }); // === end desc
 
 
