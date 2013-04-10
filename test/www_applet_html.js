@@ -12,7 +12,12 @@ function RUN(source) {
 }
 function HTML(source) { return RUN(source).results.html; }
 function JS(source) { return RUN(source).results.js; }
-
+function ERROR(source) {
+  var results = Applet.new(source).run();
+  if (results.message)
+    return results;
+  throw new Error('Error not found for: ' + JSON.stringify(source));
+}
 
 describe( '.def_tag', function () {
 
@@ -31,7 +36,7 @@ describe( '.run .html', function () {
       'a', {ids: 'my name'}, [ "enter wrong name" ]
     ];
 
-    assert.equal(RUN(html).message, "a: unknown attributes: \"ids\"");
+    assert.equal(ERROR(html).message, "a: unknown attributes: \"ids\"");
   });
 
   it( 'returns error if invalid chars in id', function () {
@@ -39,7 +44,7 @@ describe( '.run .html', function () {
       'a', {id: 'my name'}, [ "enter wrong name" ]
     ];
 
-    assert.equal(RUN(html).message, "id: invalid characters: \"my name\"");
+    assert.equal(ERROR(html).message, "id: invalid characters: \"my name\"");
   });
 
   it( 'returns error if unknown element', function () {
@@ -47,7 +52,7 @@ describe( '.run .html', function () {
       'text_inputy', {}, ["enter name"]
     ];
 
-    assert.equal(RUN(slang).message, "Function not found: text_inputy");
+    assert.equal(ERROR(slang).message, "Function not found: text_inputy");
   });
 
   it( 'creates children on previously defined element', function () {
@@ -57,6 +62,17 @@ describe( '.run .html', function () {
     ]
     ];
     assert.equal(RUN(slang).results.html, '<form action="http://www.text.com/"><button>Hello</button></form>');
+  });
+
+  it( 'uses a copy of the source array', function () {
+    var slang = [
+      'form', {action: 'http://www.text.com/'}, [
+        'button', {}, ['Hello']
+    ]
+    ];
+    var copy = slang.slice();
+    RUN(slang);
+    assert.deepEqual(slang, copy);
   });
 
 }); // === end desc
