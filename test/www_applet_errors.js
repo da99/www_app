@@ -64,6 +64,17 @@ describe( 'Errors:', function () {
     var app = Applet.new(['box', []]);
     assert.equal(app.run([]).message, ".run does not accept any arguments: [[]]");
   });
+
+  it( 'returns error if called more than once before finishing', function () {
+    var err = null;
+    var app = Applet.new(['box', ['some text']]);
+    app.def_tag('box', [], function () {
+      err = app.run();
+      return ['box', {}, ['text']];
+    });
+    app.run();
+    assert.equal(err.message, "run: called when applet already running.");
+  });
 }); // === end desc
 
 
