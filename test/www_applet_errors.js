@@ -42,9 +42,8 @@ describe( 'Errors:', function () {
 
     var app = Applet.new(['box', 100, []]);
     app.def_tag('box', [], function (m, a1, a2) {});
-    app.run();
 
-    assert.equal(app.error.message, "box: invalid argument: 100");
+    assert.equal(app.run().message, "box: invalid argument: 100");
   });
 
 }); // === end desc
