@@ -39,11 +39,18 @@ describe( 'Errors:', function () {
 
 
   it( 'returns error if arguments are numbers instead of array/object', function () {
-
     var app = Applet.new(['box', 100, []]);
     app.def_tag('box', [], function (m, a1, a2) {});
 
     assert.equal(app.run().message, "box: invalid argument: 100");
+  });
+
+  it( 'returns error if tag .on_run func does not return an array', function () {
+    var app = Applet.new(['box', {}, []]);
+    app.def_tag('box', [], function (m, a1, a2) {});
+
+    var msg = "box: function does not return a [tag, args, content] array: function (m, a1, a2) {}";
+    assert.equal(app.run().message, msg);
   });
 
 }); // === end desc
