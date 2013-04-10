@@ -68,15 +68,15 @@ describe( 'tag: button', function () {
     var slang = [
       'button', {}, ['Send']
     ];
-    assert.equal(HTML(slang), '<button>Send</button>');
+    assert.equal(HTML(slang), '<button class="ok_1">Send</button>');
   });
 
-  it( 'allows a on_click events', function (done) {
+  it( 'allows a on_click events', function () {
     var slang = [
       'button', ['Send'],
       'on_click', ['tell', ['It worked.']]
     ];
-    assert.equal(RUN(slang).results.js, [['ok_button_1', 'on_click', ['tell', ['It worked.']]]]);
+    assert.deepEqual(RUN(slang).results.js, [['button.ok_1', 'on_click', null, ['tell', ['It worked.']]]]);
   });
 
 }); // === end desc
