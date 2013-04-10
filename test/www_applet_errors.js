@@ -37,6 +37,21 @@ describe( 'Errors:', function () {
     assert.equal(ERROR(html).message, "Function not found: text_boxs");
   });
 
+  it( 'returns error if more than two array args', function () {
+    var html = [
+      'button', ['my name'], ['my address']
+    ];
+
+    assert.equal(ERROR(html).message, "button: invalid argument: [\"my address\"]");
+  });
+
+  it( 'returns error if more than two object args', function () {
+    var html = [
+      'button', {}, {id: 'id1'}
+    ];
+
+    assert.equal(ERROR(html).message, "button: invalid argument: {\"id\":\"id1\"}");
+  });
 
   it( 'returns error if arguments are numbers instead of array/object', function () {
     var app = Applet.new(['box', 100, []]);

@@ -32,8 +32,8 @@ The Standard: What you need to do to implement it on your fav. prog. lang.
    an error:
 
     [
-       "too_many_args", [], [], [],
-       "too_many_args", {}, {}, []
+       "too_many_arrays", [], [],
+       "too_many_objs",   {}, {}
     ]
 
 
