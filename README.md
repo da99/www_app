@@ -28,6 +28,15 @@ The Standard: What you need to do to implement it on your fav. prog. lang.
        "another_func_with_args", {}, [ 1, 2, 3 ]
     ]
 
+6) Any extra arguments other than a object or array will be considered
+   an error:
+
+    [
+       "too_many_args", [], [], [],
+       "too_many_args", {}, {}, []
+    ]
+
+
 
 Example:
 ---------
