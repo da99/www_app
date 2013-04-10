@@ -96,7 +96,7 @@ implementation of the standard.
 The nodejs/npm implementation:
 ------------------------------
 
-    npm install json_applet (Currently, it's not on the npm yet.)
+    // npm install json_applet 
 
     var Applet = require('json_applet').Applet;
     var source = [
