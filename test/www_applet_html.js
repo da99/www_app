@@ -43,14 +43,6 @@ describe( '.run .html', function () {
     assert.equal(RUN(slang).message, "Function not found: text_inputy");
   });
 
-  it( 'returns an error if content does not pass sanitization function', function () {
-    var slang = [
-      'button', {}, [["my text"]]
-    ];
-
-    assert.equal(RUN(slang).message, "button: Must be a string within an array: [[\"my text\"]]");
-  });
-
   it( 'creates children on previously defined element', function () {
     var slang = [
       'form', {action: 'http://www.text.com/'}, [
