@@ -68,10 +68,10 @@ describe( 'tag: button', function () {
     var slang = [
       'button', {}, ['Send']
     ];
-    assert.equal(HTML(slang), '<button class="ok_1">Send</button>');
+    assert.equal(HTML(slang), '<button>Send</button>');
   });
 
-  it( 'allows a on_click events', function () {
+  it( 'allows on_click events', function () {
     var slang = [
       'button', ['Send'],
       'on_click', ['tell', ['It worked.']]
