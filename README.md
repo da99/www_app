@@ -106,7 +106,8 @@ The nodejs/npm implementation:
 
 If there are any errors, they are returned from `.run` as:
 
-    { error: new Error("the msg") }
+    my_applet.run();
+    // => new Error("the error msg");
 
 
 Events
