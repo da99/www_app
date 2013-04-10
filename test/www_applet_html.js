@@ -5,7 +5,7 @@ var _     = require('underscore')
 , cheerio = require('cheerio');
 ;
 
-function RUN(source) { return WWW.new(source).run(); }
+function RUN(source) { return Applet.new(source).run(); }
 
 describe( '.def_tag', function () {
 
@@ -27,7 +27,7 @@ describe( '.run .html', function () {
     assert.equal(RUN(html).message, "a: unknown attributes: \"ids\"");
   });
 
-  it( 'returns error if invalid chars in name', function () {
+  it( 'returns error if invalid chars in id', function () {
     var html = [
       'a', {id: 'my name'}, [ "enter wrong name" ]
     ];
@@ -64,7 +64,7 @@ describe( '.run .html', function () {
 }); // === end desc
 
 
-describe( '.run .html buttons', function () {
+describe( 'tag: button', function () {
 
   it( 'creates a HTML button tag', function () {
     var slang = [
@@ -87,7 +87,7 @@ describe( '.run .html buttons', function () {
 
 }); // === end desc
 
-describe( '.run .html links: a', function () {
+describe( 'tag: a', function () {
 
   it( 'creates a HTML a tag', function () {
     var html = [
@@ -116,4 +116,5 @@ describe( '.run .html links: a', function () {
   });
 
 }); // === end desc
+
 
