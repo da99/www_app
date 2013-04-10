@@ -5,43 +5,29 @@ var _     = require('underscore')
 , cheerio = require('cheerio');
 ;
 
-var HTML = [
-  'block', function (meta, args) {
-    return "<div>" + err_check(meta.app.run(args)).join("") + "</div>";
-  },
-  'form', function (meta, args, content) {
-    return "<form>" + err_check(meta.app.run(content)).join("") + "</form>";
-  }, {is_parent: true},
-  'text_input', function (meta, args, content) {
-    return '<input>' + content[0] + '</input>';
-  }, {child_of: 'form'}
-];
 
-var anything = function (any) { return any; };
-var Ok      = function (source) { return Applet.new(source, HTML).run(); };
-var ERROR   = function (source) { return Ok(source).error; };
+var APP     = function (source) { return Applet.new(source); };
+
 var RESULTS = function (source) {
-  var results = Ok(source);
-  if (results.error)
-    throw error;
-  return results.results;
-};
-var RUN = function (app) {
-  app.run();
-  if (app.error)
-    throw app.error;
-  return app;
+  return RUN(source).results;
 };
 
-var err_check = function (results) {
-  if (results && results.error)
-    return [results.error.message];
-  return results.results;
+var RUN = function (source) {
+  var results = APP(source).run();
+  if (results.message)
+    throw results;
+  return results;
+};
+
+var ERROR   = function (source) {
+  var results = APP(source).run();
+  if (!results.message)
+    throw new Error("Error expected, but not found: " + JSON.stringify(source));
+  return results;
 };
 
 
-
-describe( '.run', function () {
+describe( 'Errors:', function () {
 
   it( 'returns error if func not defined', function () {
     var html = [
