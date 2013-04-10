@@ -103,7 +103,7 @@ describe( 'tag: a', function () {
     var html = [
       'a', {href:'http://www.test.com/'}, ['My Link']
     ];
-    var r    = to_html(html);
+    var r    = HTML(html);
     var a    = cheerio.load(r)('a');
     assert.equal( a.attr('href') , "http://www.test.com/");
     assert.equal( a.text()       , "My Link" );
@@ -111,18 +111,18 @@ describe( 'tag: a', function () {
 
   it( 'accepts 2 args: link, text', function () {
     var html = ['a', {href: 'http://www.test.com/'}, ['My Link']];
-    assert.equal(to_html(html), '<a href="http://www.test.com/">My Link</a>');
+    assert.equal(HTML(html), '<a href="http://www.test.com/">My Link</a>');
   });
 
   it( 'normalizes href', function () {
     var html = ['a', {href: 'hTTp://www.test.com/'}, ['My Link']];
-    assert.equal(to_html(html), '<a href="http://www.test.com/">My Link</a>');
+    assert.equal(HTML(html), '<a href="http://www.test.com/">My Link</a>');
   });
 
   it( 'returns error if link is invalid', function () {
     var html = ['a', {href: 'http://www.te\x3Cst.com/'}, ['My Link']];
     var err  = null;
-    assert.equal(run(html).error.message, 'href: URI is not strictly valid.: http://www.te<st.com/');
+    assert.equal(ERROR(html).message, 'href: URI is not strictly valid.: http://www.te<st.com/');
   });
 
 }); // === end desc
