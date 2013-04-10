@@ -4,8 +4,15 @@ var _     = require('underscore')
 , Applet  = require('www_applet').Applet
 , cheerio = require('cheerio');
 ;
+function RUN(source) {
+  var results = Applet.new(source).run();
+  if (results.message)
+    throw results;
+  return results;
+}
+function HTML(source) { return RUN(source).results.html; }
+function JS(source) { return RUN(source).results.js; }
 
-function RUN(source) { return Applet.new(source).run(); }
 
 describe( '.def_tag', function () {
 
@@ -52,7 +59,6 @@ describe( '.run .html', function () {
     assert.equal(RUN(slang).results.html, '<form action="http://www.text.com/"><button>Hello</button></form>');
   });
 
-
 }); // === end desc
 
 
@@ -62,20 +68,16 @@ describe( 'tag: button', function () {
     var slang = [
       'button', {}, ['Send']
     ];
-    assert.equal(to_html(slang), '<button>Send</button>');
+    assert.equal(HTML(slang), '<button>Send</button>');
   });
 
-  describe( '{on_click: [...]}', function () {
-
-    it.skip( 'generates JavaScript', function (done) {
-      var slang = [
-        'button', 'my', 'Send',
-        'on_click', ['alert', 'It worked.']
-      ];
-      assert.equal(to_js(slang), 'ok_slang.on_click("my", "alert", "It worked.")');
-    });
-
-  }); // === end desc
+  it( 'allows a on_click events', function (done) {
+    var slang = [
+      'button', ['Send'],
+      'on_click', ['tell', ['It worked.']]
+    ];
+    assert.equal(RUN(slang).results.js, [['ok_button_1', 'on_click', ['tell', ['It worked.']]]]);
+  });
 
 }); // === end desc
 
