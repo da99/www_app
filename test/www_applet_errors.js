@@ -42,7 +42,7 @@ describe( 'Errors:', function () {
       'button', ['my name'], ['my address']
     ];
 
-    assert.equal(ERROR(html).message, "button: invalid argument: [\"my address\"]");
+    assert.equal(ERROR(html).message, "button: extra array argument: [\"my address\"]");
   });
 
   it( 'returns error if more than two object args', function () {
@@ -50,7 +50,7 @@ describe( 'Errors:', function () {
       'button', {}, {id: 'id1'}
     ];
 
-    assert.equal(ERROR(html).message, "button: invalid argument: {\"id\":\"id1\"}");
+    assert.equal(ERROR(html).message, "button: extra attr object argument: {\"id\":\"id1\"}");
   });
 
   it( 'returns error if arguments are numbers instead of array/object', function () {
