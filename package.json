@@ -1,7 +1,7 @@
 {
   "name": "www_applet",
   "version": "0.0.1",
-  "description": "Mini-web apps using JSON.",
+  "description": "Not ready.",
   "main": "lib/www_applet.js",
   "directories": {
     "test": "test"
