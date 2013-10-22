@@ -10,4 +10,5 @@ var program = [
   "Hello", ['var', ['tArGet']]
 ];
 
-Applet.new(program, f).run();
+var temp = Applet.new(program, f);
+temp.run();
