@@ -1,8 +1,13 @@
 
 var f = {
-  hello: function (env) {
-    console.log(env.name + ", World.");
+  hello: function (env, app) {
+    console.log(env.name + ", " + env.args[0] + ".");
   }
 };
 
-Applet.new(["Hello", []], f).run();
+var program = [
+  "var create", ['Target', 'World'],
+  "Hello", ['var', ['tArGet']]
+];
+
+Applet.new(program, f).run();
