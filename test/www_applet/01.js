@@ -24,7 +24,7 @@ temp.run();
 // ================================================================
 
 var program = [
-  "var create", ["hello world", 'function', [
+  "var", ["hello world", 'function', [
     "log", ['Hello', 'Test 2']
   ]],
   "hello world", []
