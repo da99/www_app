@@ -6,11 +6,11 @@
 
 
 var program = [
-  "var create", ['One', 'test 1'],
+  "var", ['One', 'test 1'],
   "Hello", ['var', ['ONE']]
 ];
 
-var temp = Applet.new(program, {
+var temp = WWW_Applet.new(program, {
   hello: function (env, app) {
     console.log(env.name + ", " + env.args[0] + ".");
   }
@@ -30,7 +30,7 @@ var program = [
   "hello world", []
 ];
 
-var temp = Applet.new(program);
+var temp = WWW_Applet.new(program);
 
 temp.run();
 
