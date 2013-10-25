@@ -1,4 +1,8 @@
 
+// TODO:
+// it passes a clone of app to each function.
+// it can local-ize a var to current clone app
+
 
 // ================================================================
 // Test 1
