@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+set -u -e -o pipefail
+
+
+#!/usr/bin/env node
+# -*- js   -*-
+#
+
+mocha --colors -b           \
+  test/sanitize_html.js     \
+  test/sanitize_attrs.js    \
+  test/www_applet_errors.js \
+  test/www_applet_html.js   \
+  test/www_applet_run.js    \
+  "$@"

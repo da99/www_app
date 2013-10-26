@@ -1,0 +1,32 @@
+{
+  "name": "www_applet",
+  "version": "0.0.2",
+  "description": "Not ready.",
+  "main": "lib/www_applet.js",
+  "directories": {
+    "test": "test"
+  },
+  "scripts": {
+    "test": "bin/mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/da99/www_applet.git"
+  },
+  "keywords": [
+    "da99",
+    "okdoki"
+  ],
+  "dependencies": {
+    "underscore": "1.x.x",
+    "unhtml": "x.x.x",
+    "special-html": "x.x.x",
+    "underscore.string": "x.x.x",
+    "entities": "x.x.x",
+    "uri-js": "x.x.x",
+    "cheerio": "x.x.x"
+  },
+  "author": "da99",
+  "license": "MIT",
+  "readmeFilename": "README.md"
+}
