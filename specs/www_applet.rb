@@ -20,3 +20,21 @@ describe "WWW_Applet.new" do
   end
 
 end # === describe WWW_Applet.new ===
+
+
+describe "#extract_first" do
+
+  it "removes first occurance of value" do
+    a = WWW_Applet.new ["a", "b", "a"]
+    a.extract_first "a"
+    a.object.should == ["b", "a"]
+  end
+
+  it "removes first occurance if value is a function call" do
+    a = WWW_Applet.new ["a", [], "b", [], "a", []]
+    a.extract_first "a"
+    a.object.should == ["b", [], "a", []]
+  end
+
+end # === describe #extract_first
+
