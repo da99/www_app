@@ -1,0 +1,32 @@
+PATH
+  remote: .
+  specs:
+    www_applet (0.0.1)
+
+GEM
+  remote: https://rubygems.org/
+  specs:
+    Bacon_Colored (0.1.3)
+      bacon (~> 1.0)
+      colored
+    bacon (1.2.0)
+    coderay (1.1.0)
+    colored (1.2)
+    method_source (0.8.2)
+    pry (0.9.12.6)
+      coderay (~> 1.0)
+      method_source (~> 0.8)
+      slop (~> 3.4)
+    rake (10.3.2)
+    slop (3.5.0)
+
+PLATFORMS
+  ruby
+
+DEPENDENCIES
+  Bacon_Colored (~> 0.1)
+  bacon (~> 1.0)
+  bundler (~> 1.5)
+  pry
+  rake
+  www_applet!
