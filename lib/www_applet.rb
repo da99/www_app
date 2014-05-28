@@ -10,6 +10,10 @@ class WWW_Applet
   end # === class self ===
 
   def initialize o
+    @funcs = {}
+    @done  = false
+    @stack = []
+
     case o
     when String
       @code = o
@@ -24,12 +28,26 @@ class WWW_Applet
     end
   end
 
+  def stack o = nil
+    if o
+      @stack.concat o
+    end
+    @stack
+  end
+
   def object
     @obj
   end
 
   def code
     MultiJson.dump object
+  end
+
+  def functions o = nil
+    if o
+      @funcs.merge! o
+    end
+    @funcs
   end
 
   #
@@ -45,6 +63,41 @@ class WWW_Applet
     end
 
     target
+  end
+
+  def write_function name, l
+    @funcs[name] = l
+  end
+
+  def fork_and_run name, o
+    forked = WWW_Applet.new o
+    forked.functions functions
+    forked.stack     stack
+    forked.run
+    forked
+  end
+
+  def run
+    fail Invalid.new("Already finished running.") if @done
+
+    start = 0
+    fin   = @obj.size
+    curr  = start
+
+    while curr < fin && !@done
+      val = @obj[curr]
+      next_val = @obj[curr + 1]
+      if next_val.is_a?(Array)
+        curr += 1
+        stack.push functions[val].call(self, val, next_val)
+      else
+        stack.push val
+      end
+
+      curr += 1
+    end
+
+    @done = true
   end
 
 end # === class WWW_Applet ===

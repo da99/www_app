@@ -38,3 +38,27 @@ describe "#extract_first" do
 
 end # === describe #extract_first
 
+describe "#run" do
+
+  it "puts non-function calls on the stack" do
+    a = WWW_Applet.new ["a", "b", "c"]
+    a.run
+    a.stack.should == "a b c".split
+  end
+
+  it "calls the proper function" do
+    a = WWW_Applet.new ["split", ["1 2 3"], "plus_1_and_join", []]
+    a.write_function "split", lambda { |obj, name, vals|
+      forked = obj.fork_and_run(name, vals)
+      forked.stack.last.split
+    }
+
+    a.write_function "plus_1_and_join", lambda { |obj, name, vals|
+      obj.stack.last.map { |i| Integer(i) + 1 }.join " "
+    }
+
+    a.run
+    a.stack.last.should == "2 3 4"
+  end
+
+end # === describe
