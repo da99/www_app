@@ -45,7 +45,7 @@ JavaScript/browser:
 Rules:
 -------
 
-1. Strings, numbers, and functions.
+1. Allowed: Strings, numbers, Arrays, and functions.
 2. Function calls: a string, followed by an Array:
 
 ```javascript
