@@ -90,4 +90,13 @@ describe "#run" do
     o.stack.should == [1,2,3,3,3]
   end
 
+  it "raises Invalid if function returns an unknown Ruby Symbol" do
+    o = WWW_Applet.new ["f", []]
+    o.write_function "f", lambda { |o,n,v|
+      :go_forth
+    }
+    lambda { o.run }.should.raise(WWW_Applet::Invalid).
+      message.should.match /Unknown operation: :go_forth/i
+  end
+
 end # === describe
