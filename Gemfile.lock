@@ -1,7 +1,7 @@
 PATH
   remote: .
   specs:
-    www_applet (0.0.1)
+    www_applet (0.1.0)
       multi_json (~> 1.10)
       yajl-ruby (~> 1.2)
 
