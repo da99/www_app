@@ -100,8 +100,11 @@ class WWW_Applet
         case ruby_val
         when :fin
           @done = true
+        when :ignore_return
         when :cont
           fail Invalid.new("Function not found: #{val}")
+        when Symbol
+          fail Invalid.new("Unknown operation: #{ruby_val.inspect}")
         else
           stack.push ruby_val
         end

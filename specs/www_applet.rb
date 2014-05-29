@@ -76,4 +76,18 @@ describe "#run" do
     o.stack.should == [1,2,3,4,5]
   end
 
+  it "runs function in its own fork" do
+    o = WWW_Applet.new [1, 2, "three", ["four", []]]
+    o.write_function "three", lambda { |o,n,v|
+      o.stack.concat [3,3,3]
+      :ignore_return
+    }
+    o.write_function "four", lambda { |o,n,v|
+      o.stack.push 4
+      5
+    }
+    o.run
+    o.stack.should == [1,2,3,3,3]
+  end
+
 end # === describe
