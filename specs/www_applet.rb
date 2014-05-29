@@ -61,4 +61,19 @@ describe "#run" do
     a.stack.last.should == "2 3 4"
   end
 
+  it "stops if the function returns :fin" do
+    o = WWW_Applet.new ["a", 1, 2, "yo_yo", [], "no fun", []]
+    o.write_function "yo_yo", lambda { |o, n, v| :fin }
+    o.run
+    o.stack.should == ["a", 1, 2]
+  end
+
+  it "continues if the function returns :cont" do
+    o = WWW_Applet.new [1, 2, "go_forth", [], 5]
+    o.write_function "go_forth", lambda { |o, n, v| o.stack.push(3); :cont }
+    o.write_function "go_forth", lambda { |o, n, v| 4 }
+    o.run
+    o.stack.should == [1,2,3,4,5]
+  end
+
 end # === describe

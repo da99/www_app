@@ -66,7 +66,9 @@ class WWW_Applet
   end
 
   def write_function name, l
-    @funcs[name] = l
+    @funcs[name] ||= []
+    @funcs[name].push l
+    l
   end
 
   def fork_and_run name, o
@@ -83,13 +85,26 @@ class WWW_Applet
     start = 0
     fin   = @obj.size
     curr  = start
+    this_app = self
 
     while curr < fin && !@done
       val = @obj[curr]
       next_val = @obj[curr + 1]
       if next_val.is_a?(Array)
         curr += 1
-        stack.push functions[val].call(self, val, next_val)
+        ruby_val = nil
+        functions[val].detect { |f|
+          ruby_val = f.call(this_app, val, next_val)
+          ruby_val != :cont
+        }
+        case ruby_val
+        when :fin
+          @done = true
+        when :cont
+          fail Invalid.new("Function not found: #{val}")
+        else
+          stack.push ruby_val
+        end
       else
         stack.push val
       end
