@@ -3,8 +3,9 @@ require "multi_json"
 
 class WWW_Applet
 
-  Invalid   = Class.new(RuntimeError)
-  Not_Found = Class.new(RuntimeError)
+  Invalid            = Class.new(RuntimeError)
+  Value_Not_Found    = Class.new(RuntimeError)
+  Computer_Not_Found = Class.new(RuntimeError)
 
   class << self
   end # === class self ===
@@ -55,7 +56,7 @@ class WWW_Applet
   #
   def extract_first name
     i = @obj.find_index(name)
-    fail(Not_Found.new "value: #{name}") unless i
+    fail(Value_Not_Found.new name.inspect) unless i
     target = @obj.delete_at(i)
 
     if @obj[i].is_a?(Array)
@@ -93,7 +94,11 @@ class WWW_Applet
       if next_val.is_a?(Array)
         curr += 1
         ruby_val = nil
-        functions[val].detect { |f|
+        funcs = functions[val]
+        if !funcs
+          fail Computer_Not_Found.new(val.inspect)
+        end
+        funcs.detect { |f|
           ruby_val = f.call(this_app, val, next_val)
           ruby_val != :cont
         }

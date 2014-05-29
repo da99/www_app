@@ -21,6 +21,40 @@ describe "WWW_Applet.new" do
 
 end # === describe WWW_Applet.new ===
 
+describe "'value ='" do
+
+  it "evaluates value if array" do
+    o = WWW_Applet.new [
+      "my val", "value =", [1,2,3, "go forth", []]
+    ]
+    o.write_function "go forth", lambda { |o,n,v|
+      o.stack.push 4
+    }
+    o.run
+    o.values["my val"].should == [1,2,3,4]
+  end
+
+end # === describe
+
+describe "'computer ='" do
+
+  it "does not evaluate Array" do
+    o = WWW_Applet.new [
+      "my func", "computer =", [1,2,3, "a", []]
+    ]
+    o.run
+    o.values["my func"].first.tokens.should == [1,2,3,"a",[]]
+  end
+
+  it "sets scope to origin scope" do
+    o = WWW_Applet.new [
+      "my func", "computer =", [1,2,3, "a", []]
+    ]
+    o.run
+    o.values["my func"].first.scope.should == o
+  end
+
+end # === describe value as is
 
 describe "#extract_first" do
 
@@ -99,4 +133,16 @@ describe "#run" do
       message.should.match /Unknown operation: :go_forth/i
   end
 
-end # === describe
+  it "raises Value_Not_Found if the name of the value belongs to an outside scope value" do
+    o = WWW_Applet.new [
+      "my val", "value =", ["a"],
+      "my comp", "computer =", [
+        [],[],
+        "upcase", ["value", ["my val"]]
+      ]
+    ]
+  end
+
+end # === describe :run
+
+
