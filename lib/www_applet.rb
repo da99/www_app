@@ -10,10 +10,12 @@ class WWW_Applet
   class << self
   end # === class self ===
 
-  def initialize o
-    @funcs = {}
-    @done  = false
-    @stack = []
+  def initialize o, parent_computer = nil
+    @vals   = {}
+    @done   = false
+    @stack  = []
+    @parent = parent_computer
+    @funcs  = {}
 
     case o
     when String
@@ -27,6 +29,31 @@ class WWW_Applet
     unless @obj.is_a?(Array)
       fail Invalid.new("JS object must be an array.")
     end
+
+    write_function "console print", lambda { |o, n, v|
+      top_computer.console.push v.inspect
+    }
+
+    write_function  "value =", lambda { |o,n,v|
+      name = o.stack.last.strip.upcase
+      fork = o.fork_and_run(n,v)
+      val = fork.stack.last
+      o.values[name] = val
+    }
+  end
+
+  def top_parent_computer
+    p = parent_computer
+    curr = p
+    while curr
+      curr = p.parent_computer
+      p = curr if curr
+    end
+    p
+  end
+
+  def parent_computer
+    @parent
   end
 
   def stack o = nil
@@ -45,10 +72,17 @@ class WWW_Applet
   end
 
   def functions o = nil
-    if o
-      @funcs.merge! o
-    end
+    @funcs.merge!(o) if o
     @funcs
+  end
+
+  def value name
+    values[name.strip.upcase]
+  end
+
+  def values o = nil
+    @vals.merge!(o) if o
+    @vals
   end
 
   #
@@ -73,9 +107,7 @@ class WWW_Applet
   end
 
   def fork_and_run name, o
-    forked = WWW_Applet.new o
-    forked.functions functions
-    forked.stack     stack
+    forked = WWW_Applet.new o, self
     forked.run
     forked
   end
@@ -94,10 +126,14 @@ class WWW_Applet
       if next_val.is_a?(Array)
         curr += 1
         ruby_val = nil
+
         funcs = functions[val]
-        if !funcs
-          fail Computer_Not_Found.new(val.inspect)
+        if !funcs && parent_computer
+          funcs = parent_computer.functions[val]
         end
+
+        fail Computer_Not_Found.new(val.inspect) if !funcs
+
         funcs.detect { |f|
           ruby_val = f.call(this_app, val, next_val)
           ruby_val != :cont

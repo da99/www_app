@@ -25,14 +25,16 @@ describe "'value ='" do
 
   it "evaluates value if array" do
     o = WWW_Applet.new [
-      "my val", "value =", [1,2,3, "go forth", []]
+      "my val", "value =", ["go forth", []]
     ]
-    o.write_function "go forth", lambda { |o,n,v|
-      o.stack.push 4
-    }
+    o.write_function "go forth", lambda { |o,n,v| 4 }
     o.run
-    o.values["my val"].should == [1,2,3,4]
+    o.value("my val").should == 4
   end
+
+  it "saves value with uppercase."
+  it "raise Invalid if more than one value is passed."
+  it "raises Value_Already_Created if value already exists."
 
 end # === describe
 
@@ -55,6 +57,33 @@ describe "'computer ='" do
   end
 
 end # === describe value as is
+
+describe "Computer run:" do
+
+  it "runs a local function first." do
+    o = WWW_Applet.new [
+      "yo", "computer =", [ "console print", ["yo yo"] ],
+      "my func", "computer =", [
+         "yo", "computer =", [ "console print", ["hello"] ],
+         "yo", []
+      ]
+    ]
+    o.run
+    o.console.should == ["hello"].inspect
+  end
+
+  it "runs an a function from parent computer, if not found locally" do
+    o = WWW_Applet.new [
+      "yo", "computer =", [ "console print", ["yo yo: from top"] ],
+      "my func", "computer =", [
+         "yo", []
+      ]
+    ]
+    o.run
+    o.console.should == ["yo yo: from top"].inspect
+  end
+
+end # === describe Computer run:
 
 describe "#extract_first" do
 
@@ -81,9 +110,10 @@ describe "#run" do
   end
 
   it "calls the proper function" do
-    a = WWW_Applet.new ["split", ["1 2 3"], "plus_1_and_join", []]
+    a = WWW_Applet.new ["1 2 3", "split", [], "plus_1_and_join", []]
     a.write_function "split", lambda { |obj, name, vals|
       forked = obj.fork_and_run(name, vals)
+      forked.stack.push obj.stack.last
       forked.stack.last.split
     }
 
