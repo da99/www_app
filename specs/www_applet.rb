@@ -32,8 +32,20 @@ describe "'value ='" do
     o.value("my val").should == 4
   end
 
-  it "saves value with uppercase."
-  it "raise Invalid if more than one value is passed."
+  it "saves value with uppercase." do
+    o = WWW_Applet.new [
+      "my val", "value =", [5]
+    ]
+    o.run
+    o.values["MY VAL"].should == 5
+  end
+
+  it "raise Too_Many_Values if more than one value is passed." do
+    o = WWW_Applet.new [ "my val", "value =", [1,5] ]
+    lambda { o.run }.should.raise(WWW_Applet::Too_Many_Values).
+      message.should.match /value = , \[1,\ ?5\]/i
+  end
+
   it "raises Value_Already_Created if value already exists."
 
 end # === describe

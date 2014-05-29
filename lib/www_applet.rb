@@ -6,6 +6,7 @@ class WWW_Applet
   Invalid            = Class.new(RuntimeError)
   Value_Not_Found    = Class.new(RuntimeError)
   Computer_Not_Found = Class.new(RuntimeError)
+  Too_Many_Values    = Class.new(RuntimeError)
 
   class << self
   end # === class self ===
@@ -31,14 +32,21 @@ class WWW_Applet
     end
 
     write_function "console print", lambda { |o, n, v|
-      top_computer.console.push v.inspect
+      fork = o.fork_and_run(n, v)
+      val = fork.stack.last
+      top_computer.console.push val
+      val
     }
 
     write_function  "value =", lambda { |o,n,v|
       name = o.stack.last.strip.upcase
       fork = o.fork_and_run(n,v)
+      if fork.stack.size > 1
+        raise Too_Many_Values.new("#{n.upcase} , #{fork.stack.inspect}")
+      end
       val = fork.stack.last
       o.values[name] = val
+      val
     }
   end
 
