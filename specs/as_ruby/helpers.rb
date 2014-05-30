@@ -31,6 +31,10 @@ class WWW_Applet_Test
     @test.write_computer "stack should ==", lambda { |o,n,v|
       @applet.stack.should == o.fork_and_run(n,v).stack
     }
+
+    @test.write_computer "should not raise", lambda { |o,n,v|
+      @err.should == nil
+    }
   end
 
   def run

@@ -35,32 +35,6 @@ Dir.glob("specs/as_json/*.json").each { |f|
 }
 
 
-describe "'computer ='" do
-
-  it "does not evaluate Array" do
-    o = WWW_Applet.new [
-      "my func", "computer =", [1,2,3, "a", []]
-    ]
-    o.run
-    o.computers("my func").first.tokens.should == [1,2,3,"a",[]]
-  end
-
-  it "raises Value_Not_Found if the name of the value belongs to an outside scope value" do
-    o = WWW_Applet.new [
-      "my val", "value =", ["a"],
-      "my comp", "computer =", [
-        "console print", ["value", ["my val"]]
-      ],
-      "my comp", []
-    ]
-    lambda {
-      o.run
-    }.should.raise(WWW_Applet::Value_Not_Found).
-    message.should.match /MY VAL/
-  end
-
-end # === describe value as is
-
 describe "Computer run:" do
 
   it "raises Invalid if an Array has no preceding String" do
