@@ -197,6 +197,11 @@ class WWW_Applet
     while curr < fin && !@done
       val = @obj[curr]
       next_val = @obj[curr + 1]
+
+      if val.is_a?(Array)
+        fail Invalid.new("Computer name not specified: #{val.inspect}")
+      end
+
       if next_val.is_a?(Array)
         curr += 1
         ruby_val = nil

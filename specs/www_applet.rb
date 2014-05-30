@@ -85,7 +85,17 @@ end # === describe value as is
 
 describe "Computer run:" do
 
-  it "raises Invalid if Array has no preceding String"
+  it "raises Invalid if an Array has no preceding String" do
+    c = WWW_Applet.new [
+      "my comp", "computer =", [
+        [], [], "console print", [2]
+      ],
+      "my comp", []
+    ]
+    lambda { c.run }.
+      should.raise(WWW_Applet::Invalid).
+      message.should.match /Computer name not specified/
+  end
 
   it "runs a local function first." do
     o = WWW_Applet.new [
