@@ -103,10 +103,11 @@ describe "Computer run:" do
       "my func", "computer =", [
          "yo", "computer =", [ "console print", ["hello"] ],
          "yo", []
-      ]
+      ],
+      "my func", []
     ]
     o.run
-    o.console.should == ["hello"].inspect
+    o.console.should == ["hello".inspect]
   end
 
   it "runs an a function from parent computer, if not found locally" do
