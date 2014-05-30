@@ -69,6 +69,16 @@ describe "'value'" do
     o.stack.should == ["the val", 1,2,1]
   end
 
+  it "is case-insensitive" do
+    o = WWW_Applet.new [
+      "mY val", "value =", [3],
+      4,
+      "value", ["my VAL"]
+    ]
+    o.run
+    o.stack.should == ["mY val", 3,4,3]
+  end
+
 end # === describe "value"
 
 describe "'computer ='" do
