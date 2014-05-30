@@ -44,6 +44,7 @@ class WWW_Applet
     @done   = false
     @stack  = []
     @parent = parent_computer
+    @console = []
     @funcs  = {}
 
     case o
@@ -61,15 +62,32 @@ class WWW_Applet
 
     write_computer "console print", lambda { |o, n, v|
       forked = o.fork_and_run(n, v)
-      val = forked.stack.last
-      top_computer.console.push val
+      val = if forked.stack.size == 1
+              forked.stack.last.inspect
+            else
+              forked.stack.inspect
+            end
+      top_parent_computer.console.push  val
       val
     }
 
-    write_computer  "value =", lambda { |o,n,v|
+    write_computer "value", lambda { |o,n,v|
+      forked = o.fork_and_run(n,v)
+      fail Too_Many_Values.new("#{n.inspect} #{v.inspect}") if forked.stack.size > 1
+
+      raw_name = forked.stack.last
+      fail Value_Not_Found.new(v.inspect) if !raw_name
+
+      name = standard_key(raw_name)
+      fail Value_Not_Found.new(name.inspect) if !values.has_key?(name)
+
+      o.value name
+    }
+
+    write_computer "value =", lambda { |o,n,v|
       name   = o.stack.last
       forked = o.fork_and_run(n,v)
-      fail Too_Many_Values.new("#{name.inspect} #{n.inspect} #{forked.stack.inspect}") if forked.stack.size > 1
+      fail Too_Many_Values.new("#{name.inspect} #{n.inspect} #{v.inspect}") if forked.stack.size > 1
 
       o.write_value(name, forked.stack.last)
     }
@@ -79,6 +97,10 @@ class WWW_Applet
       write_computer name, Computer.new(name, v, o)
       v
     }
+  end
+
+  def standard_key v
+    v.strip.gsub(/\ +/, ' ').upcase
   end
 
   def top_parent_computer
@@ -102,6 +124,10 @@ class WWW_Applet
     @stack
   end
 
+  def console
+    @console
+  end
+
   def object
     @obj
   end
@@ -111,7 +137,7 @@ class WWW_Applet
   end
 
   def value raw_name
-    values[name.strip.upcase]
+    values[raw_name.strip.upcase]
   end
 
   def computers raw_name = :none

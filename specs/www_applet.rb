@@ -67,17 +67,25 @@ describe "'computer ='" do
     o.computers("my func").first.tokens.should == [1,2,3,"a",[]]
   end
 
-  it "sets scope to origin scope" do
+  it "raises Value_Not_Found if the name of the value belongs to an outside scope value" do
     o = WWW_Applet.new [
-      "my func", "computer =", [1,2,3, "a", []]
+      "my val", "value =", ["a"],
+      "my comp", "computer =", [
+        "console print", ["value", ["my val"]]
+      ],
+      "my comp", []
     ]
-    o.run
-    o.values("my func").first.scope.should == o
+    lambda {
+      o.run
+    }.should.raise(WWW_Applet::Value_Not_Found).
+    message.should.match /MY VAL/
   end
 
 end # === describe value as is
 
 describe "Computer run:" do
+
+  it "raises Invalid if Array has no preceding String"
 
   it "runs a local function first." do
     o = WWW_Applet.new [
@@ -180,16 +188,6 @@ describe "#run" do
     }
     lambda { o.run }.should.raise(WWW_Applet::Invalid).
       message.should.match /Unknown operation: :go_forth/i
-  end
-
-  it "raises Value_Not_Found if the name of the value belongs to an outside scope value" do
-    o = WWW_Applet.new [
-      "my val", "value =", ["a"],
-      "my comp", "computer =", [
-        [],[],
-        "upcase", ["value", ["my val"]]
-      ]
-    ]
   end
 
 end # === describe :run
