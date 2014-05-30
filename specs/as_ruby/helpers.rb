@@ -27,6 +27,10 @@ class WWW_Applet_Test
       msg = o.stack.last
       msg.should.match /#{Regexp.escape str_regex}/i
     }
+
+    @test.write_computer "stack should ==", lambda { |o,n,v|
+      @applet.stack.should == o.fork_and_run(n,v).stack
+    }
   end
 
   def run

@@ -1,0 +1,29 @@
+
+[
+
+  {
+    "it" : "places value on the stack",
+    "input" : [
+      "the val", "value =", [1],
+      2,
+      "value", ["the val"]
+    ],
+    "output" : [
+      "stack should ==", ["the val", 1,2,1]
+    ]
+  },
+
+
+  {
+    "it" : "is case-insensitive",
+    "input" : [
+      "mY val", "value =", [3],
+      4,
+      "value", ["my VAL"]
+    ],
+    "output" : [
+      "stack should ==", ["mY val", 3,4,3]
+    ]
+  }
+
+]

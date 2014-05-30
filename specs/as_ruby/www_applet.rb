@@ -34,29 +34,6 @@ Dir.glob("specs/as_json/*.json").each { |f|
   end
 }
 
-describe "'value'" do
-
-  it "places value on the stack" do
-    o = WWW_Applet.new [
-      "the val", "value =", [1],
-      2,
-      "value", ["the val"]
-    ]
-    o.run
-    o.stack.should == ["the val", 1,2,1]
-  end
-
-  it "is case-insensitive" do
-    o = WWW_Applet.new [
-      "mY val", "value =", [3],
-      4,
-      "value", ["my VAL"]
-    ]
-    o.run
-    o.stack.should == ["mY val", 3,4,3]
-  end
-
-end # === describe "value"
 
 describe "'computer ='" do
 
