@@ -46,7 +46,14 @@ describe "'value ='" do
       message.should.match /value = , \[1,\ ?5\]/i
   end
 
-  it "raises Value_Already_Created if value already exists."
+  it "raises Value_Already_Created if value already exists." do
+    o = WWW_Applet.new [
+      "my val", "value =", [1],
+      "mY vAl", "value =", [2]
+    ]
+    lambda { o.run }.should.raise(WWW_Applet::Value_Already_Created).
+      message.should.match /my val/i
+  end
 
 end # === describe
 

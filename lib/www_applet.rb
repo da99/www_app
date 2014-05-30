@@ -3,10 +3,12 @@ require "multi_json"
 
 class WWW_Applet
 
-  Invalid            = Class.new(RuntimeError)
-  Value_Not_Found    = Class.new(RuntimeError)
-  Computer_Not_Found = Class.new(RuntimeError)
-  Too_Many_Values    = Class.new(RuntimeError)
+  Error              = Class.new(RuntimeError)
+  Invalid            = Class.new(Error)
+  Value_Not_Found    = Class.new(Error)
+  Computer_Not_Found = Class.new(Error)
+  Too_Many_Values    = Class.new(Error)
+  Value_Already_Created = Class.new(Error)
 
   class << self
   end # === class self ===
@@ -40,11 +42,11 @@ class WWW_Applet
 
     write_function  "value =", lambda { |o,n,v|
       name = o.stack.last.strip.upcase
-      fork = o.fork_and_run(n,v)
-      if fork.stack.size > 1
-        raise Too_Many_Values.new("#{n.upcase} , #{fork.stack.inspect}")
-      end
-      val = fork.stack.last
+      forked = o.fork_and_run(n,v)
+      fail Too_Many_Values.new("#{name} #{n.upcase} #{forked.stack.inspect}") if forked.stack.size > 1
+      fail Value_Already_Created.new(name) if o.values.has_key?(name)
+
+      val = forked.stack.last
       o.values[name] = val
       val
     }
