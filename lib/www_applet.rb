@@ -9,6 +9,7 @@ class WWW_Applet
   Computer_Not_Found = Class.new(Error)
   Too_Many_Values    = Class.new(Error)
   Value_Already_Created = Class.new(Error)
+  Missing_Value      = Class.new(Error)
 
   class Computer
 
@@ -71,6 +72,13 @@ class WWW_Applet
       val
     }
 
+    write_computer "+", lambda { |o,n,v|
+      forked = o.fork_and_run(n,v)
+      num1 = o.stack.last
+      num2 = forked.stack.last
+      num1 + num2
+    }
+
     write_computer "value", lambda { |o,n,v|
       forked = o.fork_and_run(n,v)
       fail Too_Many_Values.new("#{n.inspect} #{v.inspect}") if forked.stack.size > 1
@@ -87,7 +95,7 @@ class WWW_Applet
     write_computer "value =", lambda { |o,n,v|
       name   = o.stack.last
       forked = o.fork_and_run(n,v)
-      fail Too_Many_Values.new("#{name.inspect} #{n.inspect} #{v.inspect}") if forked.stack.size > 1
+      fail Missing_Value.new("#{name.inspect} #{n.inspect} #{v.inspect}") if forked.stack.empty?
 
       o.write_value(name, forked.stack.last)
     }
@@ -164,6 +172,10 @@ class WWW_Applet
     end
 
     target
+  end
+
+  def read_value raw_name
+    @vals[standard_key(raw_name)]
   end
 
   def write_value raw_name, val

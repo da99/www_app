@@ -21,41 +21,18 @@ describe "WWW_Applet.new" do
 
 end # === describe WWW_Applet.new ===
 
-describe "'value ='" do
-
-  it "evaluates value if array" do
-    o = WWW_Applet.new [
-      "my val", "value =", ["go forth", []]
-    ]
-    o.write_computer "go forth", lambda { |o,n,v| 4 }
-    o.run
-    o.value("my val").should == 4
+Dir.glob("specs/as_json/*.json").each { |f|
+  contents = MultiJson.load(File.read(f))
+  describe "'#{File.basename(f).gsub(/\A\d+-|\.json\Z/, '').gsub('_', ' ')}'" do
+    contents.each { |t|
+      it t["it"] do
+        i = WWW_Applet.new(t["input"])
+        o = WWW_Applet_Test.new(i, t["output"])
+        o.run
+      end
+    }
   end
-
-  it "saves value with uppercase." do
-    o = WWW_Applet.new [
-      "my val", "value =", [5]
-    ]
-    o.run
-    o.value("MY VAL").should == 5
-  end
-
-  it "raise Too_Many_Values if more than one value is passed." do
-    o = WWW_Applet.new [ "my val", "value =", [1,5] ]
-    lambda { o.run }.should.raise(WWW_Applet::Too_Many_Values).
-      message.should.match /.value =. \[1,\ ?5\]/i
-  end
-
-  it "raises Value_Already_Created if value already exists." do
-    o = WWW_Applet.new [
-      "my val", "value =", [1],
-      "mY vAl", "value =", [2]
-    ]
-    lambda { o.run }.should.raise(WWW_Applet::Value_Already_Created).
-      message.should.match /my val/i
-  end
-
-end # === describe "value ="
+}
 
 describe "'value'" do
 
