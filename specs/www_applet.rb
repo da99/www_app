@@ -112,13 +112,14 @@ describe "Computer run:" do
 
   it "runs an a function from parent computer, if not found locally" do
     o = WWW_Applet.new [
-      "yo", "computer =", [ "console print", ["yo yo: from top"] ],
-      "my func", "computer =", [
-         "yo", []
-      ]
+      "top_func", "computer =", [ "console print", ["yo yo: from top"] ],
+      "reg_func", "computer =", [
+         "top_func", []
+      ],
+      "reg_func", []
     ]
     o.run
-    o.console.should == ["yo yo: from top"].inspect
+    o.console.should == ["yo yo: from top".inspect]
   end
 
 end # === describe Computer run:
