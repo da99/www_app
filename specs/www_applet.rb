@@ -55,7 +55,21 @@ describe "'value ='" do
       message.should.match /my val/i
   end
 
-end # === describe
+end # === describe "value ="
+
+describe "'value'" do
+
+  it "places value on the stack" do
+    o = WWW_Applet.new [
+      "the val", "value =", [1],
+      2,
+      "value", ["the val"]
+    ]
+    o.run
+    o.stack.should == ["the val", 1,2,1]
+  end
+
+end # === describe "value"
 
 describe "'computer ='" do
 
