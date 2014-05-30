@@ -43,7 +43,7 @@ class WWW_Applet
     write_function  "value =", lambda { |o,n,v|
       name = o.stack.last.strip.upcase
       forked = o.fork_and_run(n,v)
-      fail Too_Many_Values.new("#{name} #{n.upcase} #{forked.stack.inspect}") if forked.stack.size > 1
+      fail Too_Many_Values.new("#{name.inspect} #{n.upcase.inspect} #{forked.stack.inspect}") if forked.stack.size > 1
       fail Value_Already_Created.new(name) if o.values.has_key?(name)
 
       val = forked.stack.last

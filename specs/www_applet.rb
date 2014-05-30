@@ -43,7 +43,7 @@ describe "'value ='" do
   it "raise Too_Many_Values if more than one value is passed." do
     o = WWW_Applet.new [ "my val", "value =", [1,5] ]
     lambda { o.run }.should.raise(WWW_Applet::Too_Many_Values).
-      message.should.match /value = , \[1,\ ?5\]/i
+      message.should.match /.value =. \[1,\ ?5\]/i
   end
 
   it "raises Value_Already_Created if value already exists." do
