@@ -37,7 +37,7 @@ describe "'value ='" do
       "my val", "value =", [5]
     ]
     o.run
-    o.values("MY VAL").should == 5
+    o.value("MY VAL").should == 5
   end
 
   it "raise Too_Many_Values if more than one value is passed." do
