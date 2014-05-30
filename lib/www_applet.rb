@@ -10,6 +10,32 @@ class WWW_Applet
   Too_Many_Values    = Class.new(Error)
   Value_Already_Created = Class.new(Error)
 
+  class Computer
+
+    attr_reader :name, :tokens, :origin
+
+    def initialize name, tokens, origin
+      @name   = name
+      @tokens = tokens
+      @origin = origin
+    end
+
+    def call calling_scope, name, args
+      # eval the args
+      forked = calling_scope.fork_and_run(name, args)
+
+      # pass them to the computer
+      c = WWW_Applet.new(tokens, origin)
+      c.write_value "THE ARGS", origin.stack
+
+      # run the computer from the origin scope
+      c.run
+
+      c.stack.last
+    end
+
+  end # === class Computer
+
   class << self
   end # === class self ===
 
@@ -33,22 +59,25 @@ class WWW_Applet
       fail Invalid.new("JS object must be an array.")
     end
 
-    write_function "console print", lambda { |o, n, v|
-      fork = o.fork_and_run(n, v)
-      val = fork.stack.last
+    write_computer "console print", lambda { |o, n, v|
+      forked = o.fork_and_run(n, v)
+      val = forked.stack.last
       top_computer.console.push val
       val
     }
 
-    write_function  "value =", lambda { |o,n,v|
-      name = o.stack.last.strip.upcase
+    write_computer  "value =", lambda { |o,n,v|
+      name   = o.stack.last
       forked = o.fork_and_run(n,v)
-      fail Too_Many_Values.new("#{name.inspect} #{n.upcase.inspect} #{forked.stack.inspect}") if forked.stack.size > 1
-      fail Value_Already_Created.new(name) if o.values.has_key?(name)
+      fail Too_Many_Values.new("#{name.inspect} #{n.inspect} #{forked.stack.inspect}") if forked.stack.size > 1
 
-      val = forked.stack.last
-      o.values[name] = val
-      val
+      o.write_value(name, forked.stack.last)
+    }
+
+    write_computer "computer =", lambda { |o,n,v|
+      name = o.stack.last
+      write_computer name, Computer.new(name, v, o)
+      v
     }
   end
 
@@ -81,17 +110,18 @@ class WWW_Applet
     MultiJson.dump object
   end
 
-  def functions o = nil
-    @funcs.merge!(o) if o
-    @funcs
-  end
-
-  def value name
+  def value raw_name
     values[name.strip.upcase]
   end
 
-  def values o = nil
-    @vals.merge!(o) if o
+  def computers raw_name = :none
+    if raw_name != :none
+      return @funcs[raw_name.strip.upcase]
+    end
+    @funcs
+  end
+
+  def values
     @vals
   end
 
@@ -110,7 +140,15 @@ class WWW_Applet
     target
   end
 
-  def write_function name, l
+  def write_value raw_name, val
+    name = raw_name.to_s.upcase
+    fail Value_Already_Created.new(name) if values.has_key?(name)
+    @vals[name] = val
+    val
+  end
+
+  def write_computer raw_name, l
+    name = raw_name.strip.upcase
     @funcs[name] ||= []
     @funcs[name].push l
     l
@@ -137,23 +175,26 @@ class WWW_Applet
         curr += 1
         ruby_val = nil
 
-        funcs = functions[val]
+        func_name = val.to_s.upcase
+
+        funcs = computers(func_name)
         if !funcs && parent_computer
-          funcs = parent_computer.functions[val]
+          funcs = parent_computer.computers(func_name)
         end
 
         fail Computer_Not_Found.new(val.inspect) if !funcs
 
         funcs.detect { |f|
-          ruby_val = f.call(this_app, val, next_val)
+          ruby_val = f.call(this_app, func_name, next_val)
           ruby_val != :cont
         }
+
         case ruby_val
         when :fin
           @done = true
         when :ignore_return
         when :cont
-          fail Invalid.new("Function not found: #{val}")
+          fail Computer_Not_Found.new(val.inspect)
         when Symbol
           fail Invalid.new("Unknown operation: #{ruby_val.inspect}")
         else
