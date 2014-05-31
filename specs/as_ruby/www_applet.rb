@@ -35,47 +35,6 @@ Dir.glob("specs/as_json/*.json").each { |f|
 }
 
 
-describe "Computer run:" do
-
-  it "raises Invalid if an Array has no preceding String" do
-    c = WWW_Applet.new [
-      "my comp", "computer =", [
-        [], [], "console print", [2]
-      ],
-      "my comp", []
-    ]
-    lambda { c.run }.
-      should.raise(WWW_Applet::Invalid).
-      message.should.match /Computer name not specified/
-  end
-
-  it "runs a local function first." do
-    o = WWW_Applet.new [
-      "yo", "computer =", [ "console print", ["yo yo"] ],
-      "my func", "computer =", [
-         "yo", "computer =", [ "console print", ["hello"] ],
-         "yo", []
-      ],
-      "my func", []
-    ]
-    o.run
-    o.console.should == ["hello".inspect]
-  end
-
-  it "runs an a function from parent computer, if not found locally" do
-    o = WWW_Applet.new [
-      "top_func", "computer =", [ "console print", ["yo yo: from top"] ],
-      "reg_func", "computer =", [
-         "top_func", []
-      ],
-      "reg_func", []
-    ]
-    o.run
-    o.console.should == ["yo yo: from top".inspect]
-  end
-
-end # === describe Computer run:
-
 describe "#extract_first" do
 
   it "removes first occurance of value" do

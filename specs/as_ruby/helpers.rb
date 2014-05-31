@@ -35,6 +35,10 @@ class WWW_Applet_Test
     @test.write_computer "should not raise", lambda { |o,n,v|
       @err.should == nil
     }
+
+    @test.write_computer "last console message should ==", lambda { |o,n,v|
+      @applet.console.last.should == o.fork_and_run(n,v).stack.last
+    }
   end
 
   def run

@@ -1,0 +1,47 @@
+
+[
+
+  {
+    "it" : "raises Invalid if an Array has no preceding String",
+    "input" : [
+      "my comp", "computer =", [
+        [], [], "console print", [2]
+      ],
+      "my comp", []
+    ],
+    "output" : [
+      "should raise", ["Invalid"],
+      "message should match", ["Computer name not specified"]
+    ]
+  },
+
+  {
+    "it" : "runs a local function first.",
+    "input" : [
+      "yo", "computer =", [ "console print", ["yo yo"] ],
+      "my func", "computer =", [
+         "yo", "computer =", [ "console print", ["hello"] ],
+         "yo", []
+      ],
+      "my func", []
+    ],
+    "output" : [
+      "last console message should ==", ["\"hello\""]
+    ]
+  },
+
+  {
+    "it" : "runs an a function from parent computer, if not found locally",
+    "input" : [
+      "top_func", "computer =", [ "console print", ["yo yo: from top"] ],
+      "reg_func", "computer =", [
+         "top_func", []
+      ],
+      "reg_func", []
+    ],
+    "output" : [
+      "last console message should ==", ["\"yo yo: from top\""]
+    ]
+  }
+
+]
