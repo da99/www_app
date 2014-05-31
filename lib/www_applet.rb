@@ -7,35 +7,73 @@ class Scope
 
   def initialize parent, name, tokens, args = nil
     @parent = parent
-    @name   = canonize(name || "__unknown__")
+    @name   = standard_key(name || "__unknown__")
     @tokens = tokens
     @stack  = []
     @args   = args || []
 
     @computers = {
-      "COMPUTER =" => "__computer_equals__"
+      "COMPUTER =" => "__computer_equals__",
+      "COPY OUTSIDE STACK" => "__copy_outside_stack__",
+      "ENSURE ARGS" => "__ensure_args__"
     }
   end
 
-  def __computer_equals__ raw_name, tokens
-    name   = canonize(stack.last)
+  def standard_key v
+    v.strip.gsub(/\ +/, ' ').upcase
+  end
+
+  def fork_and_run name, tokens
+    c = Scope.new(parent, name, tokens)
+    c.run
+    c
+  end
+
+  def __ensure_args__ calling_scope, orig_calling_name, args
+    the_args = calling_scope.read_value("THE ARGS")
+    if args.length != the_args.length
+      fail "Args mismatch: #{orig_calling_name.inspect} #{args.inspect} != #{the_args.inspect}"
+    end
+    args.each_with_index { |n, i|
+      calling_scope.write_value n, the_args[i]
+    }
+    :none
+  end
+
+  def __copy_outside_stack__ scope, raw_name, args
+    fail("Stack underflow: #{raw_name} #{args.inspect}") if args.size > scope.stack.size
+    args.each_with_index { |a, i|
+      write_value a, scope.stack[scope.stack.length - args.length - i]
+    }
+    :none
+  end
+
+  def __computer_equals__ scope, raw_name, args
+    name   = standard_key(stack.last)
     parent = self
-    computers[name] = lambda { |raw_name, raw_args|
-      args = Scope.new(parent, parent.name, raw_args).run.stack
+    computers[name] = lambda { |scope, raw_name, args|
       c = Scope.new(parent, raw_name, tokens, args)
       c.run
       puts "COMPUTER run: #{raw_name}"
     }
     puts "COMPUTER created: #{name.inspect}"
+    :none
   end
 
-  def run_computer raw_name, tokens
-    c = computers[canonize(raw_name)]
+  def run_computer calling_scope, raw_calling_name, raw_args
+    c = computers[standard_key(raw_calling_name)]
     fail "Computer not found: #{raw_name}" unless c
+
+    args = if standard_key(raw_calling_name) == standard_key("computer =")
+             raw_args
+           else
+             calling_scope.fork_and_run("arg run for #{raw_calling_name.inspect}", raw_args).stack
+           end
+
     if c.respond_to? :call
-      c.call(raw_name, tokens)
+      c.call(calling_scope, raw_calling_name, args)
     else
-      send c, raw_name, tokens
+      send c, calling_scope, raw_calling_name, args
     end
   end
 
@@ -54,7 +92,7 @@ class Scope
         next_val = tokens[curr + 1]
         if next_val.is_a?(Array) # we want to run a computer
           curr += 1
-          run_computer(val, next_val)
+          run_computer(self, val, next_val)
         else
           stack.push val
         end
@@ -73,13 +111,6 @@ end # === class Scope
 
 tokens = MultiJson.load File.read("./lib/www_applet.json")
 
-def canonize raw
-  raw.strip.upcase
-end
-
-def fork_and_run parent, name, tokens
-  Scope.new parent, name, tokens, stack
-end
 
 scope = Scope.new(nil, "__main__", tokens)
 scope.run
