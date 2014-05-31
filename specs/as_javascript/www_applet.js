@@ -32,13 +32,13 @@ var WWW_Applet_Test = function (input, output) {
   var this_test = this;
 
   this.output.write_computer("value should ==", function (o,n,v) {
-    var name   = last(o.stack());
-    var target = last(o.fork_and_run(n,v).stack());
+    var name   = last(o.stack);
+    var target = last(o.fork_and_run(n,v).stack);
     return assert.equal(this.input.read_value(name), target);
   });
 
   this.output.write_computer("should raise", function (o,n,v) {
-    var target = last(o.fork_and_run(n,v).stack());
+    var target = last(o.fork_and_run(n,v).stack);
     assert.throws(function () {
       if (this_test.err) {
         throw this_test.err;
@@ -51,14 +51,14 @@ var WWW_Applet_Test = function (input, output) {
   });
 
   this.output.write_computer("message should match", function (o,n,v) {
-    var str_regex = last(o.fork_and_run(n,v).stack());
-    var msg = last(this_test.output.stack());
+    var str_regex = last(o.fork_and_run(n,v).stack);
+    var msg = last(this_test.output.stack);
     var regex = new RegExp(str_regex, "i");
     return assert.ok(regex.test(this_test.err));
   });
 
   this.output.write_computer("stack should ==", function (o,n,v) {
-    return assert.equal(applet.stack(), o.fork_and_run(n,v).stack());
+    return assert.equal(applet.stack, o.fork_and_run(n,v).stack);
   });
 
   this.output.write_computer("should not raise", function (o,n,v) {
@@ -66,7 +66,7 @@ var WWW_Applet_Test = function (input, output) {
   });
 
   this.output.write_computer("last console message should ==", function (o,n,v) {
-    return assert.equal(last(applet.console()), last(o.fork_and_run(n,v).stack()));
+    return assert.equal(last(applet.console()), last(o.fork_and_run(n,v).stack));
   });
 
   return this;

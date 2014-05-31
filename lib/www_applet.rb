@@ -3,13 +3,13 @@ require "multi_json"
 
 class WWW_Applet
 
-  Error              = Class.new(RuntimeError)
-  Invalid            = Class.new(Error)
-  Value_Not_Found    = Class.new(Error)
-  Computer_Not_Found = Class.new(Error)
-  Too_Many_Values    = Class.new(Error)
+  Error                 = Class.new(RuntimeError)
+  Invalid               = Class.new(Error)
+  Value_Not_Found       = Class.new(Error)
+  Computer_Not_Found    = Class.new(Error)
+  Too_Many_Values       = Class.new(Error)
   Value_Already_Created = Class.new(Error)
-  Missing_Value      = Class.new(Error)
+  Missing_Value         = Class.new(Error)
 
   class Computer
 
@@ -27,7 +27,7 @@ class WWW_Applet
 
       # pass them to the computer
       c = WWW_Applet.new(tokens, origin)
-      c.write_value "THE ARGS", origin.stack
+      c.write_value "THE ARGS", forked.stack
 
       # run the computer from the origin scope
       c.run
@@ -51,13 +51,13 @@ class WWW_Applet
     case o
     when String
       @code = o
-      @obj  = MultiJson.load(o)
+      @tokens  = MultiJson.load(o)
     else
       @code = MultiJson.dump(o)
-      @obj  = o
+      @tokens  = o
     end
 
-    unless @obj.is_a?(Array)
+    unless @tokens.is_a?(Array)
       fail Invalid.new("JS object must be an array.")
     end
 
@@ -136,12 +136,12 @@ class WWW_Applet
     @console
   end
 
-  def object
-    @obj
+  def tokens
+    @tokens
   end
 
   def code
-    MultiJson.dump object
+    MultiJson.dump tokens
   end
 
   def value raw_name
@@ -163,12 +163,12 @@ class WWW_Applet
   # Note: Case sensitive
   #
   def extract_first name
-    i = @obj.find_index(name)
+    i = @tokens.find_index(name)
     fail(Value_Not_Found.new name.inspect) unless i
-    target = @obj.delete_at(i)
+    target = @tokens.delete_at(i)
 
-    if @obj[i].is_a?(Array)
-      return @obj.delete_at(i)
+    if @tokens[i].is_a?(Array)
+      return @tokens.delete_at(i)
     end
 
     target
@@ -201,14 +201,14 @@ class WWW_Applet
   def run
     fail Invalid.new("Already finished running.") if @done
 
-    start = 0
-    fin   = @obj.size
-    curr  = start
+    start    = 0
+    fin      = @tokens.size
+    curr     = start
     this_app = self
 
     while curr < fin && !@done
-      val = @obj[curr]
-      next_val = @obj[curr + 1]
+      val = @tokens[curr]
+      next_val = @tokens[curr + 1]
 
       if val.is_a?(Array)
         fail Invalid.new("Computer name not specified: #{val.inspect}")
