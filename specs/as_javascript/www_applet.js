@@ -7,6 +7,7 @@
 // ================================================================================
 var assert = require("assert");
 var fs = require("fs");
+var WWW_Applet = require("../../lib/www_applet").WWW_Applet;
 
 var last = function (arr) {
   return arr[arr.length-1];
@@ -83,7 +84,7 @@ WWW_Applet_Test.prototype.run = function () {
 for_each(fs.readdirSync("./specs/as_json"), function (f) {
   var desc = f.replace(/^\d\d\d\d-|.json$/g, "").replace(/_/g, " ");
   var json = JSON.parse(fs.readFileSync("./specs/as_json/" + f).toString());
-  describe(desc, function () {
+  describe('"' + desc + '"', function () {
     for_each(json, function (o) {
       it(o.it, function () {
         var t = new WWW_Applet_Test(o.input, o.output);

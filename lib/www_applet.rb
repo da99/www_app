@@ -179,14 +179,14 @@ class WWW_Applet
   end
 
   def write_value raw_name, val
-    name = raw_name.to_s.upcase
+    name = standard_key(raw_name)
     fail Value_Already_Created.new(name) if values.has_key?(name)
     @vals[name] = val
     val
   end
 
   def write_computer raw_name, l
-    name = raw_name.strip.upcase
+    name = standard_key(raw_name)
     @funcs[name] ||= []
     @funcs[name].push l
     l
