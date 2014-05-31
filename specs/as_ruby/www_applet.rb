@@ -28,13 +28,13 @@ describe "Ruby specific functionality:" do
     it "removes first occurance of value" do
       a = WWW_Applet.new ["a", "b", "a"]
       a.extract_first "a"
-      a.object.should == ["b", "a"]
+      a.tokens.should == ["b", "a"]
     end
 
     it "removes first occurance if value is a function call" do
       a = WWW_Applet.new ["a", [], "b", [], "a", []]
       a.extract_first "a"
-      a.object.should == ["b", [], "a", []]
+      a.tokens.should == ["b", [], "a", []]
     end
 
   end # === describe #extract_first
