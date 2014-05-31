@@ -1,5 +1,92 @@
 
+require "pry"
 require "multi_json"
+
+class Scope
+  attr_reader :parent, :name, :tokens, :stack, :computers
+
+  def initialize parent, name, tokens, args = nil
+    @parent = parent
+    @name   = canonize(name || "__unknown__")
+    @tokens = tokens
+    @stack  = []
+    @args   = args || []
+
+    @computers = {
+      "COMPUTER =" => "__computer_equals__"
+    }
+  end
+
+  def __computer_equals__ raw_name, tokens
+    name   = canonize(stack.last)
+    parent = self
+    computers[name] = lambda { |raw_name, raw_args|
+      args = Scope.new(parent, parent.name, raw_args).run.stack
+      c = Scope.new(parent, raw_name, tokens, args)
+      c.run
+      puts "COMPUTER run: #{raw_name}"
+    }
+    puts "COMPUTER created: #{name.inspect}"
+  end
+
+  def run_computer raw_name, tokens
+    c = computers[canonize(raw_name)]
+    fail "Computer not found: #{raw_name}" unless c
+    if c.respond_to? :call
+      c.call(raw_name, tokens)
+    else
+      send c, raw_name, tokens
+    end
+  end
+
+  def run
+    start = 0
+    stop  = tokens.length
+    curr  = 0
+
+    while curr < stop
+
+      val = tokens[curr]
+
+      if (curr + 1) == stop # we are at the end
+        stack.push val
+      else
+        next_val = tokens[curr + 1]
+        if next_val.is_a?(Array) # we want to run a computer
+          curr += 1
+          run_computer(val, next_val)
+        else
+          stack.push val
+        end
+      end
+
+      curr += 1
+
+    end
+
+    self
+  end
+
+
+end # === class Scope
+
+
+tokens = MultiJson.load File.read("./lib/www_applet.json")
+
+def canonize raw
+  raw.strip.upcase
+end
+
+def fork_and_run parent, name, tokens
+  Scope.new parent, name, tokens, stack
+end
+
+scope = Scope.new(nil, "__main__", tokens)
+scope.run
+
+__END__
+
+
 
 class WWW_Applet
 
@@ -10,6 +97,7 @@ class WWW_Applet
   Too_Many_Values       = Class.new(Error)
   Value_Already_Created = Class.new(Error)
   Missing_Value         = Class.new(Error)
+
 
   class Computer
 
@@ -36,9 +124,6 @@ class WWW_Applet
     end
 
   end # === class Computer
-
-  class << self
-  end # === class self ===
 
   def initialize o, parent_computer = nil
     @vals   = {}
@@ -252,5 +337,6 @@ class WWW_Applet
 
     @done = true
   end
+
 
 end # === class WWW_Applet ===
