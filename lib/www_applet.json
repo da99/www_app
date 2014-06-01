@@ -4,7 +4,7 @@
     "copy outside stack", [ "name" ],
     "ensure args"       , [ "error_name " ],
 
-    "new_computer"      , "computer =", [
+    "value", [ "name" ] , "computer =", [
       "copy outside stack" , [ "name" ],
       "ensure args"        , [ "error type " ],
       "name"               , "public computer =", [ "value", ["name"] ],

@@ -2,7 +2,7 @@
 require "pry"
 require "multi_json"
 
-class Scope
+class WWW_Applet
   attr_reader :parent, :name, :tokens, :stack, :computers
 
   def initialize parent, name, tokens, args = nil
@@ -10,13 +10,17 @@ class Scope
     @name   = standard_key(name || "__unknown__")
     @tokens = tokens
     @stack  = []
+    @vals   = {}
     @args   = args || []
 
     @computers = {
-      "COMPUTER =" => "__computer_equals__",
+      "COMPUTER ="         => "__create_computer__",
       "COPY OUTSIDE STACK" => "__copy_outside_stack__",
-      "ENSURE ARGS" => "__ensure_args__"
+      "ENSURE ARGS"        => "__ensure_args__",
+      "VALUE"              => "__read_value__"
     }
+
+    write_value "THE ARGS", @args
   end
 
   def standard_key v
@@ -24,56 +28,78 @@ class Scope
   end
 
   def fork_and_run name, tokens
-    c = Scope.new(parent, name, tokens)
+    c = WWW_Applet.new(parent, name, tokens)
     c.run
     c
   end
 
+  def __read_value__ sender, to, args
+    val = read_value(args.last)
+    sender.stack.push val
+    val
+  end
+
   def __ensure_args__ calling_scope, orig_calling_name, args
     the_args = calling_scope.read_value("THE ARGS")
+
     if args.length != the_args.length
       fail "Args mismatch: #{orig_calling_name.inspect} #{args.inspect} != #{the_args.inspect}"
     end
+
     args.each_with_index { |n, i|
       calling_scope.write_value n, the_args[i]
     }
     :none
   end
 
-  def __copy_outside_stack__ scope, raw_name, args
-    fail("Stack underflow: #{raw_name} #{args.inspect}") if args.size > scope.stack.size
+  def __copy_outside_stack__ sender, to, args
+    target = sender.parent
+    fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}") if args.size > target.stack.size
     args.each_with_index { |a, i|
-      write_value a, scope.stack[scope.stack.length - args.length - i]
+      write_value a, target.stack[target.stack.length - args.length - i]
     }
     :none
   end
 
-  def __computer_equals__ scope, raw_name, args
+  def __create_computer__ sender, to, tokens
     name   = standard_key(stack.last)
-    parent = self
-    computers[name] = lambda { |scope, raw_name, args|
-      c = Scope.new(parent, raw_name, tokens, args)
+    fail("Computer already created: #{name.inspect}") if computers.has_key?(name)
+    computers[name] = lambda { |sender, to, args|
+      c = WWW_Applet.new(sender, to, tokens, args)
       c.run
-      puts "COMPUTER run: #{raw_name}"
+      puts "COMPUTER run: #{to}"
     }
     puts "COMPUTER created: #{name.inspect}"
     :none
   end
 
-  def run_computer calling_scope, raw_calling_name, raw_args
-    c = computers[standard_key(raw_calling_name)]
-    fail "Computer not found: #{raw_name}" unless c
+  def read_value raw_name
+    name = standard_key(raw_name)
+    fail("Value does not exist: #{name.inspect}") unless @vals.has_key?(name)
+    @vals[name]
+  end
 
-    args = if standard_key(raw_calling_name) == standard_key("computer =")
+  def write_value raw_name, val
+    name = standard_key(raw_name)
+    fail("Value already created: #{name.inspect}") if @vals.has_key?(name)
+    @vals[name] = val
+    val
+  end
+
+  def run_computer sender, to, raw_args
+    c = computers[standard_key(to)]
+    fail("Computer not found: #{to}") unless c
+
+    args = if standard_key(to) == standard_key("computer =")
              raw_args
            else
-             calling_scope.fork_and_run("arg run for #{raw_calling_name.inspect}", raw_args).stack
+             sender.fork_and_run("arg run for #{to.inspect}", raw_args).stack
            end
 
     if c.respond_to? :call
-      c.call(calling_scope, raw_calling_name, args)
+      c.call(sender, to, args)
     else
-      send c, calling_scope, raw_calling_name, args
+      send(c, sender, to, args)
     end
   end
 
@@ -84,23 +110,21 @@ class Scope
 
     while curr < stop
 
-      val = tokens[curr]
+      val              = tokens[curr]
+      next_val         = tokens[curr + 1]
+      is_end           = (curr + 1) == stop
+      send_to_computer = next_val.is_a?(Array)
 
-      if (curr + 1) == stop # we are at the end
+      if is_end || !send_to_computer
         stack.push val
-      else
-        next_val = tokens[curr + 1]
-        if next_val.is_a?(Array) # we want to run a computer
-          curr += 1
-          run_computer(self, val, next_val)
-        else
-          stack.push val
-        end
+      else # We send a message to a computer.
+        curr += 1
+        run_computer(self, val, next_val)
       end
 
       curr += 1
 
-    end
+    end # while
 
     self
   end
@@ -110,10 +134,8 @@ end # === class Scope
 
 
 tokens = MultiJson.load File.read("./lib/www_applet.json")
-
-
-scope = Scope.new(nil, "__main__", tokens)
-scope.run
+app    = WWW_Applet.new(nil, "__main__", tokens)
+app.run
 
 __END__
 
