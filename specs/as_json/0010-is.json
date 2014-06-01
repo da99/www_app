@@ -3,39 +3,42 @@
   { "it" : "evaluates arguments if more than one",
     "input" :
     [
-      "my val", "value =", [1, "+", [3]]
+      "one", "is", [1],
+      "two", "is", [2],
+      "2", "is", ["get", ["two"]],
     ],
-    "output" : ["my val", "value should ==", [4]]
+    "output" : ["my val", "value should ==", [2]]
   },
 
   { "it" : "saves value with uppercase",
     "input" : [
-      "my val", "value =", [5]
+      "my val", "is", [5],
+      "final val", "is", [ "get", ["My Val"] ]
     ],
     "output" : [
-      "MY VAL", "value should ==", [5]
+      "FINAL VAL", "value should ==", [5]
     ]
   },
 
   {
     "it" : "fails with Missing_Value if no value is passed",
     "input" : [
-      "my val", "value =", []
+      "my val", "is", []
     ],
     "output" : [
-      "should raise", ["Missing_Value"],
-      "message should match", [ "\"value =\" []" ]
+      "should raise", ["Missing value:"],
+      "message should match", [ "\"is\" []" ]
     ]
   },
 
   {
     "it" : "fails with Value_Already_Created if value already exists",
     "input" : [
-      "my val", "value =", [1],
-      "mY vAl", "value =", [2]
+      "my val", "is", [1],
+      "mY vAl", "is", [2]
     ],
     "output" : [
-      "should raise", ["Value_Already_Created"],
+      "should raise", ["Value already created:"],
       "message should match", ["my val"]
     ]
   }
