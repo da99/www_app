@@ -3,7 +3,7 @@ require "multi_json"
 
 class WWW_Applet
 
-  attr_reader :parent, :name, :tokens, :stack, :computers
+  attr_reader :parent, :name, :tokens, :stack, :values, :computers
   MULTI_WHITE_SPACE = /\s+/
 
   # ===================================================
@@ -27,7 +27,7 @@ class WWW_Applet
     @stack     = []
     @is_done   = false
     @args      = args || []
-    @vals      = {}
+    @values    = {}
     @computers = {}
 
     extend WWW_Applet::Computers unless @parent
@@ -53,19 +53,6 @@ class WWW_Applet
       p = curr if curr
     end
     p
-  end
-
-  def read_value raw_name
-    name = standard_key(raw_name)
-    fail("Value does not exist: #{name.inspect}") unless @vals.has_key?(name)
-    @vals[name]
-  end
-
-  def write_value raw_name, val
-    name = standard_key(raw_name)
-    fail("Value already created: #{name.inspect}") if @vals.has_key?(name)
-    @vals[name] = val
-    val
   end
 
   def run
@@ -212,37 +199,30 @@ class WWW_Applet
       values.has_key?(standard_key(raw_name))
     end
 
-    def read_value sender, to, args
-      val = read_value(args.last)
-      sender.stack.push val
-      val
-    end
-
-    def require_value raw_name
-      name = standard_key(raw_name)
-      fail("Value Not Found: #{name.inspect}") if !values.has_key?(name)
-      values[name]
-    end
-
-    def value sender, to, args
-      forked = sender.fork_and_run(to, args)
-
-      raw_name = forked.stack.last
-      fail("Value Not Found: #{to.inspect} #{args.inspect}") unless raw_name
-
-      require_value(raw_name)
+    def value *raw
+      if raw.size == 1 # runs as native method
+        @values[standard_key raw.last]
+      else
+        sender, to, args = raw
+        name = standard_key args.last
+        fail("Value not found: #{name.inspect}") sender.values.has_key?(name)
+        sender.values[name]
+      end
     end
 
     def is *raw_args
       if raw_args.length == 2 # run as native function
-        raw_name, args = raw_args
-        values[standard_key raw_name] = args
+        raw_name, val = raw_args
+        name = standard_key raw_name
+        fail("Value already created: #{name.inspect}") if @values.has_key?(name)
+        @values[name] = val
 
       else
         sender, to, args = raw_args
         name   = standard_key sender.stack.last
         fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
 
+        fail("Value already created: #{name.inspect}") if sender.values.has_key?(name)
         sender.values[name] = args.last
       end
 
