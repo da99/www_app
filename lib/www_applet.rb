@@ -1,30 +1,42 @@
 
-require "pry"
 require "multi_json"
 
 class WWW_Applet
+
   attr_reader :parent, :name, :tokens, :stack, :computers
+  MULTI_WHITE_SPACE = /\s+/
+
+  # ===================================================
+  class << self
+  # ===================================================
+
+    def standard_key v
+      v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
+    end
+
+  end # === class
+
+  # ===================================================
+  # Instance methods:
+  # ===================================================
 
   def initialize parent, name, tokens, args = nil
-    @parent = parent
-    @name   = standard_key(name || "__unknown__")
-    @tokens = tokens
-    @stack  = []
-    @vals   = {}
-    @args   = args || []
+    @parent    = parent
+    @name      = standard_key(name || "__unknown__")
+    @tokens    = tokens
+    @stack     = []
+    @is_done   = false
+    @args      = args || []
+    @vals      = {}
+    @computers = {}
 
-    @computers = {
-      "COMPUTER ="         => "__create_computer__",
-      "COPY OUTSIDE STACK" => "__copy_outside_stack__",
-      "ENSURE ARGS"        => "__ensure_args__",
-      "VALUE"              => "__read_value__"
-    }
+    extend WWW_Applet::Computers unless @parent
 
-    write_value "THE ARGS", @args
+    is "THE ARGS", @args
   end
 
-  def standard_key v
-    v.strip.gsub(/\ +/, ' ').upcase
+  def standard_key *args
+    self.class.standard_key(*args)
   end
 
   def fork_and_run name, tokens
@@ -33,44 +45,14 @@ class WWW_Applet
     c
   end
 
-  def __read_value__ sender, to, args
-    val = read_value(args.last)
-    sender.stack.push val
-    val
-  end
-
-  def __ensure_args__ calling_scope, orig_calling_name, args
-    the_args = calling_scope.read_value("THE ARGS")
-
-    if args.length != the_args.length
-      fail "Args mismatch: #{orig_calling_name.inspect} #{args.inspect} != #{the_args.inspect}"
+  def top
+    p = parent_computer
+    curr = p
+    while curr
+      curr = p.parent
+      p = curr if curr
     end
-
-    args.each_with_index { |n, i|
-      calling_scope.write_value n, the_args[i]
-    }
-    :none
-  end
-
-  def __copy_outside_stack__ sender, to, args
-    target = sender.parent
-    fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}") if args.size > target.stack.size
-    args.each_with_index { |a, i|
-      write_value a, target.stack[target.stack.length - args.length - i]
-    }
-    :none
-  end
-
-  def __create_computer__ sender, to, tokens
-    name   = standard_key(stack.last)
-    fail("Computer already created: #{name.inspect}") if computers.has_key?(name)
-    computers[name] = lambda { |sender, to, args|
-      c = WWW_Applet.new(sender, to, tokens, args)
-      c.run
-      puts "COMPUTER run: #{to}"
-    }
-    puts "COMPUTER created: #{name.inspect}"
-    :none
+    p
   end
 
   def read_value raw_name
@@ -86,120 +68,136 @@ class WWW_Applet
     val
   end
 
-  def run_computer sender, to, raw_args
-    c = computers[standard_key(to)]
-    fail("Computer not found: #{to}") unless c
-
-    args = if standard_key(to) == standard_key("computer =")
-             raw_args
-           else
-             sender.fork_and_run("arg run for #{to.inspect}", raw_args).stack
-           end
-
-    if c.respond_to? :call
-      c.call(sender, to, args)
-    else
-      send(c, sender, to, args)
-    end
-  end
-
   def run
+    fail("Invalid state: Already finished running.") if @is_done
     start = 0
     stop  = tokens.length
     curr  = 0
 
-    while curr < stop
+    while curr < stop && !@is_done
 
       val              = tokens[curr]
+      fail("Invalid syntax: Computer name not specified: #{val.inspect}") if val.is_a?(Array)
       next_val         = tokens[curr + 1]
       is_end           = (curr + 1) == stop
-      send_to_computer = next_val.is_a?(Array)
-
-      if is_end || !send_to_computer
-        stack.push val
-      else # We send a message to a computer.
-        curr += 1
-        run_computer(self, val, next_val)
-      end
+      should_send      = next_val.is_a?(Array)
 
       curr += 1
 
+      if is_end || !should_send
+        stack.push val
+        next
+      end
+
+      # ===================================================
+      # SEND TO COMPUTER
+      # ===================================================
+      curr               += 1 # === move past the token array
+      from                = self
+      to                  = standard_key val
+      raw_args            = next_val
+      should_compile_args = (to != standard_key("computer ="))
+
+      args = if should_compile_args
+               from.fork_and_run("arg run for #{to.inspect}", raw_args).stack
+             else
+               raw_args
+             end
+
+      # === Find the computer. ============================
+      # === Send to computer. =============================
+      # === Re-send to next computer if requested. ========
+      # === Process final result. =========================
+      box   = self
+      found = nil
+      while box && !found # == computer as box with array of computers
+
+        found = computers[to].detect { |c|
+
+          resp = if c.respond_to? :call
+                   c.call(from, to, args)
+                 else
+                   send(c, from, to, args)
+                 end
+
+
+          if !resp.respond_to?(:call) # === not a native function
+            stack.push resp
+            true
+
+          else # === run native function to see what to do next.
+
+            resp = resp.call
+            case resp
+
+            when :exit_applet
+              @is_done = true
+              true
+
+            when :ignore_return # don't put anything on the stack
+              false
+
+            when :cont
+              false
+
+            else
+              fail("Invalid: Unknown operation: #{resp.to_s.inspect}")
+              false
+
+            end # case
+
+          end # if
+
+        } # === detect in Array of computers
+
+        box = box.parent
+
+      end # while box && !found
+
+      fail("Computer not found: #{val.inspect}") unless found
+
+      # ===================================================
+      # END OF SEND TO COMPUTER
+      # ===================================================
+
     end # while
 
+    # === Mark it done
+    @is_done = true
+
+    # === The end
     self
-  end
+  end # === def run
 
+  # ============================================================================================
+  # Module: Computers:
+  # The base computers all other top parent computers have.
+  # ============================================================================================
+  module Computers
 
-end # === class Scope
+    def require_args calling_scope, orig_calling_name, args
+      the_args = calling_scope.read_value("THE ARGS")
 
+      if args.length != the_args.length
+        fail "Args mismatch: #{orig_calling_name.inspect} #{args.inspect} != #{the_args.inspect}"
+      end
 
-tokens = MultiJson.load File.read("./lib/www_applet.json")
-app    = WWW_Applet.new(nil, "__main__", tokens)
-app.run
-
-__END__
-
-
-
-class WWW_Applet
-
-  Error                 = Class.new(RuntimeError)
-  Invalid               = Class.new(Error)
-  Value_Not_Found       = Class.new(Error)
-  Computer_Not_Found    = Class.new(Error)
-  Too_Many_Values       = Class.new(Error)
-  Value_Already_Created = Class.new(Error)
-  Missing_Value         = Class.new(Error)
-
-
-  class Computer
-
-    attr_reader :name, :tokens, :origin
-
-    def initialize name, tokens, origin
-      @name   = name
-      @tokens = tokens
-      @origin = origin
+      args.each_with_index { |n, i|
+        calling_scope.write_value n, the_args[i]
+      }
+      :none
     end
 
-    def call calling_scope, name, args
-      # eval the args
-      forked = calling_scope.fork_and_run(name, args)
-
-      # pass them to the computer
-      c = WWW_Applet.new(tokens, origin)
-      c.write_value "THE ARGS", forked.stack
-
-      # run the computer from the origin scope
-      c.run
-
-      c.stack.last
+    def copy_outside_stack sender, to, args
+      target = sender.parent
+      fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}") if args.size > target.stack.size
+      args.each_with_index { |a, i|
+        write_value a, target.stack[target.stack.length - args.length - i]
+      }
+      :none
     end
 
-  end # === class Computer
-
-  def initialize o, parent_computer = nil
-    @vals   = {}
-    @done   = false
-    @stack  = []
-    @parent = parent_computer
-    @console = []
-    @funcs  = {}
-
-    case o
-    when String
-      @code = o
-      @tokens  = MultiJson.load(o)
-    else
-      @code = MultiJson.dump(o)
-      @tokens  = o
-    end
-
-    unless @tokens.is_a?(Array)
-      fail Invalid.new("JS object must be an array.")
-    end
-
-    write_computer "console print", lambda { |o, n, v|
+    def print o, n, v
       forked = o.fork_and_run(n, v)
       val = if forked.stack.size == 1
               forked.stack.last.inspect
@@ -208,188 +206,73 @@ class WWW_Applet
             end
       top_parent_computer.console.push  val
       val
-    }
+    end
 
-    write_computer "+", lambda { |o,n,v|
-      forked = o.fork_and_run(n,v)
-      num1 = o.stack.last
-      num2 = forked.stack.last
-      num1 + num2
-    }
+    def has_value? raw_name
+      values.has_key?(standard_key(raw_name))
+    end
 
-    write_computer "value", lambda { |o,n,v|
-      forked = o.fork_and_run(n,v)
-      fail Too_Many_Values.new("#{n.inspect} #{v.inspect}") if forked.stack.size > 1
+    def read_value sender, to, args
+      val = read_value(args.last)
+      sender.stack.push val
+      val
+    end
+
+    def require_value raw_name
+      name = standard_key(raw_name)
+      fail("Value Not Found: #{name.inspect}") if !values.has_key?(name)
+      values[name]
+    end
+
+    def value sender, to, args
+      forked = sender.fork_and_run(to, args)
 
       raw_name = forked.stack.last
-      fail Value_Not_Found.new(v.inspect) if !raw_name
+      fail("Value Not Found: #{to.inspect} #{args.inspect}") unless raw_name
 
-      name = standard_key(raw_name)
-      fail Value_Not_Found.new(name.inspect) if !values.has_key?(name)
-
-      o.value name
-    }
-
-    write_computer "value =", lambda { |o,n,v|
-      name   = o.stack.last
-      forked = o.fork_and_run(n,v)
-      fail Missing_Value.new("#{name.inspect} #{n.inspect} #{v.inspect}") if forked.stack.empty?
-
-      o.write_value(name, forked.stack.last)
-    }
-
-    write_computer "computer =", lambda { |o,n,v|
-      name = o.stack.last
-      write_computer name, Computer.new(name, v, o)
-      v
-    }
-  end
-
-  def standard_key v
-    v.strip.gsub(/\ +/, ' ').upcase
-  end
-
-  def top_parent_computer
-    p = parent_computer
-    curr = p
-    while curr
-      curr = p.parent_computer
-      p = curr if curr
-    end
-    p
-  end
-
-  def parent_computer
-    @parent
-  end
-
-  def stack o = nil
-    if o
-      @stack.concat o
-    end
-    @stack
-  end
-
-  def console
-    @console
-  end
-
-  def tokens
-    @tokens
-  end
-
-  def code
-    MultiJson.dump tokens
-  end
-
-  def value raw_name
-    values[raw_name.strip.upcase]
-  end
-
-  def computers raw_name = :none
-    if raw_name != :none
-      return @funcs[raw_name.strip.upcase]
-    end
-    @funcs
-  end
-
-  def values
-    @vals
-  end
-
-  #
-  # Note: Case sensitive
-  #
-  def extract_first name
-    i = @tokens.find_index(name)
-    fail(Value_Not_Found.new name.inspect) unless i
-    target = @tokens.delete_at(i)
-
-    if @tokens[i].is_a?(Array)
-      return @tokens.delete_at(i)
+      require_value(raw_name)
     end
 
-    target
-  end
+    def is *raw_args
+      if raw_args.length == 2 # run as native function
+        raw_name, args = raw_args
+        values[standard_key raw_name] = args
 
-  def read_value raw_name
-    @vals[standard_key(raw_name)]
-  end
-
-  def write_value raw_name, val
-    name = standard_key(raw_name)
-    fail Value_Already_Created.new(name) if values.has_key?(name)
-    @vals[name] = val
-    val
-  end
-
-  def write_computer raw_name, l
-    name = standard_key(raw_name)
-    @funcs[name] ||= []
-    @funcs[name].push l
-    l
-  end
-
-  def fork_and_run name, o
-    forked = WWW_Applet.new o, self
-    forked.run
-    forked
-  end
-
-  def run
-    fail Invalid.new("Already finished running.") if @done
-
-    start    = 0
-    fin      = @tokens.size
-    curr     = start
-    this_app = self
-
-    while curr < fin && !@done
-      val = @tokens[curr]
-      next_val = @tokens[curr + 1]
-
-      if val.is_a?(Array)
-        fail Invalid.new("Computer name not specified: #{val.inspect}")
-      end
-
-      if next_val.is_a?(Array)
-        curr += 1
-        ruby_val = nil
-
-        func_name = val.to_s.upcase
-
-        funcs = computers(func_name)
-        if !funcs && parent_computer
-          funcs = parent_computer.computers(func_name)
-        end
-
-        fail Computer_Not_Found.new(val.inspect) if !funcs
-
-        funcs.detect { |f|
-          ruby_val = f.call(this_app, func_name, next_val)
-          ruby_val != :cont
-        }
-
-        case ruby_val
-        when :fin
-          @done = true
-        when :ignore_return
-        when :cont
-          fail Computer_Not_Found.new(val.inspect)
-        when Symbol
-          fail Invalid.new("Unknown operation: #{ruby_val.inspect}")
-        else
-          stack.push ruby_val
-        end
       else
-        stack.push val
+        sender, to, args = raw_args
+        name   = standard_key sender.stack.last
+        fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
+
+        sender.values[name] = args.last
       end
 
-      curr += 1
+      name
     end
 
-    @done = true
-  end
+    def is_a_computer sender, to, tokens
+      name   = standard_key(stack.last)
+      fail("Computer already created: #{name.inspect}") if computers.has_key?(name)
+      computers[name] = lambda { |sender, to, args|
+        c = WWW_Applet.new(sender, to, tokens, args)
+        c.run
+        puts "COMPUTER run: #{to}"
+      }
+      puts "COMPUTER created: #{name.inspect}"
+      :none
+    end
+
+  end # === module Computers
 
 
-end # === class WWW_Applet ===
+end # === class WWW_Applet ================================================================
+
+
+tokens = MultiJson.load File.read("./lib/www_applet.json")
+app    = WWW_Applet.new(nil, "__main__", tokens)
+app.run
+
+
+
+
+
+
