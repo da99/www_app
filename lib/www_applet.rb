@@ -14,7 +14,7 @@ class WWW_Applet
       v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
     end
 
-  end # === class
+  end # === class =====================================
 
   # ===================================================
   # Instance methods:
@@ -130,11 +130,11 @@ class WWW_Applet
                  end
 
 
-          if !resp.respond_to?(:call) # === not a native function
+          if !resp.respond_to?(:call) # === push value to stack
             stack.push resp
             true
 
-          else # === run native function to see what to do next.
+          else # === run native lambda to see what to do next.
 
             resp = resp.call
             case resp
@@ -169,12 +169,9 @@ class WWW_Applet
       # END OF SEND TO COMPUTER
       # ===================================================
 
-    end # while
+    end # while ===========================================
 
-    # === Mark it done
     @is_done = true
-
-    # === The end
     self
   end # === def run
 
@@ -187,15 +184,15 @@ class WWW_Applet
   # ============================================================================================
   module Computers
 
-    def require_args calling_scope, orig_calling_name, args
-      the_args = calling_scope.read_value("THE ARGS")
+    def require_args sender, to, args
+      the_args = sender.get("THE ARGS")
 
       if args.length != the_args.length
-        fail "Args mismatch: #{orig_calling_name.inspect} #{args.inspect} != #{the_args.inspect}"
+        fail "Args mismatch: #{to.inspect} #{args.inspect} != #{the_args.inspect}"
       end
 
       args.each_with_index { |n, i|
-        calling_scope.write_value n, the_args[i]
+        sender.is n, the_args[i]
       }
       :none
     end
@@ -209,14 +206,13 @@ class WWW_Applet
       :none
     end
 
-    def print o, n, v
-      forked = o.fork_and_run(n, v)
-      val = if forked.stack.size == 1
-              forked.stack.last.inspect
+    def print sender, to, args
+      val = if args.size == 1
+              args.last.inspect
             else
-              forked.stack.inspect
+              args.inspect
             end
-      top_parent_computer.console.push  val
+      top.console.push val
       val
     end
 
@@ -255,15 +251,16 @@ class WWW_Applet
     end
 
     def is_a_computer sender, to, tokens
-      name   = standard_key(stack.last)
-      fail("Computer already created: #{name.inspect}") if computers.has_key?(name)
-      computers[name] = lambda { |sender, to, args|
+      name = standard_key(sender.stack.last)
+      sender.computers[name] ||= []
+      sender.computers[name].push lambda { |sender, to, args|
         c = WWW_Applet.new(sender, to, tokens, args)
         c.run
         puts "COMPUTER run: #{to}"
       }
       puts "COMPUTER created: #{name.inspect}"
-      :none
+
+      lambda { :ignore_return }
     end
 
   # ============================================================================================
