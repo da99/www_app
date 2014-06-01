@@ -20,7 +20,22 @@ class WWW_Applet
   # Instance methods:
   # ===================================================
 
-  def initialize parent, name, tokens, args = nil
+  #
+  # Possible:
+  #
+  #   new            "__main__", [...tokens...]
+  #   new   applet , "my func" , [...tokens...]
+  #   new   applet , "my func" , [...tokens...], [..args..]
+  #
+  def initialize *raw
+    if raw.size == 2
+      parent = nil
+      name, tokens = raw
+      args = nil
+    else
+      parent, name, tokens, args = raw
+    end
+
     @parent    = parent
     @name      = standard_key(name || "__unknown__")
     @tokens    = tokens
@@ -30,7 +45,12 @@ class WWW_Applet
     @values    = {}
     @computers = {}
 
-    extend WWW_Applet::Computers unless @parent
+    if !@parent
+      extend Computers
+      Computers.public_instance_methods.each { |n|
+        @computers[standard_key(n.to_s)] = [n]
+      }
+    end
 
     is "THE ARGS", @args
   end
@@ -101,9 +121,11 @@ class WWW_Applet
 
         found = computers[to].detect { |c|
 
-          resp = if c.respond_to? :call
+          resp = case
+                 when c.respond_to?(:call) # it's a proc/lambda
                    c.call(from, to, args)
-                 else
+
+                 else                      # it's a String or Symbol
                    send(c, from, to, args)
                  end
 
@@ -156,9 +178,12 @@ class WWW_Applet
     self
   end # === def run
 
+
+  # ============================================================================================
   # ============================================================================================
   # Module: Computers:
   # The base computers all other top parent computers have.
+  # ============================================================================================
   # ============================================================================================
   module Computers
 
@@ -241,15 +266,13 @@ class WWW_Applet
       :none
     end
 
+  # ============================================================================================
   end # === module Computers
+  # ============================================================================================
+  # ============================================================================================
 
 
 end # === class WWW_Applet ================================================================
-
-
-tokens = MultiJson.load File.read("./lib/www_applet.json")
-app    = WWW_Applet.new(nil, "__main__", tokens)
-app.run
 
 
 
