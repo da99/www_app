@@ -36,7 +36,7 @@
   {
     "it" : "raises Invalid if an Array has no preceding String",
     "input" : [
-      "my comp", "computer =", [
+      "my comp", "is a computer", [
         [], [], "console print", [2]
       ],
       "my comp", []

@@ -3,7 +3,7 @@ require "multi_json"
 
 class WWW_Applet
 
-  attr_reader :parent, :name, :tokens, :stack, :values, :computers
+  attr_reader :parent, :name, :tokens, :stack, :values, :computers, :console
   MULTI_WHITE_SPACE = /\s+/
   VALID_STACK_PUSHABLES = [String, Fixnum, Float]
 
@@ -51,6 +51,7 @@ class WWW_Applet
 
     fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
 
+    @console    = []
     @parent     = parent
     @name       = standard_key(name || "__unknown__")
     @tokens     = tokens
@@ -165,7 +166,6 @@ class WWW_Applet
                    computers_box.send(c, from, to, args)
                  end
 
-
           if !resp.respond_to?(:call) # === push value to stack
             stack.push resp
             true
@@ -180,7 +180,7 @@ class WWW_Applet
               true
 
             when :ignore_return # don't put anything on the stack
-              false
+              true
 
             when :cont
               false
