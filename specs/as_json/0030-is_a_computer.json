@@ -6,7 +6,7 @@
     [
       "one", "is a computer", []
     ],
-    "output" : ["stack should ==", [{"is": ["COMPUTER"], "value": "ONE"}]]
+    "output" : ["stack should ==", [{"IS": ["COMPUTER"], "VALUE": "ONE"}]]
   },
 
   {

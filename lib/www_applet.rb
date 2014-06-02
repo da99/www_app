@@ -5,7 +5,9 @@ class WWW_Applet
 
   attr_reader :parent, :name, :tokens, :stack, :values, :computers, :console
   MULTI_WHITE_SPACE = /\s+/
-  VALID_STACK_PUSHABLES = [String, Fixnum, Float]
+  VALID_NON_OBJECTS = [String, Fixnum, Float, TrueClass, FalseClass, NilClass]
+  STOP_APPLET       = {"IS"=> ["APPLET COMMAND"], "VALUE"=>"STOP APPLET" }
+  IGNORE_RETURN     = {"IS"=>"APPLET COMMAND", "VALUE"=>"IGNORE RETURN"}
 
   # ===================================================
   class << self
@@ -78,6 +80,19 @@ class WWW_Applet
     self.class.standard_key(*args)
   end
 
+  def applet_command? val
+    object?(val) && val["IS"].include?("APPLET COMMAND")
+  end
+
+  def object? val
+    val.is_a?(Hash) && val["IS"].is_a?(Array)
+  end
+
+  def pushable_to_stack? val
+    !applet_command?(val) && 
+      ( VALID_NON_OBJECTS.include?(val.class) || object?(val) )
+  end
+
   def is_fork? answer = :none
     if answer != :none
       @is_fork = answer
@@ -100,11 +115,6 @@ class WWW_Applet
       p = curr if curr
     end
     p || self
-  end
-
-  def pushable_to_stack? val
-    VALID_STACK_PUSHABLES.include?(val.class) ||
-      (val.is_a?(Hash) && val["is"].is_a?(Array))
   end
 
   def run
@@ -166,32 +176,30 @@ class WWW_Applet
           resp = case
                  when c.respond_to?(:call) # it's a proc/lambda
                    c.call(from, to, args)
-
                  else                      # it's a String or Symbol
                    computers_box.send(c, from, to, args)
                  end
 
-          if !resp.respond_to?(:call) # === push value to stack
+          if pushable_to_stack?(resp) # === push value to stack
             stack.push resp
             true
 
-          else # === run native lambda to see what to do next.
+          else # === run applet command
 
-            resp = resp.call
-            case resp
+            case resp["VALUE"]
 
-            when :stop_applet
+            when "STOP APPLET"
               @is_done = true
               true
 
-            when :ignore_return # don't put anything on the stack
+            when "IGNORE RETURN" # don't put anything on the stack
               true
 
-            when :cont
+            when "CONTINUE"
               false
 
             else
-              fail("Invalid: Unknown operation: #{resp.to_s.inspect}")
+              fail("Invalid: Unknown operation: #{resp["VALUE"].to_s.inspect}")
               false
 
             end # case
@@ -234,7 +242,7 @@ class WWW_Applet
         sender.is n, the_args[i]
       }
 
-      lambda { :ignore_return }
+      IGNORE_RETURN
     end
 
     def copy_outside_stack sender, to, args
@@ -244,7 +252,7 @@ class WWW_Applet
         write_value a, target.stack[target.stack.length - args.length - i]
       }
 
-      lambda { :ignore_return }
+      IGNORE_RETURN
     end
 
     def print sender, to, args
@@ -254,8 +262,8 @@ class WWW_Applet
               args.inspect
             end
       top.console.push val
-      val
-      lambda { :ignore_return }
+
+      IGNORE_RETURN
     end
 
     def has_value? raw_name
@@ -308,13 +316,14 @@ class WWW_Applet
       sender.computers[name].push lambda { |sender, to, args|
         c = WWW_Applet.new(sender, to, tokens, args)
         c.run
+        c.stack.last
       }
 
-      {"is"=> ["COMPUTER"], "value"=> name}
+      {"IS"=> ["COMPUTER"], "VALUE"=> name}
     end
 
     def stop_applet sender, to, tokens
-      lambda { :stop_applet }
+      STOP_APPLET
     end
 
   # ============================================================================================

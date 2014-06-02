@@ -64,6 +64,19 @@
   },
 
   {
+    "it" : "puts last value of a stack when computer finishes processing message",
+    "input" :[
+      "my computer", "is a computer", [
+        1
+      ],
+      "my computer", []
+    ],
+    "output" : [
+      "stack should ==", [{"IS": ["COMPUTER"], "VALUE": "MY COMPUTER"}, 1]
+    ]
+  },
+
+  {
     "it" : "runs a local computer first.",
     "input" : [
       "yo", "is a computer", [ "print", ["yo yo"] ],
