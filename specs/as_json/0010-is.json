@@ -1,4 +1,21 @@
 [
+  { "it" : "pops name off stack",
+    "input" :
+    [
+      "one", "is", [1],
+      "two", "is", [2]
+    ],
+    "output" : ["stack should ==", [1,2]]
+  },
+
+  { "it" : "leaves value on stack",
+    "input" :
+    [
+      "three", "is", [3],
+      "four",  "is", [4]
+    ],
+    "output" : ["stack should ==", [3,4]]
+  },
 
   { "it" : "evaluates arguments",
     "input" :
