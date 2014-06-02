@@ -5,10 +5,17 @@ require 'pry'
 
 class WWW_Applet_Test
 
+  module Computers
+    def write_computer name, l
+      @computers[name] = [l]
+    end
+  end # === module Computers
+
   def initialize applet, output
     @applet = applet
     @err    = nil
-    @test   = WWW_Applet.new(output)
+    @test   = WWW_Applet.new("__main_test___", output)
+    @test.extend Computers
 
     @test.write_computer "value should ==", lambda { |o,n,v|
       name = o.stack.last

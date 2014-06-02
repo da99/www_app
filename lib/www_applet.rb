@@ -23,15 +23,22 @@ class WWW_Applet
   #
   # Possible:
   #
+  #   new                        [...tokens...]
   #   new            "__main__", [...tokens...]
   #   new   applet , "my func" , [...tokens...]
   #   new   applet , "my func" , [...tokens...], [..args..]
   #
   def initialize *raw
-    if raw.size == 2
+    case raw.length
+    when 1
       parent = nil
+      name   = "__main__"
+      tokens = raw
+      args   = nil
+    when 2
+      parent       = nil
       name, tokens = raw
-      args = nil
+      args         = nil
     else
       parent, name, tokens, args = raw
     end
@@ -42,7 +49,9 @@ class WWW_Applet
     @stack     = []
     @is_done   = false
     @args      = args || []
-    @values    = {}
+    @values    = {
+      "THE ARGS" => @args
+    }
     @computers = {}
 
     if !@parent
@@ -52,7 +61,6 @@ class WWW_Applet
       }
     end
 
-    is "THE ARGS", @args
   end
 
   def standard_key *args
@@ -119,6 +127,7 @@ class WWW_Applet
       found = nil
       while box && !found # == computer as box with array of computers
 
+        next unless computers[to]
         found = computers[to].detect { |c|
 
           resp = case
@@ -226,7 +235,7 @@ class WWW_Applet
       else
         sender, to, args = raw
         name = standard_key args.last
-        fail("Value not found: #{name.inspect}") sender.values.has_key?(name)
+        fail("Value not found: #{name.inspect}") unless sender.values.has_key?(name)
         sender.values[name]
       end
     end
