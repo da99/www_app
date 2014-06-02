@@ -17,6 +17,21 @@
   },
 
   {
+    "it" : "fails with \"Value not found:\" if computer attempts to get an external value",
+    "input": [
+      "my val", "is", [1],
+      "my computer", "is a computer", [
+        "get", ["my val"]
+      ],
+      "my computer", []
+    ],
+    "output" : [
+      "should raise", ["Value not found:"],
+      "message should match", ["my val"]
+    ]
+  },
+
+  {
     "it" : "puts last value of a stack when computer finishes processing message",
     "input" :[
       "my computer", "is a computer", [
