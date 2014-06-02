@@ -134,7 +134,7 @@ class WWW_Applet
       from                = self
       to                  = standard_key val
       raw_args            = next_val
-      should_compile_args = (to != standard_key("computer ="))
+      should_compile_args = (to != standard_key("is a computer"))
 
       args = if should_compile_args
                from.fork_and_run("arg run for #{to.inspect}", raw_args).stack
@@ -228,7 +228,8 @@ class WWW_Applet
       args.each_with_index { |n, i|
         sender.is n, the_args[i]
       }
-      :none
+
+      lambda { :ignore_return }
     end
 
     def copy_outside_stack sender, to, args
@@ -237,7 +238,8 @@ class WWW_Applet
       args.each_with_index { |a, i|
         write_value a, target.stack[target.stack.length - args.length - i]
       }
-      :none
+
+      lambda { :ignore_return }
     end
 
     def print sender, to, args
@@ -248,6 +250,7 @@ class WWW_Applet
             end
       top.console.push val
       val
+      lambda { :ignore_return }
     end
 
     def has_value? raw_name
@@ -279,7 +282,10 @@ class WWW_Applet
 
       else
         sender, to, args = raw_args
-        name   = standard_key sender.stack.last
+        raw_name   = sender.stack.pop
+        fail("Missing value: #{raw_name.inspect} #{to.inspect} #{args.inspect}") unless raw_name
+
+        name = standard_key raw_name
         fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
 
         fail("Value already created: #{name.inspect}") if sender.values.has_key?(name)
@@ -290,16 +296,16 @@ class WWW_Applet
     end
 
     def is_a_computer sender, to, tokens
-      name = standard_key(sender.stack.last)
+      raw_name = sender.stack.pop
+      fail("Missing value: #{raw_name.inspect} #{to.inspect} [...tokens...]") unless raw_name
+      name = standard_key(raw_name)
       sender.computers[name] ||= []
       sender.computers[name].push lambda { |sender, to, args|
         c = WWW_Applet.new(sender, to, tokens, args)
         c.run
-        puts "COMPUTER run: #{to}"
       }
-      puts "COMPUTER created: #{name.inspect}"
 
-      lambda { :ignore_return }
+      name
     end
 
     def stop_applet sender, to, tokens

@@ -62,11 +62,11 @@
   },
 
   {
-    "it" : "runs a local function first.",
+    "it" : "runs a local computer first.",
     "input" : [
-      "yo", "computer =", [ "console print", ["yo yo"] ],
-      "my func", "computer =", [
-         "yo", "computer =", [ "console print", ["hello"] ],
+      "yo", "is a computer", [ "print", ["yo yo"] ],
+      "my func", "is a computer", [
+         "yo", "is a computer", [ "print", ["hello"] ],
          "yo", []
       ],
       "my func", []
