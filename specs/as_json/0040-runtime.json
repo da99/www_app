@@ -1,5 +1,37 @@
 
 [
+  {
+    "it" : "entire applet stops for \"STOP APPLET\"",
+    "input" : [
+      1,2,3,
+      "STOP APPLET", [],
+      4,5,6
+    ],
+    "output" : [
+      "stack should ==", [1,2,3]
+    ]
+  },
+
+  {
+    "it" : "puts String values on the stack",
+    "input" : [
+      "a", "b", "c"
+    ],
+    "output" : [
+      "stack should ==", ["a","b","c"]
+    ]
+  },
+
+  {
+    "it" : "puts numeric values on the stack",
+    "input" : [
+      5, "a", 1.0
+    ],
+    "output" : [
+      "stack should ==", [5, "a", 1.0]
+    ]
+  },
+
 
   {
     "it" : "raises Invalid if an Array has no preceding String",
@@ -12,6 +44,20 @@
     "output" : [
       "should raise", ["Invalid"],
       "message should match", ["Computer name not specified"]
+    ]
+  },
+
+  {
+    "it" : "runs a computer in its own fork",
+    "input": [
+      "my val", "is", [1],
+      "my computer", "is a computer", [
+        "my val", "is", [2],
+        "print", ["get", ["my val"]]
+      ]
+    ],
+    "output" : [
+      "console should ==", [2]
     ]
   },
 
