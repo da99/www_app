@@ -26,11 +26,12 @@ class WWW_Applet
   #
   # Possible:
   #
-  #   new                      " [... JSON ...] "
-  #   new                        [...tokens...]
-  #   new            "__main__", [...tokens...]
-  #   new   applet , "my func" , [...tokens...]
-  #   new   applet , "my func" , [...tokens...], [..args..]
+  #   new                        "[... JSON ...]"
+  #   new                         [...tokens...]
+  #   new            "__main__",  [...tokens...]
+  #   new            "__main__", "[...tokens...]"
+  #   new   applet , "my func" ,  [...tokens...]
+  #   new   applet , "my func" ,  [...tokens...], [..args..]
   #
   def initialize *raw
     case raw.length

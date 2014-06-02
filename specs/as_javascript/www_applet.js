@@ -31,13 +31,25 @@ var WWW_Applet_Test = function (input, output) {
   var applet = this.input;
   var this_test = this;
 
-  this.output.write_computer("value should ==", function (o,n,v) {
+  return this;
+};
+
+WWW_Applet_Test.prototype.run = function () {
+  this.input.run();
+  this.output.run();
+  return this;
+};
+
+
+WWW_Applet_Test.Computers = {
+
+  "value should ==" : function (o,n,v) {
     var name   = last(o.stack);
     var target = last(o.fork_and_run(n,v).stack);
     return assert.equal(this.input.read_value(name), target);
-  });
+  },
 
-  this.output.write_computer("should raise", function (o,n,v) {
+  "should raise" : function (o,n,v) {
     var target = last(o.fork_and_run(n,v).stack);
     assert.throws(function () {
       if (this_test.err) {
@@ -48,36 +60,30 @@ var WWW_Applet_Test = function (input, output) {
     });
 
     return true;
-  });
+  },
 
-  this.output.write_computer("message should match", function (o,n,v) {
+  "message should match" : function (o,n,v) {
     var str_regex = last(o.fork_and_run(n,v).stack);
     var msg = last(this_test.output.stack);
     var regex = new RegExp(str_regex, "i");
     return assert.ok(regex.test(this_test.err));
-  });
+  },
 
-  this.output.write_computer("stack should ==", function (o,n,v) {
+  "stack should ==" : function (o,n,v) {
     return assert.equal(applet.stack, o.fork_and_run(n,v).stack);
-  });
+  },
 
-  this.output.write_computer("should not raise", function (o,n,v) {
+  "should not raise" : function (o,n,v) {
     return assert.equal(this_test.err, null);
-  });
+  },
 
-  this.output.write_computer("last console message should ==", function (o,n,v) {
+  "last console message should ==" :  function (o,n,v) {
     return assert.equal(last(applet.console()), last(o.fork_and_run(n,v).stack));
-  });
+  }
 
-  return this;
-};
+}; // === WWW_Applet.Computers
 
-WWW_Applet_Test.prototype.run = function () {
-  console.log("running");
-  // this.input.run();
-  // this.output.run();
-  return this;
-};
+
 
 // ================================================================================
 // The Tests.
