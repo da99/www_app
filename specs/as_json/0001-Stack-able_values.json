@@ -1,0 +1,27 @@
+
+[
+
+  {
+    "it" : "puts String values on the stack",
+    "input" : [
+      "a", "b", "c"
+    ],
+    "output" : [
+      "stack should ==", ["a","b","c"]
+    ]
+  },
+
+  {
+    "it" : "puts numeric values on the stack",
+    "input" : [
+      5, "a", 1.0
+    ],
+    "output" : [
+      "stack should ==", [5, "a", 1.0]
+    ]
+  }
+
+]
+
+
+
