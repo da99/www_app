@@ -29,7 +29,7 @@ class WWW_Applet_Test
 
     @test.write_computer "should raise", lambda { |o,n,v|
       target = o.fork_and_run(n,v).stack.last
-      @err.class.to_s.split('::').last.should == target
+      @err.message.should.match /#{Regexp.escape target}/
       @err.message
     }
 

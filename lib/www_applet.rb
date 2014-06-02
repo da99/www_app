@@ -24,6 +24,7 @@ class WWW_Applet
   #
   # Possible:
   #
+  #   new                      " [... JSON ...] "
   #   new                        [...tokens...]
   #   new            "__main__", [...tokens...]
   #   new   applet , "my func" , [...tokens...]
@@ -43,6 +44,12 @@ class WWW_Applet
     else
       parent, name, tokens, args = raw
     end
+
+    if tokens.is_a?(String)
+      tokens = MultiJson.load tokens
+    end
+
+    fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
 
     @parent     = parent
     @name       = standard_key(name || "__unknown__")

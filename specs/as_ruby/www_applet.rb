@@ -3,22 +3,22 @@ describe "Ruby specific functionality:" do
 
   describe ".new" do
 
-    it "accepts a string" do
+    it "accepts a String" do
       o = WWW_Applet.new "[]"
-      o.code.should == "[]"
+      o.tokens.should == MultiJson.load("[]")
     end
 
-    it "accepts an array" do
+    it "accepts an Array" do
       code = ["a", []]
       o = WWW_Applet.new code
-      o.code.should == MultiJson.dump(code)
+      o.tokens.should == code
     end
 
-    it "raises WWW_Applet::Invalid if object is not an Array" do
+    it "raises \"Invalid\" if object is not an Array" do
       lambda {
         WWW_Applet.new({a:"a"})
-      }.should.raise(WWW_Applet::Invalid).
-      message.should.match /JS object must be an array/i
+      }.should.raise(RuntimeError).
+      message.should.match /Invalid: JS object must be an array/i
     end
 
   end # === describe WWW_Applet.new ===

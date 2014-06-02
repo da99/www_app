@@ -1,6 +1,6 @@
 [
 
-  { "it" : "evaluates arguments if more than one",
+  { "it" : "evaluates arguments",
     "input" :
     [
       "one", "is", [1],
@@ -10,10 +10,10 @@
     "output" : ["MY VAL", "value should ==", [2]]
   },
 
-  { "it" : "saves value with uppercase",
+  { "it" : "standardizes name of value",
     "input" : [
       "my val", "is", [5],
-      "final val", "is", [ "get", ["My Val"] ]
+      "  final      val", "is", [ "get", ["My Val"] ]
     ],
     "output" : [
       "FINAL VAL", "value should ==", [5]
@@ -21,7 +21,7 @@
   },
 
   {
-    "it" : "fails with Missing_Value if no value is passed",
+    "it" : "fails with \"Missing value:\" if no value is passed",
     "input" : [
       "my val", "is", []
     ],
@@ -32,7 +32,7 @@
   },
 
   {
-    "it" : "fails with Value_Already_Created if value already exists",
+    "it" : "fails with \"Value already created:\" if value already exists",
     "input" : [
       "my val", "is", [1],
       "mY vAl", "is", [2]
