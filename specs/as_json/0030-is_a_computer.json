@@ -16,7 +16,7 @@
     "input" : [
       "my val", "is", ["a"],
       "my comp", "is a computer", [
-        "console print", ["value", ["my val"]]
+        "console print", ["get", ["my val"]]
       ],
       "my comp", []
     ],

@@ -51,19 +51,19 @@ class WWW_Applet
 
     fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
 
-    @console    = []
-    @parent     = parent
-    @name       = standard_key(name || "__unknown__")
-    @tokens     = tokens
-    @stack      = []
-    @is_done    = false
-    @args       = args || []
-    @is_running = false
-    @is_fork    = false
-    @values    = {
+    @console     = []
+    @parent      = parent
+    @name        = standard_key(name || "__unknown__")
+    @tokens      = tokens
+    @stack       = []
+    @is_done     = false
+    @args        = args || []
+    @is_running  = false
+    @is_fork     = false
+    @computers   = {}
+    @values      = {
       "THE ARGS" => @args
     }
-    @computers = {}
 
     if !@parent
       extend Computers
@@ -292,7 +292,7 @@ class WWW_Applet
         sender.values[name] = args.last
       end
 
-      name
+      sender.values[name]
     end
 
     def is_a_computer sender, to, tokens
