@@ -5,8 +5,8 @@
 // ================================================================================
 // Helpers and Requires
 // ================================================================================
-var assert = require("assert");
-var fs = require("fs");
+var assert     = require("assert");
+var fs         = require("fs");
 var WWW_Applet = require("../../lib/www_applet").WWW_Applet;
 
 var last = function (arr) {
@@ -73,8 +73,9 @@ var WWW_Applet_Test = function (input, output) {
 };
 
 WWW_Applet_Test.prototype.run = function () {
-  this.input.run();
-  this.output.run();
+  console.log("running");
+  // this.input.run();
+  // this.output.run();
   return this;
 };
 
@@ -82,16 +83,21 @@ WWW_Applet_Test.prototype.run = function () {
 // The Tests.
 // ================================================================================
 for_each(fs.readdirSync("./specs/as_json"), function (f) {
+
   var desc = f.replace(/^\d\d\d\d-|.json$/g, "").replace(/_/g, " ");
   var json = JSON.parse(fs.readFileSync("./specs/as_json/" + f).toString());
+
   describe('"' + desc + '"', function () {
+
     for_each(json, function (o) {
       it(o.it, function () {
         var t = new WWW_Applet_Test(o.input, o.output);
         t.run();
-      });
+      }); // === it
     });
-  });
+
+  }); // === describe
+
 });
 
 
