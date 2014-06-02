@@ -137,7 +137,7 @@ class WWW_Applet
       curr += 1
 
       if is_end || !should_send
-        fail("Unknown type: #{val.inspect}") unless pushable_to_stack?(val)
+        fail("Invalid value: #{val.inspect}") unless pushable_to_stack?(val)
         stack.push val
         next
       end

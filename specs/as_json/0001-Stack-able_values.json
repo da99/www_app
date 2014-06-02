@@ -49,7 +49,19 @@
     "output" : [
       "stack should ==", [5, "a", 1.0]
     ]
+  },
+
+  {
+    "it" : "fails with Invalid if an invalid object is found",
+    "input" : [
+      {"IS": "COMPUTER", "VALUE": "THIS_FUNK"}
+    ],
+    "output" : [
+      "should raise", ["Invalid value: "],
+      "message should match", ["\"THIS_FUNK\""]
+    ]
   }
+
 
 ]
 
