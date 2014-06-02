@@ -12,6 +12,36 @@
   },
 
   {
+    "it" : "puts \"true\" on the stack",
+    "input" : [
+      true
+    ],
+    "output" : [
+      "stack should ==", [true]
+    ]
+  },
+
+  {
+    "it" : "puts \"false\" on the stack",
+    "input" : [
+      false
+    ],
+    "output" : [
+      "stack should ==", [false]
+    ]
+  },
+
+  {
+    "it" : "puts \"null\" on the stack",
+    "input" : [
+      null
+    ],
+    "output" : [
+      "stack should ==", [null]
+    ]
+  },
+
+  {
     "it" : "puts numeric values on the stack",
     "input" : [
       5, "a", 1.0
