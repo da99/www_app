@@ -127,8 +127,13 @@ class WWW_Applet
       found = nil
       while box && !found # == computer as box with array of computers
 
-        next unless computers[to]
-        found = computers[to].detect { |c|
+        computers = box.computers[to]
+        if !computers
+          box = box.parent
+          next
+        end
+
+        found = computers.detect { |c|
 
           resp = case
                  when c.respond_to?(:call) # it's a proc/lambda
