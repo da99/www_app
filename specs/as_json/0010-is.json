@@ -5,9 +5,9 @@
     [
       "one", "is", [1],
       "two", "is", [2],
-      "2", "is", ["get", ["two"]]
+      "my val", "is", ["get", ["two"]]
     ],
-    "output" : ["my val", "value should ==", [2]]
+    "output" : ["MY VAL", "value should ==", [2]]
   },
 
   { "it" : "saves value with uppercase",

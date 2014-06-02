@@ -5,6 +5,7 @@ class WWW_Applet
 
   attr_reader :parent, :name, :tokens, :stack, :values, :computers
   MULTI_WHITE_SPACE = /\s+/
+  VALID_STACK_PUSHABLES = [String, Fixnum, Float]
 
   # ===================================================
   class << self
@@ -69,7 +70,7 @@ class WWW_Applet
   end
 
   def fork_and_run name, tokens
-    c = WWW_Applet.new(parent, name, tokens)
+    c = WWW_Applet.new(self, name, tokens)
     c.run
     c
   end
@@ -104,6 +105,7 @@ class WWW_Applet
       curr += 1
 
       if is_end || !should_send
+        fail("Unknown type: #{val.inspect}") unless VALID_STACK_PUSHABLES.include?(val.class)
         stack.push val
         next
       end
@@ -131,7 +133,9 @@ class WWW_Applet
       found = nil
       while box && !found # == computer as box with array of computers
 
-        computers = box.computers[to]
+        computers     = box.computers[to]
+        computers_box = box
+
         box = box.parent
         next if !computers
 
@@ -142,7 +146,7 @@ class WWW_Applet
                    c.call(from, to, args)
 
                  else                      # it's a String or Symbol
-                   send(c, from, to, args)
+                   computers_box.send(c, from, to, args)
                  end
 
 
@@ -234,14 +238,15 @@ class WWW_Applet
       values.has_key?(standard_key(raw_name))
     end
 
-    def value *raw
+    def get *raw
       if raw.size == 1 # runs as native method
         @values[standard_key raw.last]
       else
         sender, to, args = raw
         name = standard_key args.last
-        fail("Value not found: #{name.inspect}") unless sender.values.has_key?(name)
-        sender.values[name]
+        target = sender.parent
+        fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
+        target.values[name]
       end
     end
 

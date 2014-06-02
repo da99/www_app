@@ -56,6 +56,10 @@ class WWW_Applet_Test
     begin
       @applet.run
     rescue Object => e
+      fail_expected = @test.tokens.detect { |v|
+        v.is_a?(String) && WWW_Applet.standard_key(v) == "SHOULD RAISE"
+      }
+      raise e unless fail_expected
       @err = e
     end
     @test.run
