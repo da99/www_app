@@ -33,7 +33,7 @@ class WWW_Applet
     when 1
       parent = nil
       name   = "__main__"
-      tokens = raw
+      tokens = raw.first
       args   = nil
     when 2
       parent       = nil
@@ -49,6 +49,7 @@ class WWW_Applet
     @stack     = []
     @is_done   = false
     @args      = args || []
+    @is_running = false
     @values    = {
       "THE ARGS" => @args
     }
@@ -84,6 +85,9 @@ class WWW_Applet
   end
 
   def run
+    fail("Invalid state: Already running.") if @is_running
+    @is_running = true
+
     fail("Invalid state: Already finished running.") if @is_done
     start = 0
     stop  = tokens.length
@@ -128,10 +132,8 @@ class WWW_Applet
       while box && !found # == computer as box with array of computers
 
         computers = box.computers[to]
-        if !computers
-          box = box.parent
-          next
-        end
+        box = box.parent
+        next if !computers
 
         found = computers.detect { |c|
 
@@ -172,8 +174,6 @@ class WWW_Applet
           end # if
 
         } # === detect in Array of computers
-
-        box = box.parent
 
       end # while box && !found
 

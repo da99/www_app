@@ -3,11 +3,15 @@ require 'Bacon_Colored'
 require 'www_applet'
 require 'pry'
 
+def read_value applet, raw
+  applet.instance_eval { @values[applet.standard_key raw] }
+end
+
 class WWW_Applet_Test
 
   module Computers
-    def write_computer name, l
-      @computers[name] = [l]
+    def write_computer raw, l
+      @computers[standard_key raw] = [l]
     end
   end # === module Computers
 
@@ -20,7 +24,7 @@ class WWW_Applet_Test
     @test.write_computer "value should ==", lambda { |o,n,v|
       name = o.stack.last
       target = o.fork_and_run(n,v).stack.last
-      @applet.read_value(name).should == target
+      read_value(@applet, name).should == target
     }
 
     @test.write_computer "should raise", lambda { |o,n,v|
