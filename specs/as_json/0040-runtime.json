@@ -53,11 +53,11 @@
       "my val", "is", [1],
       "my computer", "is a computer", [
         "my val", "is", [2],
-        "print", ["get", ["my val"]]
+        "print", [1, "get", ["my val"]]
       ]
     ],
     "output" : [
-      "console should ==", [2]
+      "console should ==", ["[1, 2]"]
     ]
   },
 

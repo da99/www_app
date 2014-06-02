@@ -50,6 +50,10 @@ class WWW_Applet_Test
     @test.write_computer "last console message should ==", lambda { |o,n,v|
       @applet.console.last.should == o.fork_and_run(n,v).stack.last
     }
+
+    @test.write_computer "console should ==", lambda { |o,n,v|
+      @applet.console.should == v
+    }
   end
 
   def run
