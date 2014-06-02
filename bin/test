@@ -2,9 +2,10 @@
 # -*- bash -*-
 #
 #
+first_opt="$1"
 set -u -e -o pipefail
 
-if [[ "$@" == "help" ]]; then
+if [[ "$first_opt" == "help" ]]; then
 
   echo ""
   echo "  # == examples: =="
@@ -14,7 +15,7 @@ if [[ "$@" == "help" ]]; then
   exit 0
 fi
 
-if [[ "$@" == "js" ]]; then
+if [[ "$first_opt" == "js" ]]; then
   shift
   files="$(find specs/as_javascript -maxdepth 1 -type f -iname "*.js" -and -not -iname "helpers.js")"
   if [[ -z "$files" ]]; then
