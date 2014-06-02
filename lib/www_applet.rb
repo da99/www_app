@@ -44,13 +44,14 @@ class WWW_Applet
       parent, name, tokens, args = raw
     end
 
-    @parent    = parent
-    @name      = standard_key(name || "__unknown__")
-    @tokens    = tokens
-    @stack     = []
-    @is_done   = false
-    @args      = args || []
+    @parent     = parent
+    @name       = standard_key(name || "__unknown__")
+    @tokens     = tokens
+    @stack      = []
+    @is_done    = false
+    @args       = args || []
     @is_running = false
+    @is_fork    = false
     @values    = {
       "THE ARGS" => @args
     }
@@ -69,8 +70,16 @@ class WWW_Applet
     self.class.standard_key(*args)
   end
 
+  def is_fork? answer = :none
+    if answer != :none
+      @is_fork = answer
+    end
+    @is_fork
+  end
+
   def fork_and_run name, tokens
     c = WWW_Applet.new(self, name, tokens)
+    c.is_fork?(true)
     c.run
     c
   end
@@ -244,7 +253,11 @@ class WWW_Applet
       else
         sender, to, args = raw
         name = standard_key args.last
-        target = sender.parent
+        target = sender
+        if !target.values.has_key?(name) && target.is_fork?
+          target = sender.parent
+        end
+
         fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
         target.values[name]
       end
