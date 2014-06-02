@@ -102,6 +102,11 @@ class WWW_Applet
     p || self
   end
 
+  def pushable_to_stack? val
+    VALID_STACK_PUSHABLES.include?(val.class) ||
+      (val.is_a?(Hash) && val["is"].is_a?(Array))
+  end
+
   def run
     fail("Invalid state: Already running.") if @is_running
     @is_running = true
@@ -122,7 +127,7 @@ class WWW_Applet
       curr += 1
 
       if is_end || !should_send
-        fail("Unknown type: #{val.inspect}") unless VALID_STACK_PUSHABLES.include?(val.class)
+        fail("Unknown type: #{val.inspect}") unless pushable_to_stack?(val)
         stack.push val
         next
       end
@@ -305,7 +310,7 @@ class WWW_Applet
         c.run
       }
 
-      name
+      {"is"=> ["COMPUTER"], "value"=> name}
     end
 
     def stop_applet sender, to, tokens

@@ -1,6 +1,14 @@
 
 [
 
+  { "it" : "pops name off stack",
+    "input" :
+    [
+      "one", "is a computer", []
+    ],
+    "output" : ["stack should ==", [{"is": ["COMPUTER"], "value": "ONE"}]]
+  },
+
   {
     "it" : "does not evaluate Array",
     "input" : [
