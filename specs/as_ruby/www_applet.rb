@@ -26,7 +26,7 @@ describe "Ruby specific functionality:" do
 end # === describe Ruby specific
 
 
-Dir.glob("specs/as_json/*.json").each { |f|
+Dir.glob("specs/as_json/*.json").sort.each { |f|
   contents = MultiJson.load(File.read(f))
   describe "'#{File.basename(f).gsub(/\A\d+-|\.json\Z/, '').gsub('_', ' ')}'" do
     contents.each { |t|
