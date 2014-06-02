@@ -67,7 +67,7 @@ class WWW_Applet
     if !@parent
       extend Computers
       Computers.public_instance_methods.each { |n|
-        @computers[standard_key(n.to_s)] = [n]
+        @computers[standard_key(n.to_s).gsub('_', ' ')] = [n]
       }
     end
 
@@ -92,13 +92,13 @@ class WWW_Applet
   end
 
   def top
-    p = parent_computer
+    p = parent
     curr = p
     while curr
       curr = p.parent
       p = curr if curr
     end
-    p
+    p || self
   end
 
   def run
@@ -175,7 +175,7 @@ class WWW_Applet
             resp = resp.call
             case resp
 
-            when :exit_applet
+            when :stop_applet
               @is_done = true
               true
 
@@ -300,6 +300,10 @@ class WWW_Applet
       puts "COMPUTER created: #{name.inspect}"
 
       lambda { :ignore_return }
+    end
+
+    def stop_applet sender, to, tokens
+      lambda { :stop_applet }
     end
 
   # ============================================================================================

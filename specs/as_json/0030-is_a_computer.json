@@ -4,7 +4,7 @@
   {
     "it" : "does not evaluate Array",
     "input" : [
-      "my func", "computer =", [1,2,3, "unknown func", []]
+      "my func", "is a computer", [1,2,3, "unknown func", []]
     ],
     "output" : [
       "should not raise", []
@@ -12,16 +12,16 @@
   },
 
   {
-    "it" : "raises Value_Not_Found if the name of the value belongs to an outside scope value",
+    "it" : "raises \"Value not found:\" if the name of the value belongs to an outside scope value",
     "input" : [
-      "my val", "value =", ["a"],
-      "my comp", "computer =", [
+      "my val", "is", ["a"],
+      "my comp", "is a computer", [
         "console print", ["value", ["my val"]]
       ],
       "my comp", []
     ],
     "output" : [
-      "should raise", ["Value_Not_Found"],
+      "should raise", ["Value not found:"],
       "message should match", ["MY VAL"]
     ]
   }

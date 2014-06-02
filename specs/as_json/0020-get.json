@@ -4,12 +4,12 @@
   {
     "it" : "places value on the stack",
     "input" : [
-      "the val", "value =", [1],
+      "the val", "is", [1],
       2,
-      "value", ["the val"]
+      "get", ["the val"]
     ],
     "output" : [
-      "stack should ==", ["the val", 1,2,1]
+      "stack should ==", [1,2,1]
     ]
   },
 
@@ -17,12 +17,12 @@
   {
     "it" : "is case-insensitive",
     "input" : [
-      "mY val", "value =", [3],
+      "mY val", "is", [3],
       4,
-      "value", ["my VAL"]
+      "get", ["my VAL"]
     ],
     "output" : [
-      "stack should ==", ["mY val", 3,4,3]
+      "stack should ==", [3,4,3]
     ]
   }
 
