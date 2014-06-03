@@ -79,7 +79,7 @@ WWW_Applet_Test.Computers = {
     var str_regex = last(args).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     var regex     = new RegExp(str_regex, "i");
     var msg       = this.test_err.message;
-    assert.ok(regex.test(msg))
+    assert.ok(regex.test(msg));
     return true;
   },
 
