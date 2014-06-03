@@ -50,7 +50,7 @@ WWW_Applet_Test.prototype.run = function () {
   try {
     this.input.run();
   } catch (e) {
-    if (!is_included(this.input.tokens, "SHOULD RAISE")) {
+    if (!is_included(this.output.tokens, "should raise")) {
       throw e;
     }
     this.output.test_err = e;
@@ -79,23 +79,28 @@ WWW_Applet_Test.Computers = {
     var str_regex = last(args);
     var msg = last(sender.stack);
     var regex = new RegExp(str_regex, "i");
-    return assert.ok(regex.test(this.test_err.message));
+    assert.ok(regex.test(this.test_err.message))
+    return true;
   },
 
   "stack should ==" : function (sender, to, args) {
-    return assert.deepEqual(this.test_applet.stack, args);
+    assert.deepEqual(this.test_applet.stack, args);
+    return true;
   },
 
   "should not raise" : function (sender, to, args) {
-    return assert.equal(this.test_err, null);
+    assert.equal(this.test_err, null);
+    return true;
   },
 
   "last console message should ==" :  function (sender, to, args) {
-    return assert.deepEqual(last(this.test_applet.console), last(args));
+    assert.deepEqual(last(this.test_applet.console), last(args));
+    return true;
   },
 
   "console should ==": function (sender, to, args) {
-    return assert.deepEqual(this.test_applet.console, args);
+    assert.deepEqual(this.test_applet.console, args);
+    return true;
   }
 
 }; // === WWW_Applet.Computers
