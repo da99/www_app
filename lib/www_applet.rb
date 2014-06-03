@@ -101,7 +101,7 @@ class WWW_Applet
       (applet_object?(val) && !applet_command?(val))
   end
 
-  def is_fork? answer = :none
+  def fork? answer = :none
     if answer != :none
       @is_fork = answer
     end
@@ -110,7 +110,7 @@ class WWW_Applet
 
   def fork_and_run name, tokens
     c = WWW_Applet.new(self, name, tokens)
-    c.is_fork?(true)
+    c.fork?(true)
     c.run
     c
   end
@@ -285,8 +285,8 @@ class WWW_Applet
         sender, to, args = raw
         name = standard_key args.last
         target = sender
-        if !target.values.has_key?(name) && target.is_fork?
-          target = sender.parent
+        while (!target.values.has_key?(name) && target.fork? && target.parent)
+          target = target.parent
         end
 
         fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
