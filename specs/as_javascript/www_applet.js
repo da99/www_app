@@ -24,12 +24,13 @@ var for_each = function (arr, f) {
 // ================================================================================
 
 var WWW_Applet_Test = function (input, output) {
-  this.input  = new WWW_Applet(input);
-  this.output = new WWW_Applet(output);
   this.err    = null;
 
-  var applet = this.input;
-  var this_test = this;
+  this.input  = new WWW_Applet(input);
+
+  this.output = new WWW_Applet(output);
+  this.output.values["APPLET"] = input;
+  this.output.extend(WWW_Applet_Test.Computers);
 
   return this;
 };

@@ -34,33 +34,13 @@ class WWW_Applet
   #   new   applet , "my func" ,  [...tokens...], [..args..]
   #
   def initialize *raw
-    case raw.length
-    when 1
-      parent = nil
-      name   = "__main__"
-      tokens = raw.first
-      args   = nil
-    when 2
-      parent       = nil
-      name, tokens = raw
-      args         = nil
-    else
-      parent, name, tokens, args = raw
-    end
-
-    if tokens.is_a?(String)
-      tokens = MultiJson.load tokens
-    end
-
-    fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
-
     @console     = []
-    @parent      = parent
-    @name        = standard_key(name || "__unknown__")
-    @tokens      = tokens
+    @name        = nil
+    @parent      = nil
+    @tokens      = nil
+    @args        = []
     @stack       = []
     @is_done     = false
-    @args        = args || []
     @is_running  = false
     @is_fork     = false
     @computers   = {}
@@ -68,13 +48,38 @@ class WWW_Applet
       "THE ARGS" => @args
     }
 
-    if !@parent
-      extend Computers
-      Computers.public_instance_methods.each { |n|
-        @computers[standard_key(n.to_s).gsub('_', ' ')] = [n]
-      }
+    case raw.length
+    when 0
+      fail "Invalid: Not enough arguments."
+    when 1
+      @name   = "origin"
+      @tokens = raw.first
+    when 2
+      @name, @tokens = raw
+    when 4
+      @parent, @name, @tokens, @args = raw
+    else
+      fail "Too many extra arguments: #{raw.inspect}"
     end
 
+    @name = @name || "[unknown]"
+
+    fail("Invalid value: for args: #{args.inspect}") unless args.is_a?(Array)
+
+    if tokens.is_a?(String)
+      tokens = MultiJson.load tokens
+    end
+
+    fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
+
+    self.extend(Computers) unless @parent
+  end # def initialize
+
+  def extend m
+    m.public_instance_methods.each { |n|
+      @computers[standard_key(n.to_s).gsub('_', ' ')] = [n]
+    }
+    super
   end
 
   def standard_key *args
@@ -89,9 +94,9 @@ class WWW_Applet
     val.is_a?(Hash) && val["IS"].is_a?(Array)
   end
 
-  def pushable_to_stack? val
-    !applet_command?(val) && 
-      ( VALID_NON_OBJECTS.include?(val.class) || object?(val) )
+  def stack_able? val
+    ( VALID_NON_OBJECTS.include?(val.class) || object?(val) ) &&
+      !applet_command?(val)
   end
 
   def is_fork? answer = :none
@@ -138,7 +143,7 @@ class WWW_Applet
       curr += 1
 
       if is_end || !should_send
-        fail("Invalid value: #{val.inspect}") unless pushable_to_stack?(val)
+        fail("Invalid value: #{val.inspect}") unless stack_able?(val)
         stack.push val
         next
       end
@@ -181,7 +186,7 @@ class WWW_Applet
                    computers_box.send(c, from, to, args)
                  end
 
-          if pushable_to_stack?(resp) # === push value to stack
+          if stack_able?(resp) # === push value to stack
             stack.push resp
             true
 
