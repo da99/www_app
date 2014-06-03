@@ -6,13 +6,12 @@
       "my val", "is", [1],
       "my computer", "is a computer", [
         "my val", "is", [2],
-        "print", [1, "get", ["my val"]],
-        2
+        "print", ["get", ["my val"]]
       ],
       "my computer", []
     ],
     "output" : [
-      "console should ==", ["[1, 2]"]
+      "console should ==", ["2"]
     ]
   },
 
