@@ -36,9 +36,9 @@ var is_included = function (arr, val) {
 var WWW_Applet_Test = function (input, output) {
   this.err    = null;
 
-  this.input  = new WWW_Applet(input);
+  this.input  = new WWW_Applet({name: "INPUT", json: input});
 
-  this.output = new WWW_Applet(output);
+  this.output = new WWW_Applet({name: "OUTPUT SPECS", json: output});
   this.output.extend(WWW_Applet_Test.Computers);
   this.output.test_applet = this.input;
   this.output.test_err    = null;
