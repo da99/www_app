@@ -40,8 +40,8 @@ var WWW_Applet_Test = function (input, output) {
 
   this.output = new WWW_Applet(output);
   this.output.extend(WWW_Applet_Test.Computers);
-  this.output.test_applet = output;
-  this.output.test_err    = nil;
+  this.output.test_applet = this.input;
+  this.output.test_err    = null;
 
   return this;
 };
@@ -64,33 +64,38 @@ WWW_Applet_Test.Computers = {
 
   "value should ==" : function (sender, to, args) {
     var name   = last(sender.stack);
-    var target = last(sender.fork_and_run(to, args).stack);
-    assert.equal(this.test_applet.get(name), target);
+    var target = last(args);
+    assert.equal(this.test_applet.GET(name), target);
     return true;
   },
 
   "should raise" : function (sender, to, args) {
-    var target = last(sender.fork_and_run(to, args).stack);
-    return true;
+    var err_name = last(args);
+    assert.ok(this.test_err.message, new RegExp(err_name, "i"));
+    return this.test_err.message;
   },
 
-  "message should match" : function (o,n,v) {
-    var str_regex = last(o.fork_and_run(n,v).stack);
-    var msg = last(this_test.output.stack);
+  "message should match" : function (sender, to, args) {
+    var str_regex = last(args);
+    var msg = last(sender.stack);
     var regex = new RegExp(str_regex, "i");
-    return assert.ok(regex.test(this_test.err));
+    return assert.ok(regex.test(this.test_err.message));
   },
 
-  "stack should ==" : function (o,n,v) {
-    return assert.equal(applet.stack, o.fork_and_run(n,v).stack);
+  "stack should ==" : function (sender, to, args) {
+    return assert.deepEqual(this.test_applet.stack, args);
   },
 
-  "should not raise" : function (o,n,v) {
-    return assert.equal(this_test.err, null);
+  "should not raise" : function (sender, to, args) {
+    return assert.equal(this.test_err, null);
   },
 
-  "last console message should ==" :  function (o,n,v) {
-    return assert.equal(last(applet.console()), last(o.fork_and_run(n,v).stack));
+  "last console message should ==" :  function (sender, to, args) {
+    return assert.deepEqual(last(this.test_applet.console), last(args));
+  },
+
+  "console should ==": function (sender, to, args) {
+    return assert.deepEqual(this.test_applet.console, args);
   }
 
 }; // === WWW_Applet.Computers

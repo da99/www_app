@@ -59,8 +59,8 @@ class WWW_Applet_Test
     end
 
     def should_raise sender, to, args
-      target = args.last
-      @test_err.message.should.match /#{Regexp.escape target}/
+      err_name = args.last
+      @test_err.message.should.match /#{Regexp.escape err_name}/
       @test_err.message
     end
 
