@@ -54,25 +54,25 @@ class WWW_Applet_Test
     aliases[:value_should_equals_equals] = "value should =="
     def value_should_equals_equals sender, to, args
       name = sender.stack.last
-      target = sender.fork_and_run(to,args).stack.last
+      target = args.last
       @test_applet.get(name).should == target
     end
 
     def should_raise sender, to, args
-      target = sender.fork_and_run(to,args).stack.last
+      target = args.last
       @test_err.message.should.match /#{Regexp.escape target}/
       @test_err.message
     end
 
     def message_should_match sender, to, args
-      str_regex = sender.fork_and_run(to, args).stack.last
+      str_regex = args.last
       msg = sender.stack.last
       msg.should.match /#{Regexp.escape str_regex}/i
     end
 
     aliases[:stack_should_equal_equal] = "stack should =="
     def stack_should_equal_equal sender, to, args
-      @test_applet.stack.should == sender.fork_and_run(to, args).stack
+      @test_applet.stack.should == args
     end
 
     def should_not_raise sender, to, args
@@ -81,7 +81,7 @@ class WWW_Applet_Test
 
     aliases[:last_console_message_should_equal_equal] = "last console message should =="
     def last_console_message_should_equal_equal sender, to, args
-      @test_applet.console.last.should == sender.fork_and_run(to, args).stack.last
+      @test_applet.console.last.should == args.last
     end
 
     aliases[:console_should_equal_equal] = "console should =="

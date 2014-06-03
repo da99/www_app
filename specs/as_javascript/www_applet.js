@@ -8,16 +8,26 @@
 var assert     = require("assert");
 var fs         = require("fs");
 var WWW_Applet = require("../../lib/www_applet").WWW_Applet;
-
-var last = function (arr) {
-  return arr[arr.length-1];
-};
+var last       = function (arr) { return arr[arr.length-1]; };
 
 var for_each = function (arr, f) {
   for (var i = 0; i < arr.length; i++) {
     f(arr[i], i);
   }
 };
+
+var is_included = function (arr, val) {
+  var curr  = 0;
+  var stop  = arr.length;
+
+  while (curr < stop) {
+    if (arr[curr] === val) {
+      return true;
+    }
+    curr = curr + 1;
+  }
+  return false;
+}; // function is_included
 
 // ================================================================================
 // WWW_Applet_Test
@@ -29,14 +39,22 @@ var WWW_Applet_Test = function (input, output) {
   this.input  = new WWW_Applet(input);
 
   this.output = new WWW_Applet(output);
-  this.output.values["APPLET"] = input;
   this.output.extend(WWW_Applet_Test.Computers);
+  this.output.test_applet = output;
+  this.output.test_err    = nil;
 
   return this;
 };
 
 WWW_Applet_Test.prototype.run = function () {
-  this.input.run();
+  try {
+    this.input.run();
+  } catch (e) {
+    if (!is_included(this.input.tokens, "SHOULD RAISE")) {
+      throw e;
+    }
+    this.output.test_err = e;
+  }
   this.output.run();
   return this;
 };
@@ -44,22 +62,15 @@ WWW_Applet_Test.prototype.run = function () {
 
 WWW_Applet_Test.Computers = {
 
-  "value should ==" : function (o,n,v) {
-    var name   = last(o.stack);
-    var target = last(o.fork_and_run(n,v).stack);
-    return assert.equal(this.input.values[name.toUpperCase()], target);
+  "value should ==" : function (sender, to, args) {
+    var name   = last(sender.stack);
+    var target = last(sender.fork_and_run(to, args).stack);
+    assert.equal(this.test_applet.get(name), target);
+    return true;
   },
 
-  "should raise" : function (o,n,v) {
-    var target = last(o.fork_and_run(n,v).stack);
-    assert.throws(function () {
-      if (this_test.err) {
-        throw this_test.err;
-      } else {
-        throw new Error("No error thrown.");
-      }
-    });
-
+  "should raise" : function (sender, to, args) {
+    var target = last(sender.fork_and_run(to, args).stack);
     return true;
   },
 
