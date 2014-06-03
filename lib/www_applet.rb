@@ -260,9 +260,11 @@ class WWW_Applet
 
     def copy_outside_stack sender, to, args
       target = sender.parent
-      fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}") if args.size > target.stack.size
+      if args.size > target.stack.size
+        fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}")
+      end
       args.each_with_index { |a, i|
-        write_value a, target.stack[target.stack.length - args.length - i]
+        sender.is a, target.stack[target.stack.length - args.length - i]
       }
 
       IGNORE_RETURN
@@ -279,24 +281,29 @@ class WWW_Applet
       IGNORE_RETURN
     end
 
-    def has_value? raw_name
-      values.has_key?(standard_key(raw_name))
+    def has? *raw
+      if raw.length == 1 # run as native function
+        values.has_key?(standard_key(raw.first))
+      else
+        sender, to, args = raw
+        fail "Not done"
+      end
     end
 
     def get *raw
-      if raw.size == 1 # runs as native method
-        values[standard_key raw.last]
-      else
-        sender, to, args = raw
-        name = standard_key args.last
-        target = sender
-        while (!target.values.has_key?(name) && target.fork? && target.parent)
-          target = target.parent
-        end
-
-        fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
-        target.values[name]
+      if raw.size == 1 # runs as native function
+        return values[standard_key raw.last]
       end
+
+      sender, to, args = raw
+      name   = standard_key args.last
+      target = sender
+      while (!target.values.has_key?(name) && target.fork? && target.parent)
+        target = target.parent
+      end
+
+      fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
+      target.values[name]
     end
 
     def is *raw_args
@@ -305,18 +312,19 @@ class WWW_Applet
         name = standard_key raw_name
         fail("Value already created: #{name.inspect}") if @values.has_key?(name)
         @values[name] = val
+        return val
 
-      else
-        sender, to, args = raw_args
-        raw_name   = sender.stack.pop
-        fail("Missing value: #{raw_name.inspect} #{to.inspect} #{args.inspect}") unless raw_name
-
-        name = standard_key raw_name
-        fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
-
-        fail("Value already created: #{name.inspect}") if sender.values.has_key?(name)
-        sender.values[name] = args.last
       end
+
+      sender, to, args = raw_args
+      raw_name   = sender.stack.pop
+      fail("Missing value: #{raw_name.inspect} #{to.inspect} #{args.inspect}") unless raw_name
+
+      name = standard_key raw_name
+      fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
+
+      fail("Value already created: #{name.inspect}") if sender.values.has_key?(name)
+      sender.values[name] = args.last
 
       sender.values[name]
     end
