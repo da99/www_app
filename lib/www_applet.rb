@@ -309,36 +309,62 @@ class WWW_Applet
     def is *raw_args
       if raw_args.length == 2 # run as native function
         raw_name, val = raw_args
-        name = standard_key raw_name
-        fail("Value already created: #{name.inspect}") if @values.has_key?(name)
+        name = standard_key(raw_name)
+        if @values.has_key?(name)
+          fail "Value already created: #{raw_name.inspect}"
+        end
         @values[name] = val
         return val
-
       end
 
       sender, to, args = raw_args
-      raw_name   = sender.stack.pop
-      fail("Missing value: #{raw_name.inspect} #{to.inspect} #{args.inspect}") unless raw_name
+      raw_name = sender.stack.pop
+      value    = args.last
+      source = "#{raw_name.inspect} #{to.inspect} #{args.inspect}"
+      if !raw_name
+        fail "Missing value: #{source}"
+      end
+
+      if !(raw_name.is_a? String)
+        fail "Invalid value: Must be a string: #{source}"
+      end
+
+      if args.empty?
+        fail "Missing value: #{source}"
+      end
 
       name = standard_key raw_name
-      fail("Missing value: #{name.inspect} #{to.inspect} #{args.inspect}") if args.empty?
+      if sender.values.has_key?(name)
+        fail("Value already created: #{name.inspect}")
+      end
 
-      fail("Value already created: #{name.inspect}") if sender.values.has_key?(name)
-      sender.values[name] = args.last
-
-      sender.values[name]
+      sender.values[name] = value
+      return value
     end
 
     def is_a_computer sender, to, tokens
+      source   = "#{sender.stack.last.inspect} #{to.inspect} [...]"
+      if sender.stack.empty?
+        fail("Missing value: a name for the computer: #{source}")
+      end
+
       raw_name = sender.stack.pop
-      fail("Missing value: #{raw_name.inspect} #{to.inspect} [...tokens...]") unless raw_name
+      if !raw_name.is_a?(String)
+        fail "Invalid value: computer name must be a string: #{source}"
+      end
+
       name = standard_key(raw_name)
-      sender.computers[name] ||= []
-      sender.computers[name].push lambda { |sender, to, args|
-        c = WWW_Applet.new(sender, to, tokens, args)
-        c.run
-        c.stack.last
-      }
+      if sender.computers[name]
+        fail "Invalid value: computer name already taken: #{source}"
+      end
+
+      sender.computers[name] = [
+        lambda { |sender, to, args|
+          c = WWW_Applet.new(sender, to, tokens, args)
+          c.run
+          c.stack.last
+        }
+      ]
 
       {"IS"=> ["COMPUTER"], "VALUE"=> name}
     end
