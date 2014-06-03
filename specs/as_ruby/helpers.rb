@@ -4,56 +4,17 @@ require 'www_applet'
 require 'pry'
 
 def read_value applet, raw
-  applet.instance_eval { @values[applet.standard_key raw] }
+  applet.values[applet.standard_key raw]
 end
 
 class WWW_Applet_Test
-
-  module Computers
-    def write_computer raw, l
-      @computers[standard_key raw] = [l]
-    end
-  end # === module Computers
 
   def initialize applet, output
     @applet = applet
     @err    = nil
     @test   = WWW_Applet.new("__main_test___", output)
     @test.extend Computers
-
-    @test.write_computer "value should ==", lambda { |o,n,v|
-      name = o.stack.last
-      target = o.fork_and_run(n,v).stack.last
-      read_value(@applet, name).should == target
-    }
-
-    @test.write_computer "should raise", lambda { |o,n,v|
-      target = o.fork_and_run(n,v).stack.last
-      @err.message.should.match /#{Regexp.escape target}/
-      @err.message
-    }
-
-    @test.write_computer "message should match", lambda { |o,n,v|
-      str_regex = o.fork_and_run(n,v).stack.last
-      msg = o.stack.last
-      msg.should.match /#{Regexp.escape str_regex}/i
-    }
-
-    @test.write_computer "stack should ==", lambda { |o,n,v|
-      @applet.stack.should == o.fork_and_run(n,v).stack
-    }
-
-    @test.write_computer "should not raise", lambda { |o,n,v|
-      @err.should == nil
-    }
-
-    @test.write_computer "last console message should ==", lambda { |o,n,v|
-      @applet.console.last.should == o.fork_and_run(n,v).stack.last
-    }
-
-    @test.write_computer "console should ==", lambda { |o,n,v|
-      @applet.console.should == v
-    }
+    @test.send :test_applet, @applet
   end
 
   def run
@@ -64,9 +25,78 @@ class WWW_Applet_Test
         v.is_a?(String) && WWW_Applet.standard_key(v) == "SHOULD RAISE"
       }
       raise e unless fail_expected
-      @err = e
+      @test.send :test_err, e
     end
     @test.run
   end
 
+  module Computers
+
+    class << self
+      def aliases
+        @map ||= {}
+      end
+    end # === class self
+
+    private
+    def test_applet app = :none
+      if app != :none
+        @test_applet = app
+      end
+      @test_applet
+    end
+
+    def test_err e = :none
+      if e != :none
+        @test_err = e
+      end
+      @test_err
+    end
+
+
+    public
+    aliases[:value_should_equals_equals] = "value should =="
+    def value_should_equals_equals sender, to, args
+      name = sender.stack.last
+      target = sender.fork_and_run(to,args).stack.last
+      read_value(@test_applet, name).should == target
+    end
+
+    def should_raise sender, to, args
+      target = sender.fork_and_run(to,args).stack.last
+      @test_err.message.should.match /#{Regexp.escape target}/
+      @test_err.message
+    end
+
+    def message_should_match sender, to, args
+      str_regex = sender.fork_and_run(to, args).stack.last
+      msg = sender.stack.last
+      msg.should.match /#{Regexp.escape str_regex}/i
+    end
+
+    aliases[:stack_should_equal_equal] = "stack should =="
+    def stack_should_equal_equal sender, to, args
+      @test_applet.stack.should == sender.fork_and_run(to, args).stack
+    end
+
+    def should_not_raise sender, to, args
+      @err.should == nil
+    end
+
+    aliases[:last_console_message_should_equal_equal] = "last console message should =="
+    def last_console_message_should_equal_equal sender, to, args
+      @test_applet.console.last.should == sender.fork_and_run(to, args).stack.last
+    end
+
+    aliases[:console_should_equal_equal] = "console should =="
+    def console_should_equal_equal sender, to, args
+      @test_applet.console.should == args
+    end
+  end # === module Computers
+
 end # === class
+
+
+
+
+

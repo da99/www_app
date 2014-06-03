@@ -47,7 +47,7 @@ WWW_Applet_Test.Computers = {
   "value should ==" : function (o,n,v) {
     var name   = last(o.stack);
     var target = last(o.fork_and_run(n,v).stack);
-    return assert.equal(this.input.read_value(name), target);
+    return assert.equal(this.input.values[name.toUpperCase()], target);
   },
 
   "should raise" : function (o,n,v) {

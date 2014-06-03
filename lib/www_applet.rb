@@ -77,9 +77,14 @@ class WWW_Applet
     self.extend(Computers) unless @parent
   end # def initialize
 
-  def extend m
-    m.public_instance_methods.each { |n|
-      @computers[standard_key(n.to_s).gsub('_', ' ')] = [n]
+  def extend mod
+    mod.public_instance_methods.each { |sym|
+      name = if mod.respond_to?(:aliases) && mod.aliases[sym]
+               standard_key(mod.aliases[sym])
+             else
+               standard_key(sym.to_s).gsub('_', ' ')
+             end
+      @computers[name] = [sym]
     }
     super
   end
