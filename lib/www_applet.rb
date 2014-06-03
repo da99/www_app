@@ -128,7 +128,7 @@ class WWW_Applet
     @is_running = true
 
     fail("Invalid state: Already finished running.") if @is_done
-    start = 0
+
     stop  = tokens.length
     curr  = 0
 
@@ -151,11 +151,11 @@ class WWW_Applet
       # ===================================================
       # SEND TO COMPUTER
       # ===================================================
-      curr               += 1 # === move past the token array
+      curr               += 1 # === move past the tokens array
       from                = self
       to                  = standard_key val
       raw_args            = next_val
-      should_compile_args = (to != standard_key("is a computer"))
+      should_compile_args = (to != standard_key("IS A COMPUTER"))
 
       args = if should_compile_args
                from.fork_and_run("arg run for #{to.inspect}", raw_args).stack
