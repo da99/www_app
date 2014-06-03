@@ -87,16 +87,16 @@ class WWW_Applet
   end
 
   def applet_command? val
-    object?(val) && val["IS"].include?("APPLET COMMAND")
+    applet_object?(val) && val["IS"].include?("APPLET COMMAND")
   end
 
-  def object? val
+  def applet_object? val
     val.is_a?(Hash) && val["IS"].is_a?(Array)
   end
 
   def stack_able? val
-    ( VALID_NON_OBJECTS.include?(val.class) || object?(val) ) &&
-      !applet_command?(val)
+    VALID_NON_OBJECTS.include?(val.class) &&
+      (applet_object?(val) && !applet_command?(val))
   end
 
   def is_fork? answer = :none
