@@ -285,7 +285,7 @@ class WWW_Applet
 
     def get *raw
       if raw.size == 1 # runs as native method
-        @values[standard_key raw.last]
+        values[standard_key raw.last]
       else
         sender, to, args = raw
         name = standard_key args.last

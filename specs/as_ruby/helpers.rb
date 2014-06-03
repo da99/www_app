@@ -3,10 +3,6 @@ require 'Bacon_Colored'
 require 'www_applet'
 require 'pry'
 
-def read_value applet, raw
-  applet.values[applet.standard_key raw]
-end
-
 class WWW_Applet_Test
 
   def initialize applet, output
@@ -59,7 +55,7 @@ class WWW_Applet_Test
     def value_should_equals_equals sender, to, args
       name = sender.stack.last
       target = sender.fork_and_run(to,args).stack.last
-      read_value(@test_applet, name).should == target
+      @test_applet.get(name).should == target
     end
 
     def should_raise sender, to, args
