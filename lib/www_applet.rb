@@ -56,6 +56,8 @@ class WWW_Applet
       @tokens = raw.first
     when 2
       @name, @tokens = raw
+    when 3
+      @parent, @name, @tokens = raw
     when 4
       @parent, @name, @tokens, @args = raw
     else
@@ -95,7 +97,7 @@ class WWW_Applet
   end
 
   def stack_able? val
-    VALID_NON_OBJECTS.include?(val.class) &&
+    VALID_NON_OBJECTS.include?(val.class) ||
       (applet_object?(val) && !applet_command?(val))
   end
 
