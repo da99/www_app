@@ -76,10 +76,10 @@ WWW_Applet_Test.Computers = {
   },
 
   "message should match" : function (sender, to, args) {
-    var str_regex = last(args);
-    var msg = last(sender.stack);
-    var regex = new RegExp(str_regex, "i");
-    assert.ok(regex.test(this.test_err.message))
+    var str_regex = last(args).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    var regex     = new RegExp(str_regex, "i");
+    var msg       = this.test_err.message;
+    assert.ok(regex.test(msg))
     return true;
   },
 
