@@ -64,13 +64,13 @@ class WWW_Applet
 
     @name = @name || "[unknown]"
 
-    fail("Invalid value: for args: #{args.inspect}") unless args.is_a?(Array)
+    fail("Invalid value: for args: #{args.inspect}") unless @args.is_a?(Array)
 
-    if tokens.is_a?(String)
-      tokens = MultiJson.load tokens
+    if @tokens.is_a?(String)
+      @tokens = MultiJson.load @tokens
     end
 
-    fail("Invalid: JS object must be an array") unless tokens.is_a?(Array)
+    fail("Invalid: JS object must be an array") unless @tokens.is_a?(Array)
 
     self.extend(Computers) unless @parent
   end # def initialize
