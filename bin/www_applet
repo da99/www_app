@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+#
+set -u -e -o pipefail
+
+
+target="$(gem which www_applet)"
+
+this_dir="$(pwd)"
+applet_dir="$(dirname $target)"
+applet_file="${applet_dir}/www_applet.js"
+
+if [[ -z "$@" ]]; then
+  target_dir="$this_dir"
+else
+  target_dir="$1"
+fi
+new_file="$target_dir/www_applet.js"
+cp $applet_file $new_file
+echo " === Wrote: $new_file"
+
