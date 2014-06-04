@@ -79,7 +79,8 @@ WWW_Applet_Test.Computers = {
       assert.ok(this.test_err.message, "Expected error: \"" + err_name + '"');
     } else {
       throw this.test_err;
-    };
+    }
+
     return this.test_err.message;
   },
 
