@@ -5,18 +5,38 @@
 set -u -e -o pipefail
 
 
-target="$(gem which www_applet)"
+case "$1" in
+  "help")
+    echo ""
+    echo "  # ===================="
+    echo "  www_applet help"
+    echo "  www_applet install"
+    echo "  # ===================="
+    ;;
 
-this_dir="$(pwd)"
-applet_dir="$(dirname $target)"
-applet_file="${applet_dir}/www_applet.js"
+  "install")
+    target="$(gem which www_applet)"
 
-if [[ -z "$@" ]]; then
-  target_dir="$this_dir"
-else
-  target_dir="$1"
-fi
-new_file="$target_dir/www_applet.js"
-cp $applet_file $new_file
-echo " === Wrote: $new_file"
+    this_dir="$(pwd)"
+    applet_dir="$(dirname $target)"
+    applet_file="${applet_dir}/www_applet.js"
+
+    if [[ -z "$@" ]]; then
+      target_dir="$this_dir"
+    else
+      target_dir="$1"
+    fi
+
+    new_file="$target_dir/www_applet.js"
+    cp $applet_file $new_file
+    echo "#=== Wrote: $new_file"
+    ;;
+
+  "*")
+    echo "Unknown operation: $1" 1>&2
+    exit 1
+    ;;
+esac
+
+
 
