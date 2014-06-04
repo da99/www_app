@@ -1,42 +1,45 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
 # -*- bash -*-
 #
 #
-set -u -e -o pipefail
 
+case ARGV[0]
 
-case "$1" in
-  "help")
-    echo ""
-    echo "  # ===================="
-    echo "  www_applet help"
-    echo "  www_applet install"
-    echo "  # ===================="
-    ;;
+when "help"
 
-  "install")
-    target="$(gem which www_applet)"
+  puts %^
+    # ===================="
+    www_applet help"
+    www_applet install"
+    # ===================="
+  ^
 
-    this_dir="$(pwd)"
-    applet_dir="$(dirname $target)"
-    applet_file="${applet_dir}/www_applet.js"
+when "install"
 
-    if [[ -z "$@" ]]; then
-      target_dir="$this_dir"
-    else
-      target_dir="$1"
-    fi
+  require "fileutils"
+  args   = ARGV.dup
+  target =`gem which www_applet`.strip
 
-    new_file="$target_dir/www_applet.js"
-    cp $applet_file $new_file
-    echo "#=== Wrote: $new_file"
-    ;;
+  this_dir    = Dir.pwd
+  applet_dir  = File.dirname target
+  applet_file = File.join applet_dir, "www_applet.js"
 
-  "*")
-    echo "Unknown operation: $1" 1>&2
-    exit 1
-    ;;
-esac
+  target_dir = if !ARGV[1]
+                 this_dir
+               else
+                 ARGV[1]
+               end
+
+  new_file = File.join target_dir, "www_applet.js"
+  FileUtils.cp applet_file, new_file
+  puts "#=== From:  #{applet_file}"
+  puts "#=== Wrote: #{new_file}"
+
+else
+
+  abort "Unknown operation: #{ARGV.first.inspect}"
+
+end # === case
 
 
 
