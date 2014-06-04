@@ -18,7 +18,7 @@ Gem::Specification.new do |spec|
   spec.license       = "MIT"
 
   spec.files         = `git ls-files -z`.split("\x0").reject { |file|
-    file.index('bin/') == 0 && file != "bin/#{File.basename Dir.pwd}"
+    file.index('bin/') == 0 && file != "bin/www_applet"
   }
   spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
