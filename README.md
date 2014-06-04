@@ -24,16 +24,28 @@ To install:
 To Use:
 
 ```ruby
-  my_json = MultiJson.dump [1, 2, "three", []]
-  o = WWW_Applet.new my_json
+  require "www_applet"
 
-  o.write_function "three", lambda { |runtime, name, args|
-    runtime.stack.concat [3,3,3]
-    :ignore_return
-  }
+  json = [
+    "one", "is", [1],
+    "two", "is", [2],
+    "three", "is a computer", [
+      3
+    ],
+    "print", [
+      "get", ["one"],
+      "get", ["two"],
+      "three", []
+    ]
+  ]
+
+  o = WWW_Applet.new json
+  # --or--
+  o = WWW_Applet.new MultiJson.dump(json)
 
   o.run
-  puts o.stack.inspect
+
+  puts o.console.inspect
 ```
 
 
@@ -59,19 +71,9 @@ Rules:
   3. the arguments as an Array.
 
 ```ruby
-  lambda { |runtime, name, args|
+  lambda { |sender, name_of_computer, evaled_args|
   }
 ```
-
-4. Returning from a function: The last value is put on the stack.
-   However, if the last value is a symbol, that tells the runtime
-   to do special things:
-
-     1. `:ignore_return` : Nothing is placed on the stack.
-     2. `:cont`          : Run the next function with same name.
-     (Similar to method overloading.)
-     3.  `:fin`          : Stop everything and do not place anything
-     on the stack.
 
 Fun fact:
 -----
