@@ -74,7 +74,12 @@ WWW_Applet_Test.Computers = {
     if (!this.test_err) {
       assert.fail(this.test_err, err_name, "Expecting error to be thrown: " + JSON.stringify(err_name));
     }
-    assert.ok(this.test_err.message, new RegExp(err_name, "i"));
+    var result = (new RegExp(err_name, "i")).test(this.test_err.message);
+    if (result) {
+      assert.ok(this.test_err.message, "Expected error: \"" + err_name + '"');
+    } else {
+      throw this.test_err;
+    };
     return this.test_err.message;
   },
 
