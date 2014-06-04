@@ -71,6 +71,9 @@ WWW_Applet_Test.Computers = {
 
   "should raise" : function (sender, to, args) {
     var err_name = last(args);
+    if (!this.test_err) {
+      assert.fail(this.test_err, err_name, "Expecting error to be thrown: " + JSON.stringify(err_name));
+    }
     assert.ok(this.test_err.message, new RegExp(err_name, "i"));
     return this.test_err.message;
   },
@@ -79,7 +82,12 @@ WWW_Applet_Test.Computers = {
     var str_regex = last(args).replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     var regex     = new RegExp(str_regex, "i");
     var msg       = this.test_err.message;
-    assert.ok(regex.test(msg));
+    var result    = regex.test(msg);
+    if (result) {
+      assert.ok(result);
+    } else {
+      assert.fail(msg, last(args), "Error message mismatch: " + msg + " -> " + last(args));
+    }
     return true;
   },
 

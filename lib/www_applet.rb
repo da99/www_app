@@ -360,7 +360,7 @@ class WWW_Applet
 
       sender.computers[name] = [
         lambda { |sender, to, args|
-          c = WWW_Applet.new(sender, to, tokens, args)
+          c = WWW_Applet.new(sender, "SEND TO: #{to.inspect}", tokens, args)
           c.run
           c.stack.last
         }
