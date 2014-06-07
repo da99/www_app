@@ -53,32 +53,42 @@ end
 
 json = [
 
-  "link", "style is", [
-    "color", ["#ddd"]
-    "on hover", [
+  # ====================================
+  #               STYLES
+  # ====================================
+
+  "link", "style", [
+    "color"    , ["#ddd"],
+    "on hover" , [
       "color"    , ["#fff"],
       "bg color" , ["#ddd"]
     ]
   ],
 
-  "box title", "style is", [
+  "box title", "style", [
     "text size" , ["small"],
     "font"      , ["sans-serif", "italic"]
   ],
 
-  "form field title", "style is", [
+  "form field title", "style", [
     "color"     , ["#fff"],
     "text size" , ["medium"],
     "font"      , ["sans-serif"]
   ],
 
-  "form field notice", "style is", [
+  "form field notice", "style", [
     "color", ["#ccc"]
   ],
 
-  "form button", [
+  "form button", "style", [
     "text size", ["small"]
   ],
+
+
+  # ====================================
+  #               PAGE
+  # ====================================
+
 
   "The page", [
     "bg color"         , [ "#ffc"          ],
@@ -122,7 +132,7 @@ json = [
       "password", [
         "max chars" , [ 200 ],
         "text"      , ["Password"],
-        "notice"    , ["for better security, use spaces and words):"]
+        "notice"    , ["(for better security, use spaces and words):"]
       ],
       "password", [
         "max chars", [200],
@@ -137,12 +147,16 @@ json = [
   ], # box
 
   "box", [
-    "id", "is", ["footer"],
+    "id", ["footer"],
     "p", ["(c) 2012-2014. megauni.com. Some rights reserved."],
     "p", ["All other copyrights belong to their respective owners."]
   ]
 
-] # === end json
+]
+# =======================
+#     end json
+# =======================
+
 d = WWW_Applet.new "__MAIN__", json
 d.extend HTML
 d.run
