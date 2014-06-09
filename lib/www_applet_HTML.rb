@@ -116,6 +116,18 @@ module Styles
     new_style to, val
   end
 
+  def id sender, to, args
+    val = require_arg(
+      to,
+      standard_key(args.last),
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      [:max_length, 100, "url needs to be 100 or less chars."],
+      [:matches, /\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"]
+    )
+    new_style to, val
+  end
+
   def title sender, to, args
     val = require_arg(
       to, args.last.to_s.strip,
@@ -132,7 +144,67 @@ module Styles
     new_style to, val
   end
 
+  def notice sender, to, args
+    val = require_arg(
+      to, args.last.to_s.strip,
+      [:not_empty_string, "can't be empty."]
+    )
+    new_style to, val
+  end
+
+  def about_the_computer sender, to, args
+    name = standard_key(to)
+    The_Styles()[name] ||= {}
+    target = The_Styles()[name]
+    args.each { |o|
+      next unless is_a_style?(o)
+      target[o["NAME"]] = o["VALUE"]
+    }
+    WWW_Applet::IGNORE_RETURN
+  end
+
+  def max_chars sender, to, args
+    val = require_arg(to, args.last, :number, [:max, 200], [:min, 1])
+    new_style to, val
+  end
+
+  def on_click sender, to, args
+    new_style to, args.last
+  end
+
+  def submit_form sender, to, args
+    new_style to, args.last
+  end
+
+  def box sender, to, args
+    add_content(sender, to, args)
+  end
+
+  def button sender, to, args
+    add_content(sender, to, args)
+  end
+
+  def form sender, to, args
+    add_content(sender, to, args)
+  end
+
+  def one_line_text_input sender, to, args
+    add_content(sender, to, args)
+  end
+
+  def password sender, to, args
+    add_content(sender, to, args)
+  end
+
   private # ==========================================
+
+  def add_content sender, to, args
+    The_Styles()["THE CONTENT"] ||= []
+    target = The_Styles()["THE CONTENT"]
+    content = args.select { |o| is_a_style?(o) }
+    target.push({ "TYPE"=> standard_key(to), "CONTENT"=>content})
+    WWW_Applet::IGNORE_RETURN
+  end
 
   def The_Styles
     @The_Styles ||= {}
@@ -153,6 +225,9 @@ module Styles
             when o == :upcase
               fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
               val.upcase
+            when o == :number
+              fail "Invalid: #{name} must be a number: #{val.inspect}" unless val.is_a?(Numeric)
+              val
             when o.is_a?(Array)
               cmd = o.first
               msg = "Invalid: #{o.last}: #{val.inspect}"
@@ -167,6 +242,10 @@ module Styles
               when :max_length
                 fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
                 fail msg unless val.length <= 200
+              when :max
+                fail "Invalid: #{name} must be #{o[1]} or less" unless val <= o[1]
+              when :min
+                fail "Invalid: #{name} must be #{o[1]} or more" unless val >= o[1]
               when :matches
                 regex = o[1]
                 fail msg unless regex =~ val
@@ -186,11 +265,11 @@ end # === module Styles
 
 module HTML
 
-
-  protected
-
   def to_html
-    html_doc.to_html
+    require "pp"
+    pp The_Styles()
+    ""
+    # html_doc.to_html
   end
 
   def html_doc
@@ -252,7 +331,7 @@ json = [
   # ====================================
 
 
-  "The Computer", [
+  "About The Computer", [
     "bg color"         , [ "#ffc"          ],
     "bg image url"     , [ "THE_IMAGE_URL" ],
     "bg image pattern" , [ "repeat all"    ],
@@ -271,17 +350,17 @@ json = [
 
       "one line text input", [
         "max chars" , [ 30 ],
-        "text"      , [ "Screen Name:" ]
+        "title", ["Screen Name:"]
       ],
 
       "password", [
         "max chars" , [ 200 ],
-        "text"      , [ "Password:" ],
+        "title"     , [ "Password:" ],
         "notice"    , [ "(spaces are allowed)" ]
       ],
 
       "button", [
-        "text" , [ "Log-In" ],
+        "title" , [ "Log-In" ],
         "on click" , [ "submit form", [] ]
       ]
     ] # === form
@@ -290,18 +369,18 @@ json = [
   "box", [
     "title" ,  [ "Create a new account" ],
     "form", [
-      "one line text input", [ "max chars", [30], "text", ["Screen Name:"]],
+      "one line text input", [ "max chars", [30], "title", ["Screen Name:"]],
       "password", [
         "max chars" , [ 200 ],
-        "text"      , ["Password"],
+        "title"      , ["Password"],
         "notice"    , ["(for better security, use spaces and words):"]
       ],
       "password", [
         "max chars", [200],
-        "text", ["Re-type the password:"]
+        "title", ["Re-type the password:"]
       ],
       "button", [
-        "text", ["Create Account"],
+        "title", ["Create Account"],
         "on click", ["submit form", []]
       ]
 
