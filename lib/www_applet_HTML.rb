@@ -14,7 +14,7 @@ end # === module HTML
 module JavaScript
 end # === module JavaScrip
 
-module CSS
+module Styles
 
   class << self
 
@@ -89,7 +89,47 @@ module CSS
 
   def on_hover sender, to, args
     vals = args.select { |o| is_a_style?(o) }
-    new_style "on hover", vals
+    new_style to, vals
+  end
+
+  def bg_image_url sender, to, args
+    val = require_arg(
+      to,
+      args.last,
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      [:max_length, 200, "url needs to be 200 or less chars."],
+      [:matches, /\A[a-z0-9\_\-\:\/\?\&\(\)\@\.]{1,200}\Z/i , "url has invalid chars"]
+    )
+    new_style to, val
+  end
+
+  def bg_image_pattern sender, to, args
+    opts = ["REPEAT ALL", "REPEAT ACROSS", "REPEAT UP/DOWN"]
+    val = require_arg(
+      to,
+      standard_key(args.last),
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      [:included, opts, "can only be one of these: #{opts.join ', '}"]
+    )
+    new_style to, val
+  end
+
+  def title sender, to, args
+    val = require_arg(
+      to, args.last.to_s.strip,
+      [:not_empty_string, "can't be empty."]
+    )
+    new_style to, val
+  end
+
+  def p sender, to, args
+    val = require_arg(
+      to, args.last.to_s.strip,
+      [:not_empty_string, "can't be empty."]
+    )
+    new_style to, val
   end
 
   private # ==========================================
@@ -118,15 +158,18 @@ module CSS
               msg = "Invalid: #{o.last}: #{val.inspect}"
               case cmd
               when :string
-                fail "Invalid: #{msg}" if !val.is_a?(String)
+                fail msg if !val.is_a?(String)
               when :not_empty_string
                 fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
-                fail "Invalid: #{msg}" if val.empty?
+                fail msg if val.empty?
               when :included
-                fail "Invalid: #{msg}" unless o[1].include?(val)
+                fail msg unless o[1].include?(val)
+              when :max_length
+                fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
+                fail msg unless val.length <= 200
               when :matches
                 regex = o[1]
-                fail "Invalid: #{msg}" unless regex =~ val
+                fail msg unless regex =~ val
               else
                 fail "Invalid: unknown option: #{name.inspect} #{val.inspect} #{args.inspect}"
               end
@@ -139,26 +182,17 @@ module CSS
     val
   end
 
-end # === module CSS
+end # === module Styles
 
 module HTML
 
-  def title sender, to, args
-    content = args.last || "My Page"
-    top.html_doc.at_css("html head title").content = content
-    content
-  end
-
-  def p sender, to, args
-    content = args.last || ""
-    doc = top.html_doc
-    paragraph = Nokogiri::XML::Node.new "p", doc
-    paragraph.content = content
-    doc.at_css("html body").add_child paragraph
-    content
-  end
 
   protected
+
+  def to_html
+    html_doc.to_html
+  end
+
   def html_doc
     @html_doc ||= begin
                     Nokogiri::HTML <<-EOHTML.unindent
@@ -178,11 +212,6 @@ module HTML
 end # --- module
 
 require "www_applet"
-class WWW_Applet
-  def to_html
-    html_doc.to_html
-  end
-end
 
 json = [
 
@@ -225,7 +254,7 @@ json = [
 
   "The Computer", [
     "bg color"         , [ "#ffc"          ],
-    "bg image url"     , [ "THE IMAGE URL" ],
+    "bg image url"     , [ "THE_IMAGE_URL" ],
     "bg image pattern" , [ "repeat all"    ],
     "title"            , [ "megaUNI"       ]
   ],
@@ -291,9 +320,8 @@ json = [
 # =======================
 
 d = WWW_Applet.new "__MAIN__", json
-d.extend CSS
+d.extend_applet Styles
 d.extend HTML
-d.extend JavaScript
 d.run
 puts d.to_html
 
