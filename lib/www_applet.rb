@@ -74,10 +74,10 @@ class WWW_Applet
 
     fail("Invalid: JS object must be an array") unless @tokens.is_a?(Array)
 
-    self.extend(Computers) unless @parent
+    self.extend_applet(Computers) unless @parent
   end # def initialize
 
-  def extend mod
+  def extend_applet mod
     mod.public_instance_methods.each { |sym|
       name = if mod.respond_to?(:aliases) && mod.aliases[sym]
                standard_key(mod.aliases[sym])
@@ -86,7 +86,7 @@ class WWW_Applet
              end
       @computers[name] = [sym]
     }
-    super
+    extend mod
   end
 
   def standard_key *args

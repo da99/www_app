@@ -82,6 +82,17 @@
     "output" : [
       "stack should ==", [{"IS":["COMPUTER"], "VALUE": "MY FUNC"}, null]
     ]
+  },
+
+  {
+    "it": "does not evaluate the args if the computer is not found.",
+    "input" : [
+      "the computer", [ "another computer", []]
+    ],
+    "output" : [
+      "should raise", ["Computer not found:"],
+      "message should match", ["the computer"]
+    ]
   }
 
 ]
