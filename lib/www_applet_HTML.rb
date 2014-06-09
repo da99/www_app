@@ -38,6 +38,21 @@ module Styles
     name
   end
 
+  def about_the_computer sender, to, args
+    name = standard_key(to)
+    The_Styles()[name] ||= {}
+    target = The_Styles()[name]
+    args.each { |o|
+      next unless is_a_style?(o)
+      target[o["NAME"]] = o["VALUE"]
+    }
+    WWW_Applet::IGNORE_RETURN
+  end
+
+  # ===================================================
+  #                 Properties
+  # ===================================================
+
   def font sender, to, args
     val = args.map { |o|
       require_arg(
@@ -87,11 +102,6 @@ module Styles
     new_style "font", val
   end
 
-  def on_hover sender, to, args
-    vals = args.select { |o| is_a_style?(o) }
-    new_style to, vals
-  end
-
   def bg_image_url sender, to, args
     val = require_arg(
       to,
@@ -136,14 +146,6 @@ module Styles
     new_style to, val
   end
 
-  def p sender, to, args
-    val = require_arg(
-      to, args.last.to_s.strip,
-      [:not_empty_string, "can't be empty."]
-    )
-    new_style to, val
-  end
-
   def notice sender, to, args
     val = require_arg(
       to, args.last.to_s.strip,
@@ -152,28 +154,43 @@ module Styles
     new_style to, val
   end
 
-  def about_the_computer sender, to, args
-    name = standard_key(to)
-    The_Styles()[name] ||= {}
-    target = The_Styles()[name]
-    args.each { |o|
-      next unless is_a_style?(o)
-      target[o["NAME"]] = o["VALUE"]
-    }
-    WWW_Applet::IGNORE_RETURN
-  end
-
   def max_chars sender, to, args
     val = require_arg(to, args.last, :number, [:max, 200], [:min, 1])
     new_style to, val
   end
 
+
+  # ===================================================
+  #                    Events
+  # ===================================================
+
   def on_click sender, to, args
     new_style to, args.last
   end
 
+  def on_hover sender, to, args
+    vals = args.select { |o| is_a_style?(o) }
+    new_style to, vals
+  end
+
+  # ===================================================
+  #                    Actions
+  # ===================================================
+
   def submit_form sender, to, args
     new_style to, args.last
+  end
+
+  # ===================================================
+  #                    Elements
+  # ===================================================
+
+  def p sender, to, args
+    val = require_arg(
+      to, args.last.to_s.strip,
+      [:not_empty_string, "can't be empty."]
+    )
+    new_style to, val
   end
 
   def box sender, to, args
