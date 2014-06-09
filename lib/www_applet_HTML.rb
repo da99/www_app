@@ -8,6 +8,28 @@ class String
   end
 end
 
+module CSS
+
+  class << self
+
+    def raw_args
+      @raw_args ||= []
+    end
+
+  end # === class self
+
+  raw_args << :style
+  def style computer, to, tokens
+  end
+
+  private # ==========================================
+
+  def The_Styles
+    @The_Styles ||= {}
+  end
+
+end # === module CSS
+
 module HTML
 
   def title sender, to, args
@@ -158,11 +180,16 @@ json = [
 # =======================
 
 d = WWW_Applet.new "__MAIN__", json
+d.extend CSS
 d.extend HTML
+d.extend JavaScript
 d.run
 puts d.to_html
-File.open "/tmp/n.html", "w+" do |io|
-  io.write d.to_html
+
+if ARGV.first == "print"
+  File.open "/tmp/n.html", "w+" do |io|
+    io.write d.to_html
+  end
 end
 
 
