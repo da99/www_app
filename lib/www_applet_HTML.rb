@@ -8,6 +8,12 @@ class String
   end
 end
 
+module HTML
+end # === module HTML
+
+module JavaScript
+end # === module JavaScrip
+
 module CSS
 
   class << self
@@ -18,14 +24,119 @@ module CSS
 
   end # === class self
 
-  raw_args << :style
-  def style computer, to, tokens
+  def are sender, to, args
+    name = standard_key(sender.grab_stack_tail(1, "a name for the style"))
+    styles = args.each { |o|
+      case
+      when is_a_style?(o)
+        The_Styles()[name] ||= {}
+        The_Styles()[name][o[:NAME]] = o[:VALUE]
+      else
+        next
+      end
+    }
+    name
+  end
+
+  def font sender, to, args
+    val = args.map { |o|
+      require_arg(
+        "font",
+        o,
+        [:string, "can only be a string"],
+        [:not_empty_string, "can't be an empty string"],
+        [:matches, /\A[a-z0-9\-\_\ ]{1,100}\Z/i, "only allow 1-100 characters: letters, numbers, spaces, - _"]
+      )
+    }.join ", "
+    new_style "font", val
+  end
+
+  def bg_color sender, to, args
+    val = require_arg(
+      "bg color",
+      args.last,
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "only allow 1-25 characters: letters, numbers and #"],
+      :upcase
+    )
+    new_style "color", val
+  end
+
+  def text_color sender, to, args
+    val = require_arg(
+      "text color",
+      args.last,
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "allow 1-25 characters: letters, numbers and #"],
+      :upcase
+    )
+    new_style "color", val
+  end
+
+  def text_size sender, to, args
+    val = require_arg(
+      "text size",
+      args.last,
+      [:string, "must be a string"],
+      [:not_empty_string, "can't be an empty string"],
+      :upcase,
+      [:included, %w{SMALL MEDIUM LARGE X-LARGE}, "can only be: small, medium, large, x-large"]
+    )
+    new_style "font", val
+  end
+
+  def on_hover sender, to, args
+    vals = args.select { |o| is_a_style?(o) }
+    new_style "on hover", vals
   end
 
   private # ==========================================
 
   def The_Styles
     @The_Styles ||= {}
+  end
+
+  def new_style name, val
+    {"IS"=>["STYLE"], "VALUE"=>val, "NAME"=>standard_key(name)}
+  end
+
+  def is_a_style? o
+    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE")
+  end
+
+  def require_arg name, raw, *args
+    val = raw
+    args.each { |o|
+      val = case
+            when o == :upcase
+              fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
+              val.upcase
+            when o.is_a?(Array)
+              cmd = o.first
+              msg = "Invalid: #{o.last}: #{val.inspect}"
+              case cmd
+              when :string
+                fail "Invalid: #{msg}" if !val.is_a?(String)
+              when :not_empty_string
+                fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
+                fail "Invalid: #{msg}" if val.empty?
+              when :included
+                fail "Invalid: #{msg}" unless o[1].include?(val)
+              when :matches
+                regex = o[1]
+                fail "Invalid: #{msg}" unless regex =~ val
+              else
+                fail "Invalid: unknown option: #{name.inspect} #{val.inspect} #{args.inspect}"
+              end
+
+              val
+            else
+              fail "Invalid: unknown option: #{o.inspect}"
+            end
+    }
+    val
   end
 
 end # === module CSS
@@ -79,40 +190,40 @@ json = [
   #               STYLES
   # ====================================
 
-  "link", "style", [
-    "color"    , ["#ddd"],
+  "link", "are", [
+    "text color"    , ["#ddd"],
     "on hover" , [
-      "color"    , ["#fff"],
-      "bg color" , ["#ddd"]
+      "text color" , ["#fff"],
+      "bg color"   , ["#ddd"]
     ]
   ],
 
-  "box title", "style", [
+  "box title", "are", [
     "text size" , ["small"],
     "font"      , ["sans-serif", "italic"]
   ],
 
-  "form field title", "style", [
-    "color"     , ["#fff"],
-    "text size" , ["medium"],
-    "font"      , ["sans-serif"]
+  "form field title", "are", [
+    "text color" , ["#fff"],
+    "text size"  , ["medium"],
+    "font"       , ["sans-serif"]
   ],
 
-  "form field notice", "style", [
-    "color", ["#ccc"]
+  "form field notice", "are", [
+    "text color", ["#ccc"]
   ],
 
-  "form button", "style", [
+  "form button", "are", [
     "text size", ["small"]
   ],
 
 
   # ====================================
-  #               PAGE
+  #           The Main Computer
   # ====================================
 
 
-  "The page", [
+  "The Computer", [
     "bg color"         , [ "#ffc"          ],
     "bg image url"     , [ "THE IMAGE URL" ],
     "bg image pattern" , [ "repeat all"    ],

@@ -120,6 +120,22 @@ class WWW_Applet
     c
   end
 
+  def grab_stack_tail num, msg
+    if @stack.size < num
+      fail("Invalid state: #{msg}")
+    end
+
+    if num == 1
+      return @stack.pop
+    end
+
+    vals = []
+    num.times do |i|
+      vals.unshift @stack.pop
+    end
+    vals
+  end
+
   def top
     p = parent
     curr = p
@@ -212,7 +228,7 @@ class WWW_Applet
               false
 
             else
-              fail("Invalid: Unknown operation: #{resp["VALUE"].to_s.inspect}")
+              fail("Invalid: Unknown operation: #{resp["VALUE"].inspect}")
               false
 
             end # case
