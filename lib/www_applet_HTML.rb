@@ -98,8 +98,8 @@ module Styles
     new_style to, val
   end
 
-  def bg_image_pattern sender, to, args
-    opts = ["REPEAT ALL", "REPEAT ACROSS", "REPEAT UP/DOWN"]
+  def bg_image_repeat sender, to, args
+    opts = ["BOTH", "ACROSS", "UP/DOWN", "NO"]
     val = require_arg(
       to,
       standard_key(args.last),
@@ -299,9 +299,53 @@ module HTML
     meta
   end
 
+  def to_css_name k, v
+    case k
+    when "BG COLOR"
+      "background-color: #{v}"
+    when "BG IMAGE URL"
+      "background-image: url(#{v})"
+    when 'BG IMAGE REPEAT'
+      val = "background-repeat: "
+      val += case v
+             when "BOTH"
+               "repeat"
+             when "ACROSS"
+               "repeat-x"
+             when "UP/DOWN"
+               "repeat-y"
+             when "NO"
+               "no-repeat"
+             else
+               fail "Invalid: unknown repeat: #{v.inspect}"
+             end
+    when "TITLE"
+      nil
+    else
+      fail "Invalid: unknown css property: #{k.inspect}: #{v.inspect}"
+    end
+  end
+
+  def to_css scope, styles
+    val = "#{scope} { \n"
+    val += styles.map { |k,v|
+      css = to_css_name(k, v)
+      next unless css
+      "  #{css};"
+    }.compact.join("\n")
+    val += "\n}"
+    val
+  end
+
   def to_html
     require "pp"
-    pp organize_the_styles(@stack)
+    org = organize_the_styles(@stack)
+    html = ""
+    html += to_css("BODY", org["META"])
+
+    puts html
+    puts "============================"
+    pp org
     ""
     # html_doc.to_html
   end
@@ -334,7 +378,7 @@ json = [
 
   "bg color"         , [ "#ffc"          ],
   "bg image url"     , [ "THE_IMAGE_URL" ],
-  "bg image pattern" , [ "repeat all"    ],
+  "bg image repeat"  , [ "both"          ],
   "title"            , [ "megaUNI"       ],
 
   # ====================================
