@@ -25,28 +25,11 @@ module Styles
   end # === class self
 
   def are sender, to, args
-    name = standard_key(sender.grab_stack_tail(1, "a name for the style"))
-    styles = args.each { |o|
-      case
-      when is_a_style?(o)
-        The_Styles()[name] ||= {}
-        The_Styles()[name][o[:NAME]] = o[:VALUE]
-      else
-        next
-      end
-    }
-    name
-  end
-
-  def about_the_computer sender, to, args
-    name = standard_key(to)
-    The_Styles()[name] ||= {}
-    target = The_Styles()[name]
-    args.each { |o|
-      next unless is_a_style?(o)
-      target[o["NAME"]] = o["VALUE"]
-    }
-    WWW_Applet::IGNORE_RETURN
+    rule_name = sender.grab_stack_tail(1, "a name for the style")
+    new_style_rule(
+      rule_name,
+      args.select { |o| is_a_style?(o) }
+    )
   end
 
   # ===================================================
@@ -63,7 +46,7 @@ module Styles
         [:matches, /\A[a-z0-9\-\_\ ]{1,100}\Z/i, "only allow 1-100 characters: letters, numbers, spaces, - _"]
       )
     }.join ", "
-    new_style "font", val
+    new_style to, val
   end
 
   def bg_color sender, to, args
@@ -75,7 +58,7 @@ module Styles
       [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "only allow 1-25 characters: letters, numbers and #"],
       :upcase
     )
-    new_style "color", val
+    new_style to, val
   end
 
   def text_color sender, to, args
@@ -87,7 +70,7 @@ module Styles
       [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "allow 1-25 characters: letters, numbers and #"],
       :upcase
     )
-    new_style "color", val
+    new_style to, val
   end
 
   def text_size sender, to, args
@@ -99,7 +82,8 @@ module Styles
       :upcase,
       [:included, %w{SMALL MEDIUM LARGE X-LARGE}, "can only be: small, medium, large, x-large"]
     )
-    new_style "font", val
+
+    new_style to, val
   end
 
   def bg_image_url sender, to, args
@@ -190,49 +174,49 @@ module Styles
       to, args.last.to_s.strip,
       [:not_empty_string, "can't be empty."]
     )
-    new_style to, val
+    new_element sender, to, [val]
   end
 
-  def box sender, to, args
-    add_content(sender, to, args)
-  end
-
-  def button sender, to, args
-    add_content(sender, to, args)
-  end
-
-  def form sender, to, args
-    add_content(sender, to, args)
-  end
-
-  def one_line_text_input sender, to, args
-    add_content(sender, to, args)
-  end
-
-  def password sender, to, args
-    add_content(sender, to, args)
-  end
+  %w{ p box button form one_line_text_input password }.each { |name|
+    eval %^
+      def #{name} *args
+        new_element *args
+      end
+    ^
+  }
 
   private # ==========================================
 
-  def add_content sender, to, args
-    The_Styles()["THE CONTENT"] ||= []
-    target = The_Styles()["THE CONTENT"]
-    content = args.select { |o| is_a_style?(o) }
-    target.push({ "TYPE"=> standard_key(to), "CONTENT"=>content})
-    WWW_Applet::IGNORE_RETURN
-  end
-
-  def The_Styles
-    @The_Styles ||= {}
+  def new_style_rule rule_name, styles
+    {"IS"=>["STYLE RULE"], "NAME"=>standard_key(rule_name), "VALUE"=>styles}
   end
 
   def new_style name, val
-    {"IS"=>["STYLE"], "VALUE"=>val, "NAME"=>standard_key(name)}
+    {"IS"=>["STYLE"], "NAME"=>standard_key(name), "VALUE"=>val}
+  end
+
+  def new_element sender, to, args
+    e = {
+      "IS"    => ["ELEMENT"],
+      "NAME"  => standard_key(to),
+      "VALUE" => args.select { |o| is_stylish?(o) }
+    }
   end
 
   def is_a_style? o
     o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE")
+  end
+
+  def is_a_element? o
+    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("ELEMENT")
+  end
+
+  def is_a_style_rule? o
+    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE RULE")
+  end
+
+  def is_stylish? o
+    is_a_style?(o) || is_a_element?(o) || is_a_style_rule?(o)
   end
 
   def require_arg name, raw, *args
@@ -282,9 +266,42 @@ end # === module Styles
 
 module HTML
 
+  def organize_the_styles o
+    meta = {
+      "META"     => {},
+      "STYLES"   => {},
+      "TEXT"     => nil,
+      "ELEMENTS" => [],
+    }
+
+    if o.last.is_a? String
+      meta["TEXT"] = o.last
+    end
+
+    o.each { |v|
+      case
+      when is_a_style?(v)
+        meta["META"][v["NAME"]] = v["VALUE"]
+
+      when is_a_style_rule?(v)
+        meta["STYLES"][v["NAME"]] ||= {}
+        target = meta["STYLES"][v["NAME"]]
+        v["VALUE"].each { |rule|
+          target[rule["NAME"]] = rule["VALUE"]
+        }
+
+      when is_a_element?(v)
+        meta["ELEMENTS"].push v
+
+      end
+    }
+
+    meta
+  end
+
   def to_html
     require "pp"
-    pp The_Styles()
+    pp organize_the_styles(@stack)
     ""
     # html_doc.to_html
   end
@@ -310,6 +327,15 @@ end # --- module
 require "www_applet"
 
 json = [
+
+  # ====================================
+  #           The Main Computer
+  # ====================================
+
+  "bg color"         , [ "#ffc"          ],
+  "bg image url"     , [ "THE_IMAGE_URL" ],
+  "bg image pattern" , [ "repeat all"    ],
+  "title"            , [ "megaUNI"       ],
 
   # ====================================
   #               STYLES
@@ -342,18 +368,9 @@ json = [
     "text size", ["small"]
   ],
 
-
   # ====================================
-  #           The Main Computer
+  #             Content
   # ====================================
-
-
-  "About The Computer", [
-    "bg color"         , [ "#ffc"          ],
-    "bg image url"     , [ "THE_IMAGE_URL" ],
-    "bg image pattern" , [ "repeat all"    ],
-    "title"            , [ "megaUNI"       ]
-  ],
 
   "box", [
     "id" , [ "intro" ],
