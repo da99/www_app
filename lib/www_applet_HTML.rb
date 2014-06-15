@@ -24,9 +24,9 @@ module Styles
 
   end # === class self
 
-  def are sender, to, args
+  def styles sender, to, args
     rule_name = sender.grab_stack_tail(1, "a name for the style")
-    new_style_rule(
+    new_style_class(
       rule_name,
       args.select { |o| is_a_style?(o) }
     )
@@ -187,7 +187,7 @@ module Styles
 
   private # ==========================================
 
-  def new_style_rule rule_name, styles
+  def new_style_class rule_name, styles
     {"IS"=>["STYLE RULE"], "NAME"=>standard_key(rule_name), "VALUE"=>styles}
   end
 
@@ -211,12 +211,12 @@ module Styles
     o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("ELEMENT")
   end
 
-  def is_a_style_rule? o
+  def is_a_style_class? o
     o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE RULE")
   end
 
   def is_stylish? o
-    is_a_style?(o) || is_a_element?(o) || is_a_style_rule?(o)
+    is_a_style?(o) || is_a_element?(o) || is_a_style_class?(o)
   end
 
   def require_arg name, raw, *args
@@ -280,10 +280,11 @@ module HTML
 
     o.each { |v|
       case
+
       when is_a_style?(v)
         meta["META"][v["NAME"]] = v["VALUE"]
 
-      when is_a_style_rule?(v)
+      when is_a_style_class?(v)
         meta["STYLES"][v["NAME"]] ||= {}
         target = meta["STYLES"][v["NAME"]]
         v["VALUE"].each { |rule|
@@ -293,21 +294,60 @@ module HTML
       when is_a_element?(v)
         meta["ELEMENTS"].push v
 
-      end
+      end # case
     }
 
     meta
   end
 
+  def validate_css_color name, raw
+    v = raw.strip.upcase
+    if !(v =~ /\A#[A-Z0-9]{3,10}\Z/)
+      fail "Invalid: color for #{name.inspect}: #{raw.inspect}"
+    end
+    v
+  end
+
+  def validate_text_size name, raw
+    v = raw.strip.upcase
+    case v
+    when 'SMALL'
+    when 'LARGE'
+    when 'MEDIUM'
+    when 'X-LARGE'
+    else
+      fail "Invalid: #{name.inspect}: #{raw.inspect}"
+    end
+    v
+  end
+
+  def validate_font name, raw
+    v = raw.strip
+    if !(v =~ /\A[a-z0-9\-\_\ \'\,]{1,100}\Z/i)
+      fail "Invalid: #{name.inspect}: #{raw.inspect}"
+    end
+    v
+  end
+
   def to_css_name k, v
     case k
+    when "TEXT SIZE"
+      "font-size: #{validate_text_size k, v};"
+
+    when "TEXT COLOR"
+      "color: #{validate_css_color k, v};"
+
+    when "FONT"
+      "font-family: #{validate_font k, v};"
+
     when "BG COLOR"
-      "background-color: #{v}"
+      "background-color: #{validate_css_color k, v};"
+
     when "BG IMAGE URL"
-      "background-image: url(#{v})"
+      "background-image: url(#{v});"
+
     when 'BG IMAGE REPEAT'
-      val = "background-repeat: "
-      val += case v
+      val = case v
              when "BOTH"
                "repeat"
              when "ACROSS"
@@ -319,31 +359,55 @@ module HTML
              else
                fail "Invalid: unknown repeat: #{v.inspect}"
              end
+      "background-repeat: #{val};"
+
     when "TITLE"
       nil
+
     else
       fail "Invalid: unknown css property: #{k.inspect}: #{v.inspect}"
+
     end
   end
 
   def to_css scope, styles
-    val = "#{scope} { \n"
-    val += styles.map { |k,v|
-      css = to_css_name(k, v)
-      next unless css
-      "  #{css};"
-    }.compact.join("\n")
-    val += "\n}"
-    val
+    arr = []
+    append = []
+    styles.each { |k,v|
+      case k
+      when "ON HOVER"
+        new_scope = "#{scope}:hover"
+        org = organize_the_styles(v)
+        append << to_css(new_scope, org["META"])
+      else
+        arr << to_css_name(k, v)
+      end
+
+    }
+
+    str = ""
+    str << "#{scope} {\n  "
+    str << arr.compact.join("\n  ")
+    str << "\n}\n"
+
+    if !append.empty?
+      str << "\n"
+      str << append.join("\n")
+    end
+
+    str
   end
 
   def to_html
     require "pp"
     org = organize_the_styles(@stack)
-    html = ""
-    html += to_css("BODY", org["META"])
+    html = []
+    html << to_css("BODY", org["META"])
+    org["STYLES"].each { |name, styles|
+      html << to_css(name, styles)
+    }
 
-    puts html
+    puts html.join("\n")
     puts "============================"
     pp org
     ""
@@ -385,7 +449,7 @@ json = [
   #               STYLES
   # ====================================
 
-  "link", "are", [
+  "link", "styles", [
     "text color"    , ["#ddd"],
     "on hover" , [
       "text color" , ["#fff"],
@@ -393,22 +457,22 @@ json = [
     ]
   ],
 
-  "box title", "are", [
+  "box title", "styles", [
     "text size" , ["small"],
     "font"      , ["sans-serif", "italic"]
   ],
 
-  "form field title", "are", [
+  "form field title", "styles", [
     "text color" , ["#fff"],
     "text size"  , ["medium"],
     "font"       , ["sans-serif"]
   ],
 
-  "form field notice", "are", [
+  "form field notice", "styles", [
     "text color", ["#ccc"]
   ],
 
-  "form button", "are", [
+  "form button", "styles", [
     "text size", ["small"]
   ],
 
