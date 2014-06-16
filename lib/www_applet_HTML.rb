@@ -1,12 +1,5 @@
 
-require "nokogiri"
 
-
-class String
-  def unindent 
-    gsub(/^#{scan(/^\s*/).min_by{|l|l.length}}/, "")
-  end
-end
 
 module HTML
 end # === module HTML
@@ -188,7 +181,7 @@ module Styles
   private # ==========================================
 
   def new_style_class rule_name, styles
-    {"IS"=>["STYLE RULE"], "NAME"=>standard_key(rule_name), "VALUE"=>styles}
+    {"IS"=>["STYLE CLASS"], "NAME"=>standard_key(rule_name), "VALUE"=>styles}
   end
 
   def new_style name, val
@@ -212,7 +205,7 @@ module Styles
   end
 
   def is_a_style_class? o
-    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE RULE")
+    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE CLASS")
   end
 
   def is_stylish? o
@@ -223,6 +216,16 @@ module Styles
     val = raw
     args.each { |o|
       val = case
+
+            when o == :font
+            when o == :color
+            when o == :text_size
+            when o == :url
+            when o == :in_array
+            when o == :dom_id
+            when o == :not_empty_string
+            when o == :max_chars
+
             when o == :upcase
               fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
               val.upcase
@@ -268,10 +271,10 @@ module HTML
 
   def organize_the_styles o
     meta = {
-      "META"     => {},
-      "STYLES"   => {},
-      "TEXT"     => nil,
-      "ELEMENTS" => [],
+      "META"          => {},
+      "STYLE CLASSES" => {},
+      "TEXT"          => nil,
+      "ELEMENTS"      => [],
     }
 
     if o.last.is_a? String
@@ -285,8 +288,8 @@ module HTML
         meta["META"][v["NAME"]] = v["VALUE"]
 
       when is_a_style_class?(v)
-        meta["STYLES"][v["NAME"]] ||= {}
-        target = meta["STYLES"][v["NAME"]]
+        meta["STYLE CLASSES"][v["NAME"]] ||= {}
+        target = meta["STYLE CLASSES"][v["NAME"]]
         v["VALUE"].each { |rule|
           target[rule["NAME"]] = rule["VALUE"]
         }
@@ -332,19 +335,19 @@ module HTML
   def to_css_name k, v
     case k
     when "TEXT SIZE"
-      "font-size: #{validate_text_size k, v};"
+      ["font-size", validate_text_size(k, v)]
 
     when "TEXT COLOR"
-      "color: #{validate_css_color k, v};"
+      ["color", validate_css_color(k, v)]
 
     when "FONT"
-      "font-family: #{validate_font k, v};"
+      ["font-family", validate_font(k, v)]
 
     when "BG COLOR"
-      "background-color: #{validate_css_color k, v};"
+      ["background-color", validate_css_color(k, v)]
 
     when "BG IMAGE URL"
-      "background-image: url(#{v});"
+      ["background-image", "url(#{v})"]
 
     when 'BG IMAGE REPEAT'
       val = case v
@@ -359,7 +362,7 @@ module HTML
              else
                fail "Invalid: unknown repeat: #{v.inspect}"
              end
-      "background-repeat: #{val};"
+      ["background-repeat", "#{val}"]
 
     when "TITLE"
       nil
@@ -372,62 +375,43 @@ module HTML
 
   def to_css scope, styles
     arr = []
-    append = []
     styles.each { |k,v|
       case k
       when "ON HOVER"
         new_scope = "#{scope}:hover"
         org = organize_the_styles(v)
-        append << to_css(new_scope, org["META"])
+        to_css(new_scope, org["META"])
       else
-        arr << to_css_name(k, v)
+        name, val = to_css_name(k, v)
+        the_nodes["STYLE CLASSES"][scope][name] = v
       end
-
     }
+  end
 
-    str = ""
-    str << "#{scope} {\n  "
-    str << arr.compact.join("\n  ")
-    str << "\n}\n"
-
-    if !append.empty?
-      str << "\n"
-      str << append.join("\n")
-    end
-
-    str
+  def the_page
+    @the_nodes ||= {
+      "STYLE CLASSES" => {},
+      "ELEMENTS"      => {}
+    }
   end
 
   def to_html
-    require "pp"
+    @the_nodes = nil
+
     org = organize_the_styles(@stack)
-    html = []
-    html << to_css("BODY", org["META"])
-    org["STYLES"].each { |name, styles|
-      html << to_css(name, styles)
+    org["STYLE CLASSES"]["BODY"] = (org["STYLE CLASSES"]["BODY"] || {}).merge(org["META"])
+
+    org["STYLE CLASSES"].keys.each { |name|
+      org["STYLE CLASSES"][name] = upsert_style_class name, styles
     }
 
-    puts html.join("\n")
     puts "============================"
-    pp org
-    ""
-    # html_doc.to_html
+    require "pp"
+    # pp org
   end
 
   def html_doc
     @html_doc ||= begin
-                    Nokogiri::HTML <<-EOHTML.unindent
-                      <!DOCTYPE html>
-                      <html lang="en">
-                        <head>
-                          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-                          <title>My Page</title>
-                          <style type="text/css">
-                          </style>
-                        </head>
-                        <body></body>
-                      </html>
-                    EOHTML
                   end
   end
 end # --- module
