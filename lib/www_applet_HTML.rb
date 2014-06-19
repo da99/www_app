@@ -1,21 +1,52 @@
 
+require "nokogiri"
 
 
 module HTML
-end # === module HTML
-
-module JavaScript
-end # === module JavaScrip
-
-module Styles
 
   class << self
 
-    def raw_args
-      @raw_args ||= []
+    def unindent s
+      s.gsub(/^#{s.scan(/^\s*/).min_by{|l|l.length}}/, "")
     end
 
+    def new_page
+      @page ||= unindent <<-EOHTML
+        <!DOCTYPE html>
+        <html lang="en">
+          <head>
+            <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+            <title>[No Title]</title>
+            <style type="text/css">
+            </style>
+          </head>
+          <body>
+          </body>
+        </html>
+      EOHTML
+    end # === new_page
+
   end # === class self
+
+  def doc
+    @doc ||= Nokogiri::HTML Page::NEW
+  end
+
+  def new_element raw
+    e = Nokogiri::XML::Node.new(raw[:tag], doc)
+
+    if raw[:content]
+      e.content = raw[:content]
+    end
+
+    if raw[:childs]
+      raw[:childs].each { |raw_child|
+        e.add_child new_element(raw_child)
+      }
+    end
+
+    e
+  end
 
   def styles sender, to, args
     rule_name = sender.grab_stack_tail(1, "a name for the style")
@@ -265,9 +296,7 @@ module Styles
     val
   end
 
-end # === module Styles
 
-module HTML
 
   def organize_the_styles o
     meta = {
@@ -396,6 +425,19 @@ module HTML
   end
 
   def to_html
+    @html ||= begin
+                body = doc.at_css "body"
+
+                elements.each { |raw|
+                  body.add_child new_element(raw)
+                }
+
+                doc.to_html
+              end
+  end
+
+
+  def to_html
     @the_nodes = nil
 
     org = organize_the_styles(@stack)
@@ -414,7 +456,14 @@ module HTML
     @html_doc ||= begin
                   end
   end
-end # --- module
+
+end # === module HTML
+
+
+
+
+
+
 
 require "www_applet"
 
@@ -525,8 +574,7 @@ json = [
 # =======================
 
 d = WWW_Applet.new "__MAIN__", json
-d.extend_applet Styles
-d.extend HTML
+d.extend_applet HTML
 d.run
 puts d.to_html
 
