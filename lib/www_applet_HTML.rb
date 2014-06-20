@@ -60,79 +60,205 @@ module HTML
   #                 Properties
   # ===================================================
 
-  def font sender, to, args
-    val = args.map { |o|
-      require_arg(
-        "font",
-        o,
-        [:string, "can only be a string"],
-        [:not_empty_string, "can't be an empty string"],
-        [:matches, /\A[a-z0-9\-\_\ ]{1,100}\Z/i, "only allow 1-100 characters: letters, numbers, spaces, - _"]
-      )
-    }.join ", "
-    new_style to, val
+  class << self
+
+    def styles
+      @styles ||= begin
+                    {
+                      :bg_color        => ["background-color"     , :color],
+                      :bg_image_url    => ["background-image-url" , :url],
+                      :bg_image_repeat => ["background-repeat"    , :upcase, :in, %w{BOTH ACROSS UP/DOWN NO}],
+
+                      :font            => ["font-family"          , :all, :fonts],
+                      :text_color      => ["color"                , :color],
+                      :text_size       => ["font-size"            , :upcase, :in, %w{SMALL LARGE MEDIUM X-LARGE}],
+                    }
+                  end
+    end
+
+    def propertys
+      @propertys ||= begin
+                       {
+                         :id              => ["id", :dom_id],
+                         :title           => ["title", :string, :size_bewtween, [1, 200]],
+                         :note            => ["span", :not_empty_string],
+                         :max_chars       => [:number_between, [1, 10_000]]
+                       }
+                     end
+    end
+
+  end # === class self
+
+  public
+
+  styles.each { |name, props|
+    eval %^
+      def #{name} sender, to, args
+        clean_as_style :#{name}, to, args
+        css_name = HTML.styles[:#{name}].first
+        the_styles[css_name] = actual
+        css_name
+      end
+    ^
+  }
+
+  private
+
+  def the_styles
+    @the_stles ||= {}
   end
 
-  def bg_color sender, to, args
-    val = require_arg(
-      "bg color",
-      args.last,
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "only allow 1-25 characters: letters, numbers and #"],
-      :upcase
-    )
-    new_style to, val
+  attr_reader :original_actual
+
+  def clean_as_style name, orig_name, args
+    meta     = HTML.styles[name].dup
+    meta.shift # css name
+    raw      = if meta.include?(:all) 
+                 meta.shift
+                 args
+               else
+                 args.last
+               end
+
+    actual(orig_name, raw)
+    clean_as *meta
+
+    true
   end
 
-  def text_color sender, to, args
-    val = require_arg(
-      "text color",
-      args.last,
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      [:matches, /\A[a-z0-9\#]{1,25}\Z/i, "allow 1-25 characters: letters, numbers and #"],
-      :upcase
-    )
-    new_style to, val
+  def name_of_actual
+    return @name_of_actual.inspect unless @name_of_actual[" "]
+    @name_of_actual
   end
 
-  def text_size sender, to, args
-    val = require_arg(
-      "text size",
-      args.last,
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      :upcase,
-      [:included, %w{SMALL MEDIUM LARGE X-LARGE}, "can only be: small, medium, large, x-large"]
-    )
-
-    new_style to, val
+  def actual *args
+    case args.size
+    when 2
+      @name_of_actual = args.first
+      @original_actual = args.last
+      actual args.last
+    when 1
+      @actual = args.first
+    when 0
+      @actual
+    else
+      fail "Unknown args: #{args.inspect}"
+    end
   end
 
-  def bg_image_url sender, to, args
-    val = require_arg(
-      to,
-      args.last,
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      [:max_length, 200, "url needs to be 200 or less chars."],
-      [:matches, /\A[a-z0-9\_\-\:\/\?\&\(\)\@\.]{1,200}\Z/i , "url has invalid chars"]
-    )
-    new_style to, val
+  def clean_as *args
+    if !@name_of_actual
+      fail "Name of actual not set."
+    end
+
+    begin
+      cleaner = args.shift
+      if args.first.is_a?(Array)
+        send "clean_as_#{cleaner}", *(args.shift)
+      else
+        send "clean_as_#{cleaner}"
+      end
+    end while !args.empty?
+
+    true
   end
 
-  def bg_image_repeat sender, to, args
-    opts = ["BOTH", "ACROSS", "UP/DOWN", "NO"]
-    val = require_arg(
-      to,
-      standard_key(args.last),
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      [:included, opts, "can only be one of these: #{opts.join ', '}"]
-    )
-    new_style to, val
+  def clean_as_not_nil
+    if actual.nil?
+      fail "Invalid: #{name_of_actual} is required."
+    end
+    true
   end
+
+  def clean_as_string
+    return true if actual.is_a?(String)
+    fail "Invalid: #{name_of_actual} must be a String."
+  end
+
+  def clean_as_not_empty_string
+    clean_as_string
+    actual actual.strip
+    if actual.empty?
+      fail "Invalid: #{name_of_actual} must not be empty."
+    end
+    true
+  end
+
+  def clean_as_upcase
+    clean_as_not_empty_string
+    actual actual.upcase
+    true
+  end
+
+  def clean_as_color
+    clean_as_not_empty_string
+    if !(actual =~ /\A#[A-Z0-9]{3,10}\Z/i)
+      fail "Invalid: color for #{name_of_actual}: #{original_actual.inspect}."
+    end
+    true
+  end
+
+  def clean_as_max_length max, msg = nil
+    clean_as_not_nil
+    if actual.length > 200
+      fail(msg || "#{name_of_actual} can not be more than #{max}")
+    end
+    true
+  end
+
+  def clean_as_match regex, msg = nil
+    clean_as_string
+    if !(actual =~ regex)
+      fail(msg || "Invalid: #{name_of_actual} has invalid chars")
+    end
+    true
+  end
+
+  VALID_URL_REGEXP = /\A[a-z0-9\_\-\:\/\?\&\(\)\@\.]{1,200}\Z/i
+  def clean_as_url
+    max = 200
+    clean_as_not_empty_string
+    clean_as_max_length max, "#{name_of_actual} needs to be #{max} or less chars."
+    clean_as_match VALID_URL_REGEXP
+    true
+  end
+
+  def clean_as_in *choices
+    if !choices.include?(actual)
+      fail "Invalid: #{name_of_actual} can't be, #{actual.inspect}, but one of: #{choices.join ", "}"
+    end
+    true
+  end
+
+  def clean_as_map_to cleaner, *args
+    vals = actual.dup
+    new_vals = []
+    actual.each { |v|
+      actual v
+      send "clean_as_#{cleaner}", *args
+      new_vals.push actual
+    }
+    actual new_vals
+    true
+  end
+
+  VALID_FONT_REGEXP = /\A[a-z0-9\-\_\ ]{1,100}\Z/i
+
+  def clean_as_fonts
+    clean_as_map_to :not_empty_string
+    clean_as_map_to :match, VALID_FONT_REGEXP, "only allow 1-100 characters: letters, numbers, spaces, - _"
+    true
+  end
+
+  def clean_as_number_between min, max
+    clean_as_number
+    if actual <= min || actual >= max
+      fail "Invalid: #{name_of_actual} must be between: #{min} and #{max}"
+    end
+    true
+  end
+
+  public # =================================================================================================
 
   def id sender, to, args
     val = require_arg(
@@ -154,7 +280,8 @@ module HTML
     new_style to, val
   end
 
-  def notice sender, to, args
+  def note sender, to, args
+    return "note"
     val = require_arg(
       to, args.last.to_s.strip,
       [:not_empty_string, "can't be empty."]
@@ -163,6 +290,7 @@ module HTML
   end
 
   def max_chars sender, to, args
+    return "max_chars"
     val = require_arg(to, args.last, :number, [:max, 200], [:min, 1])
     new_style to, val
   end
@@ -332,14 +460,6 @@ module HTML
     meta
   end
 
-  def validate_css_color name, raw
-    v = raw.strip.upcase
-    if !(v =~ /\A#[A-Z0-9]{3,10}\Z/)
-      fail "Invalid: color for #{name.inspect}: #{raw.inspect}"
-    end
-    v
-  end
-
   def validate_text_size name, raw
     v = raw.strip.upcase
     case v
@@ -361,6 +481,7 @@ module HTML
     v
   end
 
+  private 
   def to_css_name k, v
     case k
     when "TEXT SIZE"
@@ -417,6 +538,8 @@ module HTML
     }
   end
 
+  public
+
   def the_page
     @the_nodes ||= {
       "STYLE CLASSES" => {},
@@ -424,20 +547,11 @@ module HTML
     }
   end
 
-  def to_html
-    @html ||= begin
-                body = doc.at_css "body"
-
-                elements.each { |raw|
-                  body.add_child new_element(raw)
-                }
-
-                doc.to_html
-              end
-  end
-
 
   def to_html
+
+    return the_styles
+
     @the_nodes = nil
 
     org = organize_the_styles(@stack)
@@ -448,7 +562,6 @@ module HTML
     }
 
     puts "============================"
-    require "pp"
     # pp org
   end
 
@@ -501,7 +614,7 @@ json = [
     "font"       , ["sans-serif"]
   ],
 
-  "form field notice", "styles", [
+  "form field note",   "styles", [
     "text color", ["#ccc"]
   ],
 
@@ -531,7 +644,7 @@ json = [
       "password", [
         "max chars" , [ 200 ],
         "title"     , [ "Password:" ],
-        "notice"    , [ "(spaces are allowed)" ]
+        "note"      , [ "(spaces are allowed)" ]
       ],
 
       "button", [
@@ -548,7 +661,7 @@ json = [
       "password", [
         "max chars" , [ 200 ],
         "title"      , ["Password"],
-        "notice"    , ["(for better security, use spaces and words):"]
+        "note"      , ["(for better security, use spaces and words):"]
       ],
       "password", [
         "max chars", [200],
@@ -576,7 +689,8 @@ json = [
 d = WWW_Applet.new "__MAIN__", json
 d.extend_applet HTML
 d.run
-puts d.to_html
+require "pp"
+pp d.to_html
 
 if ARGV.first == "print"
   File.open "/tmp/n.html", "w+" do |io|
