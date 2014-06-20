@@ -1,5 +1,7 @@
 
 require "nokogiri"
+require "www_applet"
+require "www_applet/Clean"
 
 
 module HTML
@@ -77,7 +79,7 @@ module HTML
     rule_name = sender.grab_stack_tail(1, "a name for the style")
     the_styles[rule_name] ||= {}
     args.each { |o|
-      next unless is_a_style?(o)
+      next unless is_style_value?(o)
       the_styles[rule_name][o["NAME"]] = o["VALUE"]
     }
     rule_name
@@ -86,9 +88,20 @@ module HTML
   styles.each { |name, props|
     eval %^
       def #{name} sender, to, args
-        clean_as_style :#{name}, to, args
-        css_name = HTML.styles[:#{name}].first
-        {"IS"=>["STYLE"], "NAME"=>standard_key(css_name), "VALUE"=>actual}
+
+        meta     = HTML.styles[:#{name}].dup
+        css_name = meta.shift
+        raw      = if meta.include?(:all) 
+                   meta.shift
+                   args
+                 else
+                   args.last
+                 end
+
+        clean = WWW_Applet::Clean.new(to, raw).clean_as(*meta).actual
+
+        {"IS"=>["STYLE VALUE"], "NAME"=>standard_key(css_name), "VALUE"=>clean}
+
       end
     ^
   }
@@ -99,193 +112,39 @@ module HTML
     @the_stles ||= {}
   end
 
-  def clean_as_style name, orig_name, args
-    meta     = HTML.styles[name].dup
-    meta.shift # css name
-    raw      = if meta.include?(:all) 
-                 meta.shift
-                 args
-               else
-                 args.last
-               end
-
-    actual(orig_name, raw)
-    clean_as *meta
-
-    true
-  end
-
-  def original_actual
-    @original_actual
-  end
-
-  def name_of_actual
-    return @name_of_actual.inspect unless @name_of_actual[" "]
-    @name_of_actual
-  end
-
-  def actual *args
-    case args.size
-    when 2
-      @name_of_actual = args.first
-      @original_actual = args.last
-      actual args.last
-    when 1
-      @actual = args.first
-    when 0
-      @actual
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
-  end
-
-  def clean_as *args
-    if !@name_of_actual
-      fail "Name of actual not set."
-    end
-
-    begin
-      cleaner = args.shift
-      if args.first.is_a?(Array)
-        send "clean_as_#{cleaner}", *(args.shift)
-      else
-        send "clean_as_#{cleaner}"
-      end
-    end while !args.empty?
-
-    true
-  end
-
-  def clean_as_not_nil
-    if actual.nil?
-      fail "Invalid: #{name_of_actual} is required."
-    end
-    true
-  end
-
-  def clean_as_string
-    return true if actual.is_a?(String)
-    fail "Invalid: #{name_of_actual} must be a String."
-  end
-
-  def clean_as_not_empty_string
-    clean_as_string
-    actual actual.strip
-    if actual.empty?
-      fail "Invalid: #{name_of_actual} must not be empty."
-    end
-    true
-  end
-
-  def clean_as_upcase
-    clean_as_not_empty_string
-    actual actual.upcase
-    true
-  end
-
-  def clean_as_color
-    clean_as_not_empty_string
-    if !(actual =~ /\A#[A-Z0-9]{3,10}\Z/i)
-      fail "Invalid: color for #{name_of_actual}: #{original_actual.inspect}."
-    end
-    true
-  end
-
-  def clean_as_max_length max, msg = nil
-    clean_as_not_nil
-    if actual.length > 200
-      fail(msg || "#{name_of_actual} can not be more than #{max}")
-    end
-    true
-  end
-
-  def clean_as_match regex, msg = nil
-    clean_as_string
-    if !(actual =~ regex)
-      fail(msg || "Invalid: #{name_of_actual} has invalid chars")
-    end
-    true
-  end
-
-  VALID_URL_REGEXP = /\A[a-z0-9\_\-\:\/\?\&\(\)\@\.]{1,200}\Z/i
-  def clean_as_url
-    max = 200
-    clean_as_not_empty_string
-    clean_as_max_length max, "#{name_of_actual} needs to be #{max} or less chars."
-    clean_as_match VALID_URL_REGEXP
-    true
-  end
-
-  def clean_as_in *choices
-    if !choices.include?(actual)
-      fail "Invalid: #{name_of_actual} can't be, #{actual.inspect}, but one of: #{choices.join ", "}"
-    end
-    true
-  end
-
-  def clean_as_map_to cleaner, *args
-    vals = actual.dup
-    new_vals = []
-    actual.each { |v|
-      actual v
-      send "clean_as_#{cleaner}", *args
-      new_vals.push actual
-    }
-    actual new_vals
-    true
-  end
-
-  VALID_FONT_REGEXP = /\A[a-z0-9\-\_\ ]{1,100}\Z/i
-
-  def clean_as_fonts
-    clean_as_map_to :not_empty_string
-    clean_as_map_to :match, VALID_FONT_REGEXP, "only allow 1-100 characters: letters, numbers, spaces, - _"
-    true
-  end
-
-  def clean_as_number_between min, max
-    clean_as_number
-    if actual <= min || actual >= max
-      fail "Invalid: #{name_of_actual} must be between: #{min} and #{max}"
-    end
-    true
-  end
-
   public # =================================================================================================
 
   def id sender, to, args
-    val = require_arg(
-      to,
-      standard_key(args.last),
-      [:string, "must be a string"],
-      [:not_empty_string, "can't be an empty string"],
-      [:max_length, 100, "url needs to be 100 or less chars."],
-      [:matches, /\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"]
-    )
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
+    val = WWW_Applet::Clean.new( to, standard_key(args.last)).
+      string.
+      not_empty_string.
+      max_length(100).
+      match(/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars").
+      actual
+
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def title sender, to, args
-    val = require_arg(
-      to, args.last.to_s.strip,
-      [:not_empty_string, "can't be empty."]
-    )
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
+    val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
+      not_empty_string.
+      actual
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def note sender, to, args
     return "note"
-    val = require_arg(
-      to, args.last.to_s.strip,
-      [:not_empty_string, "can't be empty."]
-    )
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
+    val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
+      not_empty_string.
+      actual
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def max_chars sender, to, args
-    return "max_chars"
-    val = require_arg(to, args.last, :number, [:max, 200], [:min, 1])
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
+    val = WWW_Applet::Clean.new(to, args.last).
+      number_between(1, 200).
+      actual
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
 
@@ -294,12 +153,12 @@ module HTML
   # ===================================================
 
   def on_click sender, to, args
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>args.last}
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
   def on_hover sender, to, args
-    vals = args.select { |o| is_a_style?(o) }
-    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>vals}
+    vals = args.select { |o| is_style_value?(o) }
+    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>vals}
   end
 
   # ===================================================
@@ -337,137 +196,32 @@ module HTML
     e = {
       "IS"    => ["ELEMENT"],
       "NAME"  => standard_key(to),
-      "VALUE" => args.select { |o| is_stylish?(o) }
+      "VALUE" => args.select { |o| is_markup_value?(o) }
     }
   end
 
-  def is_a_style? o
-    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE")
+  def is_applet_object? o
+    o.is_a?(Hash) && o["IS"].is_a?(Array)
   end
 
-  def is_a_element? o
-    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("ELEMENT")
+  def is_style_value? o
+    is_applet_object?(o) && o["IS"].include?("STYLE VALUE")
   end
 
-  def is_a_style_class? o
-    o.is_a?(Hash) && o["IS"].is_a?(Array) && o["IS"].include?("STYLE CLASS")
+  def is_element? o
+    is_applet_object?(o) && o["IS"].include?("ELEMENT")
   end
 
-  def is_stylish? o
-    is_a_style?(o) || is_a_element?(o) || is_a_style_class?(o)
+  def is_style_class? o
+    is_applet_object?(o) && o["IS"].include?("STYLE CLASS")
   end
 
-  def require_arg name, raw, *args
-    val = raw
-    args.each { |o|
-      val = case
-
-            when o == :font
-            when o == :color
-            when o == :text_size
-            when o == :url
-            when o == :in_array
-            when o == :dom_id
-            when o == :not_empty_string
-            when o == :max_chars
-
-            when o == :upcase
-              fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
-              val.upcase
-            when o == :number
-              fail "Invalid: #{name} must be a number: #{val.inspect}" unless val.is_a?(Numeric)
-              val
-            when o.is_a?(Array)
-              cmd = o.first
-              msg = "Invalid: #{o.last}: #{val.inspect}"
-              case cmd
-              when :string
-                fail msg if !val.is_a?(String)
-              when :not_empty_string
-                fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
-                fail msg if val.empty?
-              when :included
-                fail msg unless o[1].include?(val)
-              when :max_length
-                fail "Invalid: #{name} must be a string: #{val.inspect}" unless val.is_a?(String)
-                fail msg unless val.length <= 200
-              when :max
-                fail "Invalid: #{name} must be #{o[1]} or less" unless val <= o[1]
-              when :min
-                fail "Invalid: #{name} must be #{o[1]} or more" unless val >= o[1]
-              when :matches
-                regex = o[1]
-                fail msg unless regex =~ val
-              else
-                fail "Invalid: unknown option: #{name.inspect} #{val.inspect} #{args.inspect}"
-              end
-
-              val
-            else
-              fail "Invalid: unknown option: #{o.inspect}"
-            end
-    }
-    val
-  end
-
-
-
-  def organize_the_styles o
-    meta = {
-      "META"          => {},
-      "STYLE CLASSES" => {},
-      "TEXT"          => nil,
-      "ELEMENTS"      => [],
-    }
-
-    if o.last.is_a? String
-      meta["TEXT"] = o.last
-    end
-
-    o.each { |v|
-      case
-
-      when is_a_style?(v)
-        meta["META"][v["NAME"]] = v["VALUE"]
-
-      when is_a_style_class?(v)
-        meta["STYLE CLASSES"][v["NAME"]] ||= {}
-        target = meta["STYLE CLASSES"][v["NAME"]]
-        v["VALUE"].each { |rule|
-          target[rule["NAME"]] = rule["VALUE"]
-        }
-
-      when is_a_element?(v)
-        meta["ELEMENTS"].push v
-
-      end # case
-    }
-
-    meta
-  end
-
-  def validate_text_size name, raw
-    v = raw.strip.upcase
-    case v
-    when 'SMALL'
-    when 'LARGE'
-    when 'MEDIUM'
-    when 'X-LARGE'
-    else
-      fail "Invalid: #{name.inspect}: #{raw.inspect}"
-    end
-    v
-  end
-
-  def validate_font name, raw
-    v = raw.strip
-    if !(v =~ /\A[a-z0-9\-\_\ \'\,]{1,100}\Z/i)
-      fail "Invalid: #{name.inspect}: #{raw.inspect}"
-    end
-    v
+  def is_markup_value? o
+    is_applet_object?(o) && o["IS"].include?("MARKUP VALUE")
   end
 
   private 
+
   def to_css_name k, v
     case k
     when "TEXT SIZE"
@@ -564,7 +318,6 @@ end # === module HTML
 
 
 
-require "www_applet"
 
 json = [
 
