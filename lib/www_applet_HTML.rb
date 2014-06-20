@@ -26,42 +26,6 @@ module HTML
       EOHTML
     end # === new_page
 
-  end # === class self
-
-  def doc
-    @doc ||= Nokogiri::HTML Page::NEW
-  end
-
-  def new_element raw
-    e = Nokogiri::XML::Node.new(raw[:tag], doc)
-
-    if raw[:content]
-      e.content = raw[:content]
-    end
-
-    if raw[:childs]
-      raw[:childs].each { |raw_child|
-        e.add_child new_element(raw_child)
-      }
-    end
-
-    e
-  end
-
-  def styles sender, to, args
-    rule_name = sender.grab_stack_tail(1, "a name for the style")
-    new_style_class(
-      rule_name,
-      args.select { |o| is_a_style?(o) }
-    )
-  end
-
-  # ===================================================
-  #                 Properties
-  # ===================================================
-
-  class << self
-
     def styles
       @styles ||= begin
                     {
@@ -87,28 +51,53 @@ module HTML
                      end
     end
 
-  end # === class self
+  end # === class self ===================================================
 
-  public
+  def doc
+    @doc ||= Nokogiri::HTML Page::NEW
+  end
+
+  def new_element raw
+    e = Nokogiri::XML::Node.new(raw[:tag], doc)
+
+    if raw[:content]
+      e.content = raw[:content]
+    end
+
+    if raw[:childs]
+      raw[:childs].each { |raw_child|
+        e.add_child new_element(raw_child)
+      }
+    end
+
+    e
+  end
+
+  def styles sender, to, args
+    rule_name = sender.grab_stack_tail(1, "a name for the style")
+    the_styles[rule_name] ||= {}
+    args.each { |o|
+      next unless is_a_style?(o)
+      the_styles[rule_name][o["NAME"]] = o["VALUE"]
+    }
+    rule_name
+  end
 
   styles.each { |name, props|
     eval %^
       def #{name} sender, to, args
         clean_as_style :#{name}, to, args
         css_name = HTML.styles[:#{name}].first
-        the_styles[css_name] = actual
-        css_name
+        {"IS"=>["STYLE"], "NAME"=>standard_key(css_name), "VALUE"=>actual}
       end
     ^
   }
 
-  private
+  private # ===============================================================
 
   def the_styles
     @the_stles ||= {}
   end
-
-  attr_reader :original_actual
 
   def clean_as_style name, orig_name, args
     meta     = HTML.styles[name].dup
@@ -124,6 +113,10 @@ module HTML
     clean_as *meta
 
     true
+  end
+
+  def original_actual
+    @original_actual
   end
 
   def name_of_actual
@@ -269,7 +262,7 @@ module HTML
       [:max_length, 100, "url needs to be 100 or less chars."],
       [:matches, /\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"]
     )
-    new_style to, val
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def title sender, to, args
@@ -277,7 +270,7 @@ module HTML
       to, args.last.to_s.strip,
       [:not_empty_string, "can't be empty."]
     )
-    new_style to, val
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def note sender, to, args
@@ -286,13 +279,13 @@ module HTML
       to, args.last.to_s.strip,
       [:not_empty_string, "can't be empty."]
     )
-    new_style to, val
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def max_chars sender, to, args
     return "max_chars"
     val = require_arg(to, args.last, :number, [:max, 200], [:min, 1])
-    new_style to, val
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
 
@@ -301,12 +294,12 @@ module HTML
   # ===================================================
 
   def on_click sender, to, args
-    new_style to, args.last
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
   def on_hover sender, to, args
     vals = args.select { |o| is_a_style?(o) }
-    new_style to, vals
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>vals}
   end
 
   # ===================================================
@@ -314,7 +307,7 @@ module HTML
   # ===================================================
 
   def submit_form sender, to, args
-    new_style to, args.last
+    {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
   # ===================================================
@@ -339,13 +332,6 @@ module HTML
 
   private # ==========================================
 
-  def new_style_class rule_name, styles
-    {"IS"=>["STYLE CLASS"], "NAME"=>standard_key(rule_name), "VALUE"=>styles}
-  end
-
-  def new_style name, val
-    {"IS"=>["STYLE"], "NAME"=>standard_key(name), "VALUE"=>val}
-  end
 
   def new_element sender, to, args
     e = {
