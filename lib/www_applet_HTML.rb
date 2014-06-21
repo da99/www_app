@@ -52,11 +52,10 @@ module HTML
       }
     end
 
-    def propertys
-      @propertys ||= {
-        :id              => ["id", :dom_id],
-        :title           => ["title", :string, :size_bewtween, [1, 200]],
-        :note            => ["span", :not_empty_string],
+    def attributes
+      @attributes ||= {
+        :id              => ["id", :size_between, [1, 100], :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] ],
+        :title           => ["title", :string, :size_between, [1, 200]],
         :max_chars       => ["max-chars", :number_between, [1, 10_000]]
       }
     end
@@ -68,6 +67,7 @@ module HTML
         :form                => ['form'],
         :one_line_text_input => ['input', {"type"=>'text'}],
         :password            => ['input', {"type"=>'password'}],
+        :note            => ["span", {'class'=>'note'}, :not_empty_string],
         :button              => ['button']
       }
     end
@@ -79,7 +79,7 @@ module HTML
     the_styles[rule_name] ||= {}
     args.each { |o|
       case
-      when is_style_value?(o)
+      when is_style?(o)
         the_styles[rule_name][o["NAME"]] = o["VALUE"]
       when is_style_class?(o)
         the_styles["#{rule_name}:#{o["NAME"]}"] = o["VALUE"]
@@ -103,8 +103,16 @@ module HTML
 
         clean = WWW_Applet::Clean.new(to, raw).clean_as(*meta).actual
 
-        {"IS"=>["STYLE VALUE"], "NAME"=>css_name, "VALUE"=>clean}
+        {"IS"=>["STYLE"], "NAME"=>css_name, "VALUE"=>clean}
 
+      end
+    ^
+  }
+
+  attributes.each { |name, props|
+    eval %^
+      def #{name} sender, to, args
+        {"IS"=>["ATTRIBUTE"], "NAME"=>:#{name}, "VALUE"=>args.last}
       end
     ^
   }
@@ -112,44 +120,10 @@ module HTML
   elements.each { |name, props|
     eval %^
       def #{name} sender, to, args
-
-        {"IS"=>["ELEMENT VALUE"], "NAME"=>:#{name}, "VALUE"=>args}
+        {"IS"=>["ELEMENT"], "NAME"=>:#{name}, "VALUE"=>args}
       end
     ^
   }
-
-  def id sender, to, args
-    val = WWW_Applet::Clean.new( to, standard_key(args.last)).
-      string.
-      not_empty_string.
-      max_length(100).
-      match(/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars").
-      actual
-
-    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
-  end
-
-  def title sender, to, args
-    val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
-      not_empty_string.
-      actual
-    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
-  end
-
-  def note sender, to, args
-    return "note"
-    val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
-      not_empty_string.
-      actual
-    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
-  end
-
-  def max_chars sender, to, args
-    val = WWW_Applet::Clean.new(to, args.last).
-      number_between(1, 200).
-      actual
-    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
-  end
 
 
   # ===================================================
@@ -157,11 +131,11 @@ module HTML
   # ===================================================
 
   def on_click sender, to, args
-    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>args.last}
+    {"IS"=>["ATTRIBUTE"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
   def on_hover sender, to, args
-    vals = args.select { |o| is_style_value?(o) }.inject({}) do |memo, s|
+    vals = args.select { |o| is_style?(o) }.inject({}) do |memo, s|
       memo[s["NAME"]] = s["VALUE"]
       memo
     end
@@ -189,7 +163,7 @@ module HTML
     }
 
     stack.each { |o|
-      next unless is_element_value?(o)
+      next unless is_element?(o)
       the_body.add_child new_element(o)
     }
 
@@ -226,9 +200,9 @@ module HTML
 
     raw["VALUE"].each { |o|
       case
-      when is_element_value?(o)
+      when is_element?(o)
         e.add_child new_element(o)
-      when is_attribute_value?(o)
+      when is_attribute?(o)
         e[o["NAME"].downcase] = o["VALUE"]
       end
     }
@@ -240,29 +214,24 @@ module HTML
     @the_stles ||= {}
   end
 
-
   def is_applet_object? o
     o.is_a?(Hash) && o["IS"].is_a?(Array)
   end
 
-  def is_style_value? o
-    is_applet_object?(o) && o["IS"].include?("STYLE VALUE")
+  def is_style? o
+    is_applet_object?(o) && o["IS"].include?("STYLE")
   end
 
-  def is_element_value? o
-    is_applet_object?(o) && o["IS"].include?("ELEMENT VALUE")
-  end
-
-  def is_sub_style_class? o
-    is_applet_object?(o) && o["IS"].include?("SUB STYLE CLASS")
+  def is_element? o
+    is_applet_object?(o) && o["IS"].include?("ELEMENT")
   end
 
   def is_style_class? o
     is_applet_object?(o) && o["IS"].include?("STYLE CLASS")
   end
 
-  def is_attribute_value? o
-    is_applet_object?(o) && o["IS"].include?("ATTRIBUTE VALUE")
+  def is_attribute? o
+    is_applet_object?(o) && o["IS"].include?("ATTRIBUTE")
   end
 
 end # === module HTML
