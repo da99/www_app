@@ -29,28 +29,24 @@ module HTML
     end # === new_page
 
     def styles
-      @styles ||= begin
-                    {
-                      :bg_color        => ["background-color"     , :color],
-                      :bg_image_url    => ["background-image-url" , :url],
-                      :bg_image_repeat => ["background-repeat"    , :upcase, :in, %w{BOTH ACROSS UP/DOWN NO}],
+      @styles ||= {
+        :bg_color        => ["background-color"     , :color],
+        :bg_image_url    => ["background-image-url" , :url],
+        :bg_image_repeat => ["background-repeat"    , :upcase, :in, %w{BOTH ACROSS UP/DOWN NO}],
 
-                      :font            => ["font-family"          , :all, :fonts],
-                      :text_color      => ["color"                , :color],
-                      :text_size       => ["font-size"            , :upcase, :in, %w{SMALL LARGE MEDIUM X-LARGE}],
-                    }
-                  end
+        :font            => ["font-family"          , :all, :fonts],
+        :text_color      => ["color"                , :color],
+        :text_size       => ["font-size"            , :upcase, :in, %w{SMALL LARGE MEDIUM X-LARGE}],
+      }
     end
 
     def propertys
-      @propertys ||= begin
-                       {
-                         :id              => ["id", :dom_id],
-                         :title           => ["title", :string, :size_bewtween, [1, 200]],
-                         :note            => ["span", :not_empty_string],
-                         :max_chars       => [:number_between, [1, 10_000]]
-                       }
-                     end
+      @propertys ||= {
+        :id              => ["id", :dom_id],
+        :title           => ["title", :string, :size_bewtween, [1, 200]],
+        :note            => ["span", :not_empty_string],
+        :max_chars       => [:number_between, [1, 10_000]]
+      }
     end
 
   end # === class self ===================================================
@@ -79,8 +75,12 @@ module HTML
     rule_name = sender.grab_stack_tail(1, "a name for the style")
     the_styles[rule_name] ||= {}
     args.each { |o|
-      next unless is_style_value?(o)
-      the_styles[rule_name][o["NAME"]] = o["VALUE"]
+      case
+      when is_style_value?(o)
+        the_styles[rule_name][o["NAME"]] = o["VALUE"]
+      when is_style_class?(o)
+        the_styles["#{rule_name}:#{o["NAME"]}"] = o["VALUE"]
+      end
     }
     rule_name
   end
@@ -157,8 +157,12 @@ module HTML
   end
 
   def on_hover sender, to, args
-    vals = args.select { |o| is_style_value?(o) }
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>vals}
+    vals = args.select { |o| is_style_value?(o) }.inject({}) do |memo, s|
+      memo[s["NAME"]] = s["VALUE"]
+      memo
+    end
+
+    {"IS"=>["STYLE CLASS"], "NAME"=>standard_key(to).sub("ON ", '').downcase, "VALUE"=>vals}
   end
 
   # ===================================================
@@ -210,6 +214,10 @@ module HTML
 
   def is_element? o
     is_applet_object?(o) && o["IS"].include?("ELEMENT")
+  end
+
+  def is_sub_style_class? o
+    is_applet_object?(o) && o["IS"].include?("SUB STYLE CLASS")
   end
 
   def is_style_class? o
