@@ -32,11 +32,23 @@ module HTML
       @styles ||= {
         :bg_color        => ["background-color"     , :color],
         :bg_image_url    => ["background-image-url" , :url],
-        :bg_image_repeat => ["background-repeat"    , :upcase, :in, %w{BOTH ACROSS UP/DOWN NO}],
-
+        :bg_image_repeat => [
+          "background-repeat",
+          :downcase,
+          :in, [
+            "repeat-all",
+            "repeat-x",
+            "repeat-y",
+            "none"
+          ]
+        ],
         :font            => ["font-family"          , :all, :fonts],
         :text_color      => ["color"                , :color],
-        :text_size       => ["font-size"            , :upcase, :in, %w{SMALL LARGE MEDIUM X-LARGE}],
+        :text_size       => [
+          "font-size",
+          :upcase,
+          :in, %w{SMALL LARGE MEDIUM X-LARGE}
+        ],
       }
     end
 
@@ -228,64 +240,6 @@ module HTML
     is_applet_object?(o) && o["IS"].include?("MARKUP VALUE")
   end
 
-  private 
-
-  def to_css_name k, v
-    case k
-    when "TEXT SIZE"
-      ["font-size", validate_text_size(k, v)]
-
-    when "TEXT COLOR"
-      ["color", validate_css_color(k, v)]
-
-    when "FONT"
-      ["font-family", validate_font(k, v)]
-
-    when "BG COLOR"
-      ["background-color", validate_css_color(k, v)]
-
-    when "BG IMAGE URL"
-      ["background-image", "url(#{v})"]
-
-    when 'BG IMAGE REPEAT'
-      val = case v
-             when "BOTH"
-               "repeat"
-             when "ACROSS"
-               "repeat-x"
-             when "UP/DOWN"
-               "repeat-y"
-             when "NO"
-               "no-repeat"
-             else
-               fail "Invalid: unknown repeat: #{v.inspect}"
-             end
-      ["background-repeat", "#{val}"]
-
-    when "TITLE"
-      nil
-
-    else
-      fail "Invalid: unknown css property: #{k.inspect}: #{v.inspect}"
-
-    end
-  end
-
-  def to_css scope, styles
-    arr = []
-    styles.each { |k,v|
-      case k
-      when "ON HOVER"
-        new_scope = "#{scope}:hover"
-        org = organize_the_styles(v)
-        to_css(new_scope, org["META"])
-      else
-        name, val = to_css_name(k, v)
-        the_nodes["STYLE CLASSES"][scope][name] = v
-      end
-    }
-  end
-
   public
 
   def the_page
@@ -335,7 +289,7 @@ json = [
 
   "bg color"         , [ "#ffc"          ],
   "bg image url"     , [ "THE_IMAGE_URL" ],
-  "bg image repeat"  , [ "both"          ],
+  "bg image repeat"  , [ "repeat-all"    ],
   "title"            , [ "megaUNI"       ],
 
   # ====================================

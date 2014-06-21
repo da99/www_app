@@ -18,12 +18,16 @@ class WWW_Applet
     # Examples:
     #
     #   clean_as :upcase, :string, :in, [1,2,3]
+    #   clean_as :upcase, :string, :switch, {...}
     #
     def clean_as *args
       begin
         cleaner = args.shift
-        if args.first.is_a?(Array)
+        case
+        when args.first.is_a?(Array)
           send cleaner, *(args.shift)
+        when args.first.is_a?(Hash)
+          send cleaner, args.shift
         else
           send cleaner
         end
@@ -56,6 +60,13 @@ class WWW_Applet
       if actual.empty?
         fail "Invalid: #{name} must not be empty."
       end
+
+      self
+    end
+
+    def downcase
+      not_empty_string
+      update actual.downcase
 
       self
     end
@@ -104,14 +115,18 @@ class WWW_Applet
       self
     end
 
-    def in *choices
-      if choices.size == 1 && choices.first.is_a?(Array)
-        choices = choices.first
-      end
-
+    def in *raw
+      choices = raw.flatten
       if !choices.include?(actual)
         fail "Invalid: #{name} can't be, #{actual.inspect}, but one of: #{choices.join ", "}"
       end
+
+      self
+    end
+
+    def switch choices
+      self.in(choices.keys)
+      update choices[actual]
 
       self
     end
