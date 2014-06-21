@@ -64,10 +64,10 @@ module HTML
     def elements
       @elements ||= {
         :p                   => ["p", :strip, :not_empty_string],
-        :box                 => ['div class="box"'],
+        :box                 => ["div", {"class"=>"box"}],
         :form                => ['form'],
-        :one_line_text_input => ['input type="text"'],
-        :password            => ['input type="password"'],
+        :one_line_text_input => ['input', {"type"=>'text'}],
+        :password            => ['input', {"type"=>'password'}],
         :button              => ['button']
       }
     end
@@ -126,14 +126,14 @@ module HTML
       match(/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars").
       actual
 
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
+    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def title sender, to, args
     val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
       not_empty_string.
       actual
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
+    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def note sender, to, args
@@ -141,14 +141,14 @@ module HTML
     val = WWW_Applet::Clean.new( to, args.last.to_s.strip ).
       not_empty_string.
       actual
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
+    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
   def max_chars sender, to, args
     val = WWW_Applet::Clean.new(to, args.last).
       number_between(1, 200).
       actual
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
+    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>val}
   end
 
 
@@ -157,7 +157,7 @@ module HTML
   # ===================================================
 
   def on_click sender, to, args
-    {"IS"=>["MARKUP VALUE"], "NAME"=>standard_key(to), "VALUE"=>args.last}
+    {"IS"=>["ATTRIBUTE VALUE"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
   def on_hover sender, to, args
@@ -193,7 +193,7 @@ module HTML
       the_body.add_child new_element(o)
     }
 
-    the_doc.to_html
+    the_doc.to_xhtml
   end
 
 
@@ -208,7 +208,9 @@ module HTML
   end
 
   def new_element raw
-    tag = HTML.elements[raw["NAME"]].first.split.first
+    meta = HTML.elements[raw["NAME"]].dup
+    tag = meta.shift.split.first
+    attrs = meta.first.is_a?(Hash) ? meta.shift : nil
     e = Nokogiri::XML::Node.new(tag, the_doc)
 
     content = raw["VALUE"].last
@@ -216,9 +218,19 @@ module HTML
       e.content = content
     end
 
+    if attrs
+      attrs.each { |k,v|
+        e[k] = v
+      }
+    end
+
     raw["VALUE"].each { |o|
-      next unless is_element_value?(o)
-      e.add_child new_element(o)
+      case
+      when is_element_value?(o)
+        e.add_child new_element(o)
+      when is_attribute_value?(o)
+        e[o["NAME"].downcase] = o["VALUE"]
+      end
     }
 
     e
@@ -249,8 +261,8 @@ module HTML
     is_applet_object?(o) && o["IS"].include?("STYLE CLASS")
   end
 
-  def is_markup_value? o
-    is_applet_object?(o) && o["IS"].include?("MARKUP VALUE")
+  def is_attribute_value? o
+    is_applet_object?(o) && o["IS"].include?("ATTRIBUTE VALUE")
   end
 
 end # === module HTML
