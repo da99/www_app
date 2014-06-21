@@ -12,7 +12,7 @@ module HTML
       s.gsub(/^#{s.scan(/^\s*/).min_by{|l|l.length}}/, "")
     end
 
-    def new_page
+    def page
       @page ||= unindent <<-EOHTML
         <!DOCTYPE html>
         <html lang="en">
@@ -63,12 +63,12 @@ module HTML
 
   end # === class self ===================================================
 
-  def doc
-    @doc ||= Nokogiri::HTML Page::NEW
+  def the_doc
+    @doc ||= Nokogiri::HTML HTML.page
   end
 
   def new_element raw
-    e = Nokogiri::XML::Node.new(raw[:tag], doc)
+    e = Nokogiri::XML::Node.new(raw[:tag], the_doc)
 
     if raw[:content]
       e.content = raw[:content]
@@ -112,7 +112,7 @@ module HTML
 
         clean = WWW_Applet::Clean.new(to, raw).clean_as(*meta).actual
 
-        {"IS"=>["STYLE VALUE"], "NAME"=>standard_key(css_name), "VALUE"=>clean}
+        {"IS"=>["STYLE VALUE"], "NAME"=>css_name, "VALUE"=>clean}
 
       end
     ^
@@ -252,24 +252,19 @@ module HTML
 
   def to_html
 
-    return the_styles
-
-    @the_nodes = nil
-
-    org = organize_the_styles(@stack)
-    org["STYLE CLASSES"]["BODY"] = (org["STYLE CLASSES"]["BODY"] || {}).merge(org["META"])
-
-    org["STYLE CLASSES"].keys.each { |name|
-      org["STYLE CLASSES"][name] = upsert_style_class name, styles
+    the_css = the_styles.inject("") { |memo, (k, v)|
+      memo << "
+       #{k} {
+         #{v.to_a.map { |pair| "#{pair.first}: #{pair.last.is_a?(Array) ? pair.last.join(', ') : pair.last};" }.join "
+         " }
+       }
+    "
+      memo
     }
 
-    puts "============================"
-    # pp org
-  end
-
-  def html_doc
-    @html_doc ||= begin
-                  end
+    the_css
+    the_doc.at("html head style").content = the_css
+    the_doc.to_html
   end
 
 end # === module HTML
@@ -390,8 +385,7 @@ json = [
 d = WWW_Applet.new "__MAIN__", json
 d.extend_applet HTML
 d.run
-require "pp"
-pp d.to_html
+puts d.to_html
 
 if ARGV.first == "print"
   File.open "/tmp/n.html", "w+" do |io|
