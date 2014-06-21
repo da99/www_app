@@ -57,31 +57,22 @@ module HTML
         :id              => ["id", :dom_id],
         :title           => ["title", :string, :size_bewtween, [1, 200]],
         :note            => ["span", :not_empty_string],
-        :max_chars       => [:number_between, [1, 10_000]]
+        :max_chars       => ["max-chars", :number_between, [1, 10_000]]
+      }
+    end
+
+    def elements
+      @elements ||= {
+        :p                   => ["p", :strip, :not_empty_string],
+        :box                 => ['div class="box"'],
+        :form                => ['form'],
+        :one_line_text_input => ['input type="text"'],
+        :password            => ['input type="password"'],
+        :button              => ['button']
       }
     end
 
   end # === class self ===================================================
-
-  def the_doc
-    @doc ||= Nokogiri::HTML HTML.page
-  end
-
-  def new_element raw
-    e = Nokogiri::XML::Node.new(raw[:tag], the_doc)
-
-    if raw[:content]
-      e.content = raw[:content]
-    end
-
-    if raw[:childs]
-      raw[:childs].each { |raw_child|
-        e.add_child new_element(raw_child)
-      }
-    end
-
-    e
-  end
 
   def styles sender, to, args
     rule_name = sender.grab_stack_tail(1, "a name for the style")
@@ -118,13 +109,14 @@ module HTML
     ^
   }
 
-  private # ===============================================================
+  elements.each { |name, props|
+    eval %^
+      def #{name} sender, to, args
 
-  def the_styles
-    @the_stles ||= {}
-  end
-
-  public # =================================================================================================
+        {"IS"=>["ELEMENT VALUE"], "NAME"=>:#{name}, "VALUE"=>args}
+      end
+    ^
+  }
 
   def id sender, to, args
     val = WWW_Applet::Clean.new( to, standard_key(args.last)).
@@ -185,36 +177,57 @@ module HTML
     {"IS"=>["PROPERTY"], "NAME"=>standard_key(to), "VALUE"=>args.last}
   end
 
-  # ===================================================
-  #                    Elements
-  # ===================================================
+  def to_html
+    the_doc.at("html head style").content = the_styles.inject("") { |memo, (k, v)|
+      memo << "
+       #{k} {
+         #{v.to_a.map { |pair| "#{pair.first}: #{pair.last.is_a?(Array) ? pair.last.join(', ') : pair.last};" }.join "
+         " }
+       }
+    "
+      memo
+    }
 
-  def p sender, to, args
-    val = require_arg(
-      to, args.last.to_s.strip,
-      [:not_empty_string, "can't be empty."]
-    )
-    new_element sender, to, [val]
+    stack.each { |o|
+      next unless is_element_value?(o)
+      the_body.add_child new_element(o)
+    }
+
+    the_doc.to_html
   end
 
-  %w{ p box button form one_line_text_input password }.each { |name|
-    eval %^
-      def #{name} *args
-        new_element *args
-      end
-    ^
-  }
 
   private # ==========================================
 
-
-  def new_element sender, to, args
-    e = {
-      "IS"    => ["ELEMENT"],
-      "NAME"  => standard_key(to),
-      "VALUE" => args.select { |o| is_markup_value?(o) }
-    }
+  def the_doc
+    @the_doc ||= Nokogiri::HTML HTML.page
   end
+
+  def the_body
+    @the_body ||= the_doc.at('body')
+  end
+
+  def new_element raw
+    tag = HTML.elements[raw["NAME"]].first.split.first
+    e = Nokogiri::XML::Node.new(tag, the_doc)
+
+    content = raw["VALUE"].last
+    if content && content.is_a?(String)
+      e.content = content
+    end
+
+    raw["VALUE"].each { |o|
+      next unless is_element_value?(o)
+      e.add_child new_element(o)
+    }
+
+    e
+  end
+
+  def the_styles
+    @the_stles ||= {}
+  end
+
 
   def is_applet_object? o
     o.is_a?(Hash) && o["IS"].is_a?(Array)
@@ -224,8 +237,8 @@ module HTML
     is_applet_object?(o) && o["IS"].include?("STYLE VALUE")
   end
 
-  def is_element? o
-    is_applet_object?(o) && o["IS"].include?("ELEMENT")
+  def is_element_value? o
+    is_applet_object?(o) && o["IS"].include?("ELEMENT VALUE")
   end
 
   def is_sub_style_class? o
@@ -238,33 +251,6 @@ module HTML
 
   def is_markup_value? o
     is_applet_object?(o) && o["IS"].include?("MARKUP VALUE")
-  end
-
-  public
-
-  def the_page
-    @the_nodes ||= {
-      "STYLE CLASSES" => {},
-      "ELEMENTS"      => {}
-    }
-  end
-
-
-  def to_html
-
-    the_css = the_styles.inject("") { |memo, (k, v)|
-      memo << "
-       #{k} {
-         #{v.to_a.map { |pair| "#{pair.first}: #{pair.last.is_a?(Array) ? pair.last.join(', ') : pair.last};" }.join "
-         " }
-       }
-    "
-      memo
-    }
-
-    the_css
-    the_doc.at("html head style").content = the_css
-    the_doc.to_html
   end
 
 end # === module HTML
