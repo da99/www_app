@@ -1,5 +1,6 @@
 
 require "nokogiri"
+require "nokogiri-pretty"
 require "www_applet"
 require "www_applet/Clean"
 
@@ -152,7 +153,24 @@ module HTML
   end
 
   def to_html
-    the_doc.at("html head style").content = the_styles.inject("") { |memo, (k, v)|
+
+    page = <<-EOHTML
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>[No Title]</title>
+          <style type="text/css">
+            !THE_CSS
+          </style>
+        </head>
+        <body>
+          !THE_BODY
+        </body>
+      </html>
+    EOHTML
+
+    the_css = the_styles.inject("") { |memo, (k, v)|
       memo << "
        #{k} {
          #{v.to_a.map { |pair| "#{pair.first}: #{pair.last.is_a?(Array) ? pair.last.join(', ') : pair.last};" }.join "
@@ -162,12 +180,15 @@ module HTML
       memo
     }
 
+    page = page.sub("!THE_CSS", the_css)
+    the_body = ""
+
     stack.each { |o|
       next unless is_element?(o)
-      the_body.add_child new_element(o)
+      the_body << new_html(o)
     }
 
-    the_doc.to_xhtml
+    the_doc.human
   end
 
 
@@ -181,10 +202,11 @@ module HTML
     @the_body ||= the_doc.at('body')
   end
 
-  def new_element raw
-    meta = HTML.elements[raw["NAME"]].dup
-    tag = meta.shift.split.first
+  def new_html raw
+    meta  = HTML.elements[raw["NAME"]].dup
+    tag   = meta.shift.split.first
     attrs = meta.first.is_a?(Hash) ? meta.shift : nil
+
     e = Nokogiri::XML::Node.new(tag, the_doc)
 
     content = raw["VALUE"].last

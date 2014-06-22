@@ -28,6 +28,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "multi_json" , "~> 1.10"
   spec.add_dependency "opal"       , "~> 0.6"
   spec.add_dependency "nokogiri"   , "~> 1.6"
+  spec.add_dependency "nokogiri-pretty"   , "~> 0.1"
 
   spec.add_development_dependency "pry"           , "~> 0.9"
   spec.add_development_dependency "rake"          , "~> 10.3"
