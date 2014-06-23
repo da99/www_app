@@ -1,6 +1,6 @@
 
 require "nokogiri"
-require "nokogiri-pretty"
+require "escape_escape_escape"
 require "www_applet"
 require "www_applet/Clean"
 
@@ -62,15 +62,21 @@ module HTML
     end
 
     def elements
-      @elements ||= {
-        :p                   => ["p", :strip, :not_empty_string],
-        :box                 => ["div", {"class"=>"box"}],
-        :form                => ['form'],
-        :one_line_text_input => ['input', {"type"=>'text'}],
-        :password            => ['input', {"type"=>'password'}],
-        :note            => ["span", {'class'=>'note'}, :not_empty_string],
-        :button              => ['button']
-      }
+      @elements ||= begin
+                      Escape_Escape_Escape::CONFIG[:elements].inject({}) { |memo, e|
+                        memo[e.to_sym] = [e]
+                        memo
+                      }.merge({
+                        :p                 => ["p", :strip, :not_empty_string],
+                        :box               => ["div", {"class"=>"box"}],
+                        :form              => ['form'],
+                        :password          => ['input', {"type"=>'password'}],
+                        :one_line_text_box => ['input', {"type"=>'text', "value"=>''}],
+                        :text_box          => ['textarea'],
+                        :note              => ["span", {'class'=>'note'}, :not_empty_string],
+                        :button            => ['button']
+                      })
+                    end
     end
 
   end # === class self ===================================================
@@ -154,21 +160,6 @@ module HTML
 
   def to_html
 
-    page = <<-EOHTML
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-          <title>[No Title]</title>
-          <style type="text/css">
-            !THE_CSS
-          </style>
-        </head>
-        <body>
-          !THE_BODY
-        </body>
-      </html>
-    EOHTML
 
     the_css = the_styles.inject("") { |memo, (k, v)|
       memo << "
@@ -180,15 +171,30 @@ module HTML
       memo
     }
 
-    page = page.sub("!THE_CSS", the_css)
     the_body = ""
 
     stack.each { |o|
       next unless is_element?(o)
-      the_body << new_html(o)
+      the_body << element_to_html(o)
     }
 
-    the_doc.human
+    raw_doc = <<-EOHTML
+      <!DOCTYPE html>
+      <html lang="en">
+        <head>
+          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+          <title>[No Title]</title>
+          <style type="text/css">
+            #{the_css}
+          </style>
+        </head>
+        <body>
+          #{the_body}
+        </body>
+      </html>
+    EOHTML
+
+    Sanitize.document(raw_doc, Escape_Escape_Escape::CONFIG)
   end
 
 
@@ -202,34 +208,58 @@ module HTML
     @the_body ||= the_doc.at('body')
   end
 
-  def new_html raw
+  def element_to_html raw
     meta  = HTML.elements[raw["NAME"]].dup
     tag   = meta.shift.split.first
-    attrs = meta.first.is_a?(Hash) ? meta.shift : nil
 
-    e = Nokogiri::XML::Node.new(tag, the_doc)
-
-    content = raw["VALUE"].last
-    if content && content.is_a?(String)
-      e.content = content
+    custom_attrs = raw["VALUE"].select { |o| is_attribute?(o) }.inject({}) do |memo, hash|
+      memo[hash["NAME"]] = hash["VALUE"]
+      memo
     end
 
-    if attrs
-      attrs.each { |k,v|
-        e[k] = v
-      }
-    end
+    attrs  = custom_attrs.merge( meta.first.is_a?(Hash) ? meta.shift : {})
 
-    raw["VALUE"].each { |o|
-      case
-      when is_element?(o)
-        e.add_child new_element(o)
-      when is_attribute?(o)
-        e[o["NAME"].downcase] = o["VALUE"]
+    childs = raw["VALUE"].map { |o|
+      next unless is_element?(o)
+      element_to_html o
+    }.compact
+
+    inner_html = raw["VALUE"].last.is_a?(String) ?
+      Escape_Escape_Escape.inner_html(raw["VALUE"].last) :
+      nil
+
+    return nil if !inner_html && childs.empty?
+
+    attr_string = attrs.inject("") do |memo, (k,v)|
+      case v
+      when String
+        memo << "#{k}=\"#{Escape_Escape_Escape.inner_html(v)}\""
+      when Numeric
+        memo << "#{k}=\"#{v}\""
+      else
+        if k != "ON CLICK"
+        fail "Unknown type for HTML encoding/escaping: #{k.inspect} => #{v.inspect}"
+        end
       end
-    }
+      memo
+    end
 
-    e
+
+    if childs.empty?
+      childs << inner_html
+    else
+      childs << %^
+        <div class="content" ignoreme="blag">
+          #{inner_html}
+        </div>
+      ^
+    end
+
+    %^
+      <#{tag} #{attr_string}>
+        #{childs.join "\n"}
+      </#{tag}>
+    ^
   end
 
   def the_styles
@@ -321,7 +351,7 @@ json = [
     "title"   , [ "Log-in" ],
     "form", [
 
-      "one line text input", [
+      "one line text box", [
         "max chars" , [ 30 ],
         "title", ["Screen Name:"]
       ],
@@ -342,7 +372,7 @@ json = [
   "box", [
     "title" ,  [ "Create a new account" ],
     "form", [
-      "one line text input", [ "max chars", [30], "title", ["Screen Name:"]],
+      "one line text box", [ "max chars", [30], "title", ["Screen Name:"]],
       "password", [
         "max chars" , [ 200 ],
         "title"      , ["Password"],
