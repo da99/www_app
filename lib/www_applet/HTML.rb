@@ -57,7 +57,8 @@ class WWW_Applet
         @attributes ||= {
           :id              => ["id", :size_between, [1, 100], :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] ],
           :title           => ["title", :string, :size_between, [1, 200]],
-          :max_chars       => ["max-chars", :number_between, [1, 10_000]]
+          :max_chars       => ["max-chars", :number_between, [1, 10_000]],
+          :href            => ["href", :not_empty_string, :size_between, [1,200]]
         }
       end
 
@@ -179,7 +180,7 @@ class WWW_Applet
       %^<!DOCTYPE html><html lang="en"><head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
         <title>[No Title]</title>
-        <style type="text/css"> #{Sanitize::CSS.stylesheet the_css, Escape_Escape_Escape::CONFIG} </style>
+        <style type="text/css">#{Sanitize::CSS.stylesheet the_css, Escape_Escape_Escape::CONFIG}</style>
       </head>
       <body>#{Escape_Escape_Escape.html the_body}</body></html>^
     end

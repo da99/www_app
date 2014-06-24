@@ -1,38 +1,48 @@
 
 
-require "open3"
+require "differ"
 
 def norm ugly
-  o = ""
-  Open3.popen3('tidy --tidy-mark no -i2 -quiet') do |i, o, e, t|
-    i.print ugly
-    i.close
-    o << o.read
-    o << e.read
-  end
-
-  o
+  ugly.split("\n").map { |s|
+    strip = s.strip
+    if strip.index("<") == 0
+      strip
+    else
+      s
+    end
+  }.join("\n")
 end
 
 def to_doc s
-  norm %^
-<!DOCTYPE html>
-<html lang="en">
-  <head>
+  norm %^<!DOCTYPE html><html lang="en"><head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>[No Title]</title>
-    <style type="text/css">
-    </style>
+    <style type="text/css"></style>
   </head>
-  <body>#{s}</body>
-</html>
-  ^
+  <body>#{s.strip}</body></html>^
 end
 
 def input json
   d = WWW_Applet.new("__MAIN__", json)
   d.run
   norm d.to_html
+end
+
+def should_eq actual, target
+  if actual != target
+    Differ.format = :color
+    puts ""
+    puts "========  ACTUAL:  =================="
+    puts actual
+    puts "========  TARGET:  =================="
+    puts target
+    puts "========== DIFF: ===================="
+    puts Differ.diff_by_word(actual, target).to_s
+    puts "====================================="
+    puts ""
+    fail "NOT EQUAL"
+  end
+  actual.should == target
 end
 
 describe "HTML" do
@@ -47,11 +57,11 @@ describe "HTML" do
 
     target = to_doc(
       %^
-        <a href="&amp; &amp; &amp;">home</a>
+        <a href="&amp;%20&amp;%20&amp;">home</a>
       ^
     )
 
-    actual.should == target
+    should_eq actual, target
   end
 
 end # === describe HTML ===
