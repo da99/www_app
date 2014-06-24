@@ -178,23 +178,21 @@ module HTML
       the_body << element_to_html(o)
     }
 
-    raw_doc = <<-EOHTML
-      <!DOCTYPE html>
-      <html lang="en">
-        <head>
-          <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-          <title>[No Title]</title>
-          <style type="text/css">
-            #{the_css}
-          </style>
-        </head>
-        <body>
-          #{the_body}
-        </body>
-      </html>
-    EOHTML
+    ugly_but_clean = %^<!DOCTYPE html><html lang="en"><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <title>[No Title]</title>
+      <style type="text/css"> #{Sanitize::CSS.stylesheet the_css, Escape_Escape_Escape::CONFIG} </style>
+    </head>
+    <body>#{Escape_Escape_Escape.html the_body}</body></html>
+    ^
 
-    Sanitize.document(raw_doc, Escape_Escape_Escape::CONFIG)
+    require "open3"
+    Open3.popen3('tidy --tidy-mark no -i2 -quiet') do |i, o, e, t|
+      i.print ugly_but_clean
+      i.close
+      puts o.read
+      puts e.read
+    end
   end
 
 
@@ -247,19 +245,11 @@ module HTML
 
     if childs.empty?
       childs << inner_html
-    else
-      childs << %^
-        <div class="content" ignoreme="blag">
-          #{inner_html}
-        </div>
-      ^
+    elsif inner_html
+      childs << %^<div class="content"> #{inner_html}</div>^
     end
 
-    %^
-      <#{tag} #{attr_string}>
-        #{childs.join "\n"}
-      </#{tag}>
-    ^
+    %^<#{tag} #{attr_string}>#{childs.join ""}</#{tag}>^
   end
 
   def the_styles
