@@ -1,5 +1,6 @@
 
 require "multi_json"
+require "www_applet/HTML"
 
 class WWW_Applet
 
@@ -74,7 +75,10 @@ class WWW_Applet
 
     fail("Invalid: JS object must be an array") unless @tokens.is_a?(Array)
 
-    self.extend_applet(Computers) unless @parent
+    unless @parent
+      self.extend_applet(Computers) 
+      self.extend_applet(HTML)
+    end
   end # def initialize
 
   def extend_applet mod
