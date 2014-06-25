@@ -1,5 +1,6 @@
 
 require "multi_json"
+require "www_applet/Core"
 require "www_applet/HTML"
 
 class WWW_Applet
@@ -11,6 +12,9 @@ class WWW_Applet
   STOP_APPLET       = {"IS"=> ["APPLET COMMAND"], "VALUE"=>"STOP APPLET" }
   IGNORE_RETURN     = {"IS"=>"APPLET COMMAND", "VALUE"=>"IGNORE RETURN"}
 
+  COMPUTERS = {
+  }
+
   # ===================================================
   class << self
   # ===================================================
@@ -19,78 +23,40 @@ class WWW_Applet
       v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
     end
 
-    def include_meta mod
-      mod.public_instance_methods.each { |sym|
-        name = if mod.respond_to?(:aliases) && mod.aliases[sym]
-                 standard_key(mod.aliases[sym])
+    def include_computers mod
+
+      namespace = Object.new
+      namespace.extend mod
+
+      mod::Meta.each { |raw_key, raw_meta|
+
+        meta = raw_meta.dup
+        meta << :namespace
+        meta << namespace
+
+        name = case raw_key
+               when String
+                 standard_key(raw_key)
+               when Symbol
+                 standard_key(raw_key.to_s)
                else
-                 standard_key(sym.to_s).gsub('_', ' ')
+                 fail "Invalid: computer name: #{raw_key.inspect}"
                end
-        @computers[name] = [sym]
+        if self::COMPUTERS.has_key?(name)
+          fail "Computer already exists: #{raw_key.inspect} as #{name.inspect}"
+        end
+
+        self::COMPUTERS[name] = meta
       }
 
-      unless ::WWW_APPLET::HTML_MODS_COMPILED[mod]
-        HTML::VALUE_GROUPS.each { |group|
-          if mod.const_defined?(group)
-            mod.const_get(group).each { |tag, raw_meta|
-              klass = HTML.const_get(group.to_s.sub(/s$/, '').to_sym)
-              mod.instance_eval %^
-              def #{tag} sender, to, raw_args
-                new_html_value sender, to, raw_args, meta, ::WWW_Applet::HTML::COMPUTERS[:tag]
-              end
-              ^
-              HTML::COMPUTERS[tag] = meta = {
-                :name      => tag.to_s.sub(START_ON_REGEXP, '').gsub('_', '-')
-                :cleaners  => [],
-                  :group_all => false,
-                  :allow_in  => nil,
-                  :klass     => klass
-              }
-              current = 0
-              stop    = raw_meta.size
-              while current < stop
-                cmd = raw_meta[current]
-                args = raw_meta[current+1]
-                case cmd
-                when :group_all
-                  meta[:group_all] = true
+      self
 
-                when :allow_in
-                  current += 1
-                  meta[:allow_in] = args
-
-                when :tag
-                  current += 1
-                  meta[:name] = args
-                  meta[:tag]  = args
-
-                when :name
-                  current += 1
-                  meta[:name] = args
-
-                when :attributes
-                  current += 1
-                  meta[:force_attributes] = args
-
-                when :allowed_in
-                  current += 1
-                  result[:allowed_in] = args
-
-                else
-                  meta[:cleaners] << action
-                end
-                current += 1
-
-              end
-            } # each |tag, meta|
-          end
-        }
-        ::WWW_APPLET::HTML_MODS_COMPILED[mod] = true
-      end
-      extend mod
-    end
+    end # === def include_computers
 
   end # === class =====================================
+
+  include_computers Computers
+  include_computers HTML
 
   # ===================================================
   # Instance methods:
@@ -147,10 +113,6 @@ class WWW_Applet
 
     fail("Invalid: JS object must be an array") unless @tokens.is_a?(Array)
 
-    unless @parent
-      self.extend_applet(Computers) 
-      self.extend_applet(HTML)
-    end
   end # def initialize
 
   def standard_key *args
@@ -315,149 +277,66 @@ class WWW_Applet
     self
   end # === def run
 
+  def run_computer
+      unless ::WWW_APPLET::HTML_MODS_COMPILED[mod]
+        HTML::VALUE_GROUPS.each { |group|
+          if mod.const_defined?(group)
+            mod.const_get(group).each { |tag, raw_meta|
+              klass = HTML.const_get(group.to_s.sub(/s$/, '').to_sym)
+              mod.instance_eval %^
+              def #{tag} sender, to, raw_args
+                new_html_value sender, to, raw_args, meta, ::WWW_Applet::HTML::COMPUTERS[:tag]
+              end
+              ^
+              HTML::COMPUTERS[tag] = meta = {
+                :name      => tag.to_s.sub(START_ON_REGEXP, '').gsub('_', '-'),
+                :cleaners  => [],
+                  :group_all => false,
+                  :allow_in  => nil,
+                  :klass     => klass
+              }
+              current = 0
+              stop    = raw_meta.size
+              while current < stop
+                cmd = raw_meta[current]
+                args = raw_meta[current+1]
+                case cmd
+                when :group_all
+                  meta[:group_all] = true
 
-  # ============================================================================================
-  # ============================================================================================
-  # Module: Computers:
-  # The base computers all other top parent computers have.
-  # ============================================================================================
-  # ============================================================================================
-  module Computers
+                when :allow_in
+                  current += 1
+                  meta[:allow_in] = args
 
-    def require_args sender, to, args
-      the_args = sender.get("THE ARGS")
+                when :tag
+                  current += 1
+                  meta[:name] = args
+                  meta[:tag]  = args
 
-      if args.length != the_args.length
-        fail "Args mismatch: #{to.inspect} #{args.inspect} != #{the_args.inspect}"
-      end
+                when :name
+                  current += 1
+                  meta[:name] = args
 
-      args.each_with_index { |n, i|
-        sender.is n, the_args[i]
-      }
+                when :attributes
+                  current += 1
+                  meta[:force_attributes] = args
 
-      IGNORE_RETURN
-    end
+                when :allowed_in
+                  current += 1
+                  result[:allowed_in] = args
 
-    def copy_outside_stack sender, to, args
-      target = sender.parent
-      if args.size > target.stack.size
-        fail("Stack underflow in #{target.name.inspect} for: #{to.inspect} #{args.inspect}")
-      end
-      args.each_with_index { |a, i|
-        sender.is a, target.stack[target.stack.length - args.length - i]
-      }
+                else
+                  meta[:cleaners] << action
+                end
+                current += 1
 
-      IGNORE_RETURN
-    end
-
-    def print sender, to, args
-      val = if args.size == 1
-              args.last.inspect
-            else
-              args.inspect
-            end
-      top.console.push val
-
-      IGNORE_RETURN
-    end
-
-    def has? *raw
-      if raw.length == 1 # run as native function
-        values.has_key?(standard_key(raw.first))
-      else
-        sender, to, args = raw
-        fail "Not done"
-      end
-    end
-
-    def get *raw
-      if raw.size == 1 # runs as native function
-        return values[standard_key raw.last]
-      end
-
-      sender, to, args = raw
-      name   = standard_key args.last
-      target = sender
-      while (!target.values.has_key?(name) && target.fork? && target.parent)
-        target = target.parent
-      end
-
-      fail("Value not found: #{name.inspect}") unless target.values.has_key?(name)
-      target.values[name]
-    end
-
-    def is *raw_args
-      if raw_args.length == 2 # run as native function
-        raw_name, val = raw_args
-        name = standard_key(raw_name)
-        if @values.has_key?(name)
-          fail "Value already created: #{raw_name.inspect}"
-        end
-        @values[name] = val
-        return val
-      end
-
-      sender, to, args = raw_args
-      raw_name = sender.stack.pop
-      value    = args.last
-      source = "#{raw_name.inspect} #{to.inspect} #{args.inspect}"
-      if !raw_name
-        fail "Missing value: #{source}"
-      end
-
-      if !(raw_name.is_a? String)
-        fail "Invalid value: Must be a string: #{source}"
-      end
-
-      if args.empty?
-        fail "Missing value: #{source}"
-      end
-
-      name = standard_key raw_name
-      if sender.values.has_key?(name)
-        fail("Value already created: #{name.inspect}")
-      end
-
-      sender.values[name] = value
-      return value
-    end
-
-    def is_a_computer sender, to, tokens
-      source   = "#{sender.stack.last.inspect} #{to.inspect} [...]"
-      if sender.stack.empty?
-        fail("Missing value: a name for the computer: #{source}")
-      end
-
-      raw_name = sender.stack.pop
-      if !raw_name.is_a?(String)
-        fail "Invalid value: computer name must be a string: #{source}"
-      end
-
-      name = standard_key(raw_name)
-      if sender.computers[name]
-        fail "Invalid value: computer name already taken: #{source}"
-      end
-
-      sender.computers[name] = [
-        lambda { |sender, to, args|
-          c = WWW_Applet.new(sender, "SEND TO: #{to.inspect}", tokens, args)
-          c.run
-          c.stack.last
+              end
+            } # each |tag, meta|
+          end
         }
-      ]
-
-      {"IS"=> ["COMPUTER"], "VALUE"=> name}
-    end
-
-    def stop_applet sender, to, tokens
-      STOP_APPLET
-    end
-
-  # ============================================================================================
-  end # === module Computers
-  # ============================================================================================
-  # ============================================================================================
-
+        ::WWW_APPLET::HTML_MODS_COMPILED[mod] = true
+      end
+  end # === def run_computer
 
 end # === class WWW_Applet ================================================================
 
