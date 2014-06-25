@@ -12,7 +12,7 @@ class WWW_Applet
   STOP_APPLET       = {"IS"=> ["APPLET COMMAND"], "VALUE"=>"STOP APPLET" }
   IGNORE_RETURN     = {"IS"=>"APPLET COMMAND", "VALUE"=>"IGNORE RETURN"}
 
-  COMPUTERS = {
+  Computers = {
   }
 
   # ===================================================
@@ -23,16 +23,22 @@ class WWW_Applet
       v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
     end
 
+    def inspect_alias raw, actual
+      raw_inspect = raw.inspect
+      actual_inspect = actual.inspect
+      if raw_inspect == actual_inspect
+        raw_inspect
+      else
+        "#{raw_inspect} (as #{actual_inspect})"
+      end
+    end
+
     def include_computers mod
 
       namespace = Object.new
       namespace.extend mod
 
-      mod::Meta.each { |raw_key, raw_meta|
-
-        meta = raw_meta.dup
-        meta << :namespace
-        meta << namespace
+      mod::Meta.each { |raw_key, meta|
 
         name = case raw_key
                when String
@@ -42,12 +48,17 @@ class WWW_Applet
                else
                  fail "Invalid: computer name: #{raw_key.inspect}"
                end
-        if self::COMPUTERS.has_key?(name)
-          fail "Computer already exists: #{raw_key.inspect} as #{name.inspect}"
+
+        if self::Computers.has_key?(name)
+          fail "Computer already exists: #{inspect_alias raw_key, name}"
         end
 
-        self::COMPUTERS[name] = meta
-      }
+        self::Computers[name] = {
+          :meta      => meta,
+          :namespace => namespace
+        }
+
+      } # === .each Meta
 
       self
 
