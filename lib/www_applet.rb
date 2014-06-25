@@ -2,25 +2,6 @@
 require "multi_json"
 require "www_applet/HTML"
 
-class Object
-
-  def applet_value?
-      is_a?(Hash) && self[:is].include?(args.first)
-  end
-
-  def applet? *args
-    case args.size
-    when 0
-      self.class == www_applet
-    when 1
-      is_a?(hash) && self[:is].include?(args.first)
-    else
-      fail argumenterror, "too many arguments."
-    end
-  end
-
-end
-
 class WWW_Applet
 
   HTML_MODS_COMPILED = {}
