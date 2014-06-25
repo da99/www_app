@@ -33,9 +33,10 @@ if [[ "$first_opt" == "js" ]]; then
   exit 0
 fi
 
-file="$(find specs/as_ruby -maxdepth 1 -type f -iname "*$@.rb" -and -not -iname "helpers.rb")"
+file="$(find specs/as_ruby -maxdepth 1 -type f -iname "*$first_opt.rb" -and -not -iname "helpers.rb")"
 if [[ -f "$file" ]]; then
-  bundle exec bacon specs/as_ruby/helpers.rb $file
+  shift
+  bundle exec bacon specs/as_ruby/helpers.rb $file "$@"
   exit 0
 fi
 

@@ -13,13 +13,24 @@ def norm ugly
   }.join("\n")
 end
 
-def to_doc s
-  norm %^<!DOCTYPE html><html lang="en"><head>
+def to_doc o
+  tmpl = %^<!DOCTYPE html><html lang="en"><head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>[No Title]</title>
-    <style type="text/css"></style>
+    <title>$TITLE</title>
+    <style type="text/css">$STYLE</style>
   </head>
-  <body>#{s.strip}</body></html>^
+  <body>$BODY</body></html>^
+  vals = case o
+         when String
+           {:title=>'[No Title]', :body=>o}
+         when Hash
+           {:title=>'[No Title]'}.merge o
+         else
+           fail "Unknown type: #{o.inspect}"
+         end
+  tmpl.gsub(/\$([^\ <]+)/) { |sub|
+    vals[$1.downcase.to_sym] || ''
+  }
 end
 
 def input json
@@ -28,7 +39,10 @@ def input json
   norm d.to_html
 end
 
-def should_eq actual, target
+def should_eq raw_actual, raw_target
+  actual = norm raw_actual
+  target = norm raw_target
+
   if actual != target
     Differ.format = :color
     puts ""
@@ -55,12 +69,16 @@ describe "HTML" do
       ]
     ]
 
-    target = to_doc(
-      %^
-        <a href="&amp;%20&amp;%20&amp;">home</a>
-      ^
-    )
+    target = to_doc %^<a href="&amp;%20&amp;%20&amp;">home</a>^
 
+    should_eq actual, target
+  end
+
+  it "can set the page title" do
+    actual = input [
+      "title", ["Hello"]
+    ]
+    target = to_doc :title=>"Hello"
     should_eq actual, target
   end
 
