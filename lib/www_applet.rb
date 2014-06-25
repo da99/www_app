@@ -9,30 +9,35 @@ class WWW_Applet
 
   MULTI_WHITE_SPACE = /\s+/
   VALID_NON_OBJECTS = [String, Fixnum, Float, TrueClass, FalseClass, NilClass]
-  STOP_APPLET       = {"IS"=> ["APPLET COMMAND"], "VALUE"=>"STOP APPLET" }
-  IGNORE_RETURN     = {"IS"=>"APPLET COMMAND", "VALUE"=>"IGNORE RETURN"}
+  STOP_APPLET       = {:is=> [:applet_command], :value=>:stop_applet }
+  IGNORE_RETURN     = {:is=> [:applet_command], :value=>:ignore_return}
 
-  Computers = {
-  }
+  Computers = {}
 
   module POL
     class << self
 
+      def into_kv arr
+        last_key = nil
+        arr.inject({}) { |memo, val|
+          case val
+          when Array, Hash
+            fail "Dangling object: #{val.inspect}" if !last_key
+            memo[last_key] = val
+            last_key = nil
+          when Symbol
+            last_key = val
+            memo[last_key] = true
+          else
+            fail "Unknown type: #{val.inspect}"
+          end
+
+          memo
+        }
+      end
+
       def standard_key v
         v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
-      end
-
-      def applet_command? val
-        applet_object?(val) && val[:is].include?(:applet_command)
-      end
-
-      def applet_object? val
-        val.is_a?(Hash) && val[:is].is_a?(Array)
-      end
-
-      def stack_able? val
-        VALID_NON_OBJECTS.include?(val.class) ||
-          (applet_object?(val) && !applet_command?(val))
       end
 
       def inspect_alias raw, actual
@@ -45,38 +50,57 @@ class WWW_Applet
         end
       end
 
+      def applet_object? val
+        val.is_a?(Hash) && val[:is].is_a?(Array)
+      end
+
+      def applet_command? val
+        applet_object?(val) && val[:is].include?(:applet_command)
+      end
+
+      def computer? v
+        applet_object?(v) && v[:is].include?(:computer)
+      end
+
+      def stack_able? val
+        VALID_NON_OBJECTS.include?(val.class) ||
+          (applet_object?(val) && !applet_command?(val))
+      end
+
     end # === class self ===
   end # === module POL
 
   # ===================================================
   class << self
 
-    def include_computers mod
+    def include_computers *args
 
-      namespace = Object.new
-      namespace.extend mod
+      args.flatten.each { |mod|
+        computer = Object.new
+        computer.extend mod
 
-      mod::Meta.each { |raw_key, meta|
+        mod::Meta.each { |raw_key, meta|
 
-        name = case raw_key
-               when String
-                 POL.standard_key(raw_key)
-               when Symbol
-                 POL.standard_key(raw_key.to_s)
-               else
-                 fail "Invalid: computer name: #{raw_key.inspect}"
-               end
+          name = case raw_key
+                 when String
+                   POL.standard_key(raw_key)
+                 when Symbol
+                   POL.standard_key(raw_key.to_s)
+                 else
+                   fail "Invalid: computer name: #{raw_key.inspect}"
+                 end
 
-        if self::Computers.has_key?(name)
-          fail "Computer already exists: #{inspect_alias raw_key, name}"
-        end
+          if self::Computers.has_key?(name)
+            fail "Computer already exists: #{inspect_alias raw_key, name}"
+          end
 
-        self::Computers[name] = {
-          :meta      => meta,
-          :namespace => namespace
-        }
+          self::Computers[name] = POL.into_kv(meta).merge(
+            :meta     => meta,
+            :computer => computer
+          )
 
-      } # === .each Meta
+        } # === .each Meta
+      } # === each mod
 
       self
 
@@ -84,8 +108,7 @@ class WWW_Applet
 
   end # === class =====================================
 
-  include_computers Computers
-  include_computers HTML
+  include_computers Core, HTML
 
   # ===================================================
   # Instance methods:
@@ -148,11 +171,9 @@ class WWW_Applet
     ::WWW_Applet::POL
   end
 
-  def fork? answer = :none
-    if answer != :none
-      @is_fork = answer
-    end
-    @is_fork
+  def fork? *args
+    return @is_fork if args.empty?
+    @is_fork = !!args.first
   end
 
   def fork_and_run name, tokens
@@ -167,14 +188,13 @@ class WWW_Applet
       fail("Invalid state: #{msg}")
     end
 
-    if num == 1
-      return @stack.pop
-    end
+    return @stack.pop if num == 1
 
     vals = []
     num.times do |i|
       vals.unshift @stack.pop
     end
+
     vals
   end
 
