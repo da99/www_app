@@ -49,59 +49,125 @@ class WWW_Applet
       # =============== styles
       'background-color'    => [
         :is, [:style],
-        :color
+        :clean_as, [:color]
       ],
 
       'background-image-url' => [
         :is, [:style],
-        :url
+        :clean_as, [:url]
       ],
 
       'background-repeat'   => [
         :is, [:style],
-        :downcase,
-        :in, %w[ repeat-all repeat-x repeat-y none ]
+        :clean_as, [
+          :downcase,
+          :in, %w[ repeat-all repeat-x repeat-y none ]
+        ]
       ],
 
       'font-family' => [
         :is, [:style],
-        :grab_all, :fonts
+        :grab_all,
+        :clean_as, [:fonts]
       ],
 
       :color       => [
         :is, [:style],
-        :color
+        :clean_as, [:color]
       ],
 
       'font-size'  => [
         :is, [:style],
-        :downcase,
-        :in, %w[ small large medium x-large ]
+        :clean_as, [
+          :downcase,
+          :in, %w[ small large medium x-large ]
+        ]
       ],
 
       # =============== attributes
 
-      :title      => [:is, [:attribute], :allow_in, [:body], :string, :size_between, [1, 200]],
-      'max chars' => [:is, [:attribute], :number_between, [1, 10_000]],
-      :href       => [:is, [:attribute], :allow_in, [:a], :not_empty_string, :size_between, [1,200]],
-      :id         => [
+      :title      => [
+        :is       , [:attribute],
+        :allow_in , [:body],
+        :clean_as , [
+          :string,
+          :size_between, [1, 200]
+        ]
+      ],
+
+      'max chars' => [
         :is, [:attribute],
-        :size_between, [1, 100],
-        :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] 
+        :clean_as, [
+          :number_between, [1, 10_000]
+        ]
+      ],
+
+      :href => [
+        :is, [:attribute],
+        :allow_in, [:a],
+        :clean_as, [
+          :not_empty_string, :size_between, [1,200]
+        ]
+      ],
+
+      :id => [
+        :is, [:attribute],
+        :clean_as, [
+          :size_between, [1, 100],
+          :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] 
+        ]
       ],
 
       # =============== elements
-      :p                  => [:is, [:element], :strip, :not_empty_string],
-      :box                => [:is, [:element], :attr, {"class"=>"box"}],
-      :form               => [:is, [:element]],
-      :password           => [:is, [:element], :tag, ['input'], :attr, {"type"=>'password'}],
-      'one line text box' => [:is, [:element], :tag, ['input'], :attr, {"type"=>'text', :value=>''}],
-      :text_box           => [:is, [:element], :tag, ['textarea']],
-      :note               => [:is, [:element], :tag, ['span'], :attr, {'class'=>'note'}, :not_empty_string],
-      :button             => [:is, [:element], :not_empty_string],
-      :a                  => [:is, [:element], :not_empty_string],
+      :p                  => [
+        :is, [:element],
+        :clean_as, [:strip, :not_empty_string]
+      ],
 
-      # =============== attributes
+      :box                => [
+        :is, [:element],
+        :attr, {"class"=>"box"}
+      ],
+
+      :form               => [
+        :is, [:element]
+      ],
+
+      :password           => [
+        :is, [:element],
+        :tag, ['input'],
+        :attr, {"type"=>'password'}
+      ],
+
+      'one line text box' => [
+        :is, [:element],
+        :tag, ['input'],
+        :attr, {"type"=>'text', :value=>''}
+      ],
+
+      :text_box           => [
+        :is, [:element],
+        :tag, ['textarea']
+      ],
+
+      :note               => [
+        :is, [:element],
+        :tag, ['span'],
+        :attr, {'class'=>'note'},
+        :clean_as, [:not_empty_string]
+      ],
+
+      :button             => [
+        :is, [:element],
+        :clean_as, [:not_empty_string]
+      ],
+
+      :a                  => [
+        :is, [:element],
+        :clean_as, [:not_empty_string]
+      ],
+
+      # =============== actions
       'on click' => [:is, [:action]]
     }
 
