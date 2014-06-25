@@ -15,36 +15,41 @@ class WWW_Applet
   Computers = {
   }
 
+  module POL
+    class << self
+
+      def standard_key v
+        v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
+      end
+
+      def applet_command? val
+        applet_object?(val) && val[:is].include?(:applet_command)
+      end
+
+      def applet_object? val
+        val.is_a?(Hash) && val[:is].is_a?(Array)
+      end
+
+      def stack_able? val
+        VALID_NON_OBJECTS.include?(val.class) ||
+          (applet_object?(val) && !applet_command?(val))
+      end
+
+      def inspect_alias raw, actual
+        raw_inspect = raw.inspect
+        actual_inspect = actual.inspect
+        if raw_inspect == actual_inspect
+          raw_inspect
+        else
+          "#{raw_inspect} (as #{actual_inspect})"
+        end
+      end
+
+    end # === class self ===
+  end # === module POL
+
   # ===================================================
   class << self
-  # ===================================================
-
-    def standard_key v
-      v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
-    end
-
-    def applet_command? val
-      applet_object?(val) && val[:is].include?(:applet_command)
-    end
-
-    def applet_object? val
-      val.is_a?(Hash) && val[:is].is_a?(Array)
-    end
-
-    def stack_able? val
-      VALID_NON_OBJECTS.include?(val.class) ||
-        (applet_object?(val) && !applet_command?(val))
-    end
-
-    def inspect_alias raw, actual
-      raw_inspect = raw.inspect
-      actual_inspect = actual.inspect
-      if raw_inspect == actual_inspect
-        raw_inspect
-      else
-        "#{raw_inspect} (as #{actual_inspect})"
-      end
-    end
 
     def include_computers mod
 
@@ -55,9 +60,9 @@ class WWW_Applet
 
         name = case raw_key
                when String
-                 standard_key(raw_key)
+                 POL.standard_key(raw_key)
                when Symbol
-                 standard_key(raw_key.to_s)
+                 POL.standard_key(raw_key.to_s)
                else
                  fail "Invalid: computer name: #{raw_key.inspect}"
                end
@@ -140,7 +145,7 @@ class WWW_Applet
   end # def initialize
 
   def www
-    ::WWW_Applet
+    ::WWW_Applet::POL
   end
 
   def fork? answer = :none
