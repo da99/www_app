@@ -23,6 +23,19 @@ class WWW_Applet
       v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
     end
 
+    def applet_command? val
+      applet_object?(val) && val[:is].include?(:applet_command)
+    end
+
+    def applet_object? val
+      val.is_a?(Hash) && val[:is].is_a?(Array)
+    end
+
+    def stack_able? val
+      VALID_NON_OBJECTS.include?(val.class) ||
+        (applet_object?(val) && !applet_command?(val))
+    end
+
     def inspect_alias raw, actual
       raw_inspect = raw.inspect
       actual_inspect = actual.inspect
@@ -126,21 +139,8 @@ class WWW_Applet
 
   end # def initialize
 
-  def standard_key *args
-    self.class.standard_key(*args)
-  end
-
-  def applet_command? val
-    applet_object?(val) && val["IS"].include?("APPLET COMMAND")
-  end
-
-  def applet_object? val
-    val.is_a?(Hash) && val["IS"].is_a?(Array)
-  end
-
-  def stack_able? val
-    VALID_NON_OBJECTS.include?(val.class) ||
-      (applet_object?(val) && !applet_command?(val))
+  def www
+    ::WWW_Applet
   end
 
   def fork? answer = :none
@@ -203,7 +203,7 @@ class WWW_Applet
       curr += 1
 
       if is_end || !should_send
-        fail("Invalid value: #{val.inspect}") unless stack_able?(val)
+        fail("Invalid value: #{val.inspect}") unless www.stack_able?(val)
         stack.push val
         next
       end
@@ -246,7 +246,7 @@ class WWW_Applet
                    computers_box.send(c, from, to, args)
                  end
 
-          if stack_able?(resp) # === push value to stack
+          if www.stack_able?(resp) # === push value to stack
             stack.push resp
             true
 
