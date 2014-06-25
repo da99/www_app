@@ -4,9 +4,8 @@ require "www_applet/HTML"
 
 class WWW_Applet
 
-  HTML_MODS_COMPILED = {}
-
   attr_reader :parent, :name, :tokens, :stack, :values, :computers, :console
+
   MULTI_WHITE_SPACE = /\s+/
   VALID_NON_OBJECTS = [String, Fixnum, Float, TrueClass, FalseClass, NilClass]
   STOP_APPLET       = {"IS"=> ["APPLET COMMAND"], "VALUE"=>"STOP APPLET" }
@@ -18,6 +17,77 @@ class WWW_Applet
 
     def standard_key v
       v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
+    end
+
+    def include_meta mod
+      mod.public_instance_methods.each { |sym|
+        name = if mod.respond_to?(:aliases) && mod.aliases[sym]
+                 standard_key(mod.aliases[sym])
+               else
+                 standard_key(sym.to_s).gsub('_', ' ')
+               end
+        @computers[name] = [sym]
+      }
+
+      unless ::WWW_APPLET::HTML_MODS_COMPILED[mod]
+        HTML::VALUE_GROUPS.each { |group|
+          if mod.const_defined?(group)
+            mod.const_get(group).each { |tag, raw_meta|
+              klass = HTML.const_get(group.to_s.sub(/s$/, '').to_sym)
+              mod.instance_eval %^
+              def #{tag} sender, to, raw_args
+                new_html_value sender, to, raw_args, meta, ::WWW_Applet::HTML::COMPUTERS[:tag]
+              end
+              ^
+              HTML::COMPUTERS[tag] = meta = {
+                :name      => tag.to_s.sub(START_ON_REGEXP, '').gsub('_', '-')
+                :cleaners  => [],
+                  :group_all => false,
+                  :allow_in  => nil,
+                  :klass     => klass
+              }
+              current = 0
+              stop    = raw_meta.size
+              while current < stop
+                cmd = raw_meta[current]
+                args = raw_meta[current+1]
+                case cmd
+                when :group_all
+                  meta[:group_all] = true
+
+                when :allow_in
+                  current += 1
+                  meta[:allow_in] = args
+
+                when :tag
+                  current += 1
+                  meta[:name] = args
+                  meta[:tag]  = args
+
+                when :name
+                  current += 1
+                  meta[:name] = args
+
+                when :attributes
+                  current += 1
+                  meta[:force_attributes] = args
+
+                when :allowed_in
+                  current += 1
+                  result[:allowed_in] = args
+
+                else
+                  meta[:cleaners] << action
+                end
+                current += 1
+
+              end
+            } # each |tag, meta|
+          end
+        }
+        ::WWW_APPLET::HTML_MODS_COMPILED[mod] = true
+      end
+      extend mod
     end
 
   end # === class =====================================
@@ -82,77 +152,6 @@ class WWW_Applet
       self.extend_applet(HTML)
     end
   end # def initialize
-
-  def extend_applet mod
-    mod.public_instance_methods.each { |sym|
-      name = if mod.respond_to?(:aliases) && mod.aliases[sym]
-               standard_key(mod.aliases[sym])
-             else
-               standard_key(sym.to_s).gsub('_', ' ')
-             end
-      @computers[name] = [sym]
-    }
-
-    unless ::WWW_APPLET::HTML_MODS_COMPILED[mod]
-      HTML::VALUE_GROUPS.each { |group|
-        if mod.const_defined?(group)
-          mod.const_get(group).each { |tag, raw_meta|
-            klass = HTML.const_get(group.to_s.sub(/s$/, '').to_sym)
-            mod.instance_eval %^
-              def #{tag} sender, to, raw_args
-                new_html_value sender, to, raw_args, meta, ::WWW_Applet::HTML::COMPUTERS[:tag]
-              end
-            ^
-            HTML::COMPUTERS[tag] = meta = {
-              :name      => tag.to_s.sub(START_ON_REGEXP, '').gsub('_', '-')
-              :cleaners  => [],
-              :group_all => false,
-              :allow_in  => nil,
-              :klass     => klass
-            }
-            current = 0
-            stop    = raw_meta.size
-            while current < stop
-              cmd = raw_meta[current]
-              args = raw_meta[current+1]
-              case cmd
-              when :group_all
-                meta[:group_all] = true
-
-              when :allow_in
-                current += 1
-                meta[:allow_in] = args
-
-              when :tag
-                current += 1
-                meta[:name] = args
-                meta[:tag]  = args
-
-              when :name
-                current += 1
-                meta[:name] = args
-
-              when :attributes
-                current += 1
-                meta[:force_attributes] = args
-
-              when :allowed_in
-                current += 1
-                result[:allowed_in] = args
-
-              else
-                meta[:cleaners] << action
-              end
-              current += 1
-
-            end
-          } # each |tag, meta|
-        end
-      }
-      ::WWW_APPLET::HTML_MODS_COMPILED[mod] = true
-    end
-    extend mod
-  end
 
   def standard_key *args
     self.class.standard_key(*args)

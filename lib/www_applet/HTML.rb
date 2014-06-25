@@ -22,8 +22,7 @@ class WWW_Applet
 
       :style => [
         :is, [:meta],
-        :contain_only, [:string, :number],
-        :underscore_in_name, ['-']
+        :contain_only, [:string, :number]
       ],
 
       :attribute => [
@@ -42,38 +41,39 @@ class WWW_Applet
       ],
 
       # =============== sub styles
-      :on_hover  => [
+      'on hover'  => [
         :is, [:sub_style],
         :name, ['hover']
       ],
 
       # =============== styles
-      :background_color     => [
+      'background-color'    => [
         :is, [:style],
         :color
       ],
 
-      :background_image_url => [
+      'background-image-url' => [
         :is, [:style],
         :url
       ],
 
-      :background_repeat    => [
+      'background-repeat'   => [
         :is, [:style],
         :downcase,
         :in, %w[ repeat-all repeat-x repeat-y none ]
       ],
 
-      :font_family => [
+      'font-family' => [
         :is, [:style],
         :grab_all, :fonts
       ],
+
       :color       => [
         :is, [:style],
         :color
       ],
 
-      :font_size   => [
+      'font-size'  => [
         :is, [:style],
         :downcase,
         :in, %w[ small large medium x-large ]
@@ -81,28 +81,28 @@ class WWW_Applet
 
       # =============== attributes
 
-      :title     => [:is, [:attribute], :allow_in, [:body], :string, :size_between, [1, 200]],
-      :max_chars => [:is, [:attribute], :number_between, [1, 10_000]],
-      :href      => [:is, [:attribute], :allow_in, [:a], :not_empty_string, :size_between, [1,200]],
-      :id        => [
+      :title      => [:is, [:attribute], :allow_in, [:body], :string, :size_between, [1, 200]],
+      'max chars' => [:is, [:attribute], :number_between, [1, 10_000]],
+      :href       => [:is, [:attribute], :allow_in, [:a], :not_empty_string, :size_between, [1,200]],
+      :id         => [
         :is, [:attribute],
         :size_between, [1, 100],
         :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] 
       ],
 
       # =============== elements
-      :p                 => [:is, [:element], :strip, :not_empty_string],
-      :box               => [:is, [:element], :attr, {"class"=>"box"}],
-      :form              => [:is, [:element]],
-      :password          => [:is, [:element], :tag, ['input'], :attr, {"type"=>'password'}],
-      :one_line_text_box => [:is, [:element], :tag, ['input'], :attr, {"type"=>'text', :value=>''}],
-      :text_box          => [:is, [:element], :tag, ['textarea']],
-      :note              => [:is, [:element], :tag, ['span'], :attr, {'class'=>'note'}, :not_empty_string],
-      :button            => [:is, [:element], :not_empty_string],
-      :a                 => [:is, [:element], :not_empty_string],
+      :p                  => [:is, [:element], :strip, :not_empty_string],
+      :box                => [:is, [:element], :attr, {"class"=>"box"}],
+      :form               => [:is, [:element]],
+      :password           => [:is, [:element], :tag, ['input'], :attr, {"type"=>'password'}],
+      'one line text box' => [:is, [:element], :tag, ['input'], :attr, {"type"=>'text', :value=>''}],
+      :text_box           => [:is, [:element], :tag, ['textarea']],
+      :note               => [:is, [:element], :tag, ['span'], :attr, {'class'=>'note'}, :not_empty_string],
+      :button             => [:is, [:element], :not_empty_string],
+      :a                  => [:is, [:element], :not_empty_string],
 
       # =============== attributes
-      :on_click  => [:is, [:action]]
+      'on click' => [:is, [:action]]
     }
 
 
