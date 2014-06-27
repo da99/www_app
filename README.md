@@ -35,7 +35,7 @@ Ideas to remember, in this order:
   6. The most important and the most easily mis-understood
   and overlooked: 
 
-    It's not about solving software or engineering problems.
+    > It's not about solving software or engineering problems.
     It's about finding "better" requirements to fulfill.
     ("Better" is subjective.)
 
@@ -54,7 +54,7 @@ languages. Instead, their needs are configuration,
 rather than a programming language or DSL/POL.
 This is more higher level than HyperCard:
 
-  Configure rather than create.
+  > Configure rather than create.
 
 Also, I realized www\_applet can become it's own programming
 language with the power to replace PHP. It sounds crazy, but
