@@ -19,7 +19,7 @@ One benefit is to let the user
 be the programmer w/o sacrificing security.
 It's an old idea from the pre-1990s:
 
-  the symmetry of consuming/producing media.
+  > the symmetry of consuming/producing media.
 
 Ruby:
 --------------
