@@ -39,16 +39,16 @@ Ideas to remember, in this order:
     > It's about finding "better" requirements.
     >
     > Micro-optimizing engineers vs. macro-optimizing architects.
-    >
-    > Hence, "better" is interpreted differently by most people
-    > because they want to be engineers, not architects.
-    >
-    > Most scientists are engineers, not architects. Therefore,
-    > most scientists are not scientists.
-    >
-    > Hence, Austrian economics and Elec. Uni. Theory
-    > is ignored. They are architectures, rather than a bag
-    > of tricks for engineers to use (eg Neo-Keynsian economists).
+
+    Hence, "better" is interpreted differently by most people
+    because they want to be engineers, not architects.
+
+    Most scientists are engineers, not architects. Therefore,
+    most scientists are not scientists.
+
+    Hence, Austrian economics and Elec. Uni. Theory
+    is ignored. They are architectures, rather than a bag
+    of tricks for engineers to use (eg Neo-Keynsian economists).
 
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
