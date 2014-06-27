@@ -20,6 +20,12 @@ Ideas to remember, in this order:
   into re-usable components by complexing the problem
   and comparing it to similar and different problems.
 
+  4. DSLs/POLs, even if they are a subset of a prog. lang.,
+  are stil their own culture/env./prog. lang. Just like
+  with anything else, people do not want to learn something
+  new unless they see LOTS of other people/companies using it,
+  or if it is being talked about a lot (eg XML, Java, etc.).
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
