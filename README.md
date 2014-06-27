@@ -32,6 +32,13 @@ Ideas to remember, in this order:
   browsers.  Hence, the lack of demand for programming languages
   written using nothing but JSON.
 
+  6. The most important and the most easily mis-understood
+  and overlooked: 
+
+    It's not about solving software or engineering problems.
+    It's about finding "better" requirements to fulfill.
+    ("Better" is subjective.)
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
