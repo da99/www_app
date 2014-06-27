@@ -26,6 +26,12 @@ Ideas to remember, in this order:
   new unless they see LOTS of other people/companies using it,
   or if it is being talked about a lot (eg XML, Java, etc.).
 
+  5. It doesn't matter if you can play well with others,
+  because no one wants to play with you. Hence, the lack of
+  good "virtual machine"-based architecture and sandboxing in
+  browsers.  Hence, the lack of demand for programming languages
+  written using nothing but JSON.
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
