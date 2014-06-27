@@ -41,6 +41,11 @@ Ideas to remember, in this order:
     Once the requirements change, you have to re-evaluate
     the design/architecture immediately.
 
+  7. It's hard finding better requirements because of
+  familiarity and complexity (quantity and quantity).
+  Lazyiness and limited resources help you guide you to
+  fulfilling the requirements w/efficiency and genius.
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
