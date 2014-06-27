@@ -37,18 +37,9 @@ Ideas to remember, in this order:
 
     > It's not about solving problems.
     > It's about finding "better" requirements.
-    >
-    > Micro-optimizing engineers vs. macro-optimizing architects.
 
-    Hence, "better" is interpreted differently by most people
-    because they want to be engineers, not architects.
-
-    Most scientists are engineers, not architects. Therefore,
-    most scientists are not scientists.
-
-    Hence, Austrian economics and Elec. Uni. Theory
-    is ignored. They are architectures, rather than a bag
-    of tricks for engineers to use (eg Neo-Keynsian economists).
+    Once the requirements change, you have to re-evaluate
+    the design/architecture immediately.
 
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
