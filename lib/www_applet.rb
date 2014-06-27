@@ -9,8 +9,6 @@ class WWW_Applet
 
   MULTI_WHITE_SPACE = /\s+/
   VALID_NON_OBJECTS = [String, Fixnum, Float, TrueClass, FalseClass, NilClass]
-  STOP_APPLET       = {:is=> [:applet_command], :value=>:stop_applet }
-  IGNORE_RETURN     = {:is=> [:applet_command], :value=>:ignore_return}
 
   Computers = {}
 
@@ -36,8 +34,15 @@ class WWW_Applet
         }
       end
 
-      def standard_key v
-        v.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
+      def standard_key raw
+        case raw
+        when String
+          raw.strip.gsub(MULTI_WHITE_SPACE, ' ').upcase
+        when Symbol
+          standard_key(raw.to_s)
+        else
+          fail "Invalid: computer name: #{raw.inspect}"
+        end
       end
 
       def inspect_alias raw, actual
@@ -79,27 +84,16 @@ class WWW_Applet
         computer = Object.new
         computer.extend mod
 
-        mod::Meta.each { |raw_key, meta|
+        mod::Commputers.each { |raw_name, tokens|
 
-          name = case raw_key
-                 when String
-                   POL.standard_key(raw_key)
-                 when Symbol
-                   POL.standard_key(raw_key.to_s)
-                 else
-                   fail "Invalid: computer name: #{raw_key.inspect}"
-                 end
+          name = POL.standard_key raw_name
 
           if self::Computers.has_key?(name)
-            fail "Computer already exists: #{inspect_alias raw_key, name}"
+            fail "Computer already exists: #{POL.inspect_alias raw_name, name}"
           end
 
-          self::Computers[name] = POL.into_kv(meta).merge(
-            :meta     => meta,
-            :computer => computer
-          )
-
-        } # === .each Meta
+          self::Computers[name] = {:tokens=>tokens, :computer=>computer}
+        } # === .each Computer
       } # === each mod
 
       self

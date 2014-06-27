@@ -6,120 +6,155 @@ require "www_applet/Clean"
 class WWW_Applet
   module HTML
 
-    Meta = {
-
-      # =============== computer
-      :styles => [
-        :is, [:computer]
-      ],
+    Computers = {
 
       # =============== meta
 
-      :sub_style => [
-        :is, [:meta],
-        :not_contain, [:element, :attribute, :action]
+      "it's a sub style" => [
+        :new, [
+          "it's a", [:sub_style],
+          :name  , :is, [
+            :computer_name, :from, [:outside_computer],
+            :remove_words, [:first]
+          ],
+          :value , :is, [:all, :from, [:right_stack]]
+        ]
       ],
 
-      :style => [
-        :is, [:meta],
-        :contain_only, [:string, :number]
+      "it's a style" => [
+        :new, [
+          "it's a", [:style],
+          :name  , :is, [:computer_name, :from, [:outside_computer]],
+          :value , :is, [:last, :from, [:right_stack]]
+        ]
+      ]
+
+      "it's an attribute" => [
+        :new, [
+          "it's a", [:attribute],
+          :name, :is, [:computer_name, :from, [:outside_computer]],
+          :value, :is, [
+            :last, :from, [:right_stack, :from, [:outside_computer]],
+            :re_send_as, [
+              :clean_as,
+              :all, :from, [:right_stack]
+            ]
+          ]
+        ]
       ],
 
-      :attribute => [
-        :is, [:meta],
-        :contain_only, [:string, :number]
+      "it's an element" => [
+        :new, [
+          "it's a", [:element],
+          :name, :is, [:computer_name, :from, [:outside_computer]],
+          :value, :is, [
+            :all, :from, [:right_stack],
+            :extract_and_group, [
+              :sub_style,
+              :style,
+              :attributes,
+              :elements
+            ],
+            :last_string_if_any, :from, [:right_stack]
+          ]
+        ]
       ],
 
-      :element => [
-        :is, [:meta],
-        :group_content, [:sub_style, :style, :attributes, :elements, :right_last_string]
-      ],
-
-      :action => [
-        :is, [:meta],
-        :not_contain, [:sub_style]
+      "it's an action" => [
+        :new, [
+          "it's a", [:action],
+          :name, :is, [:computer_name, :from, [:outside_computer]],
+          :value, :is, [:all, :from, [:right_stack]]
+        ]
       ],
 
       # =============== sub styles
       'on hover'  => [
-        :is, [:sub_style],
-        :name, ['hover']
+        "it's a sub style", []
       ],
 
-      # =============== styles
+      # =============== STYLES
       'background-color'    => [
-        :is, [:style],
-        :clean_as, [:color]
+        "it's a style", [
+          :last, :from, [:right_stack],
+          :clean_as, [:color],
+        ]
       ],
 
       'background-image-url' => [
-        :is, [:style],
-        :clean_as, [:url]
+        "it's a style", [
+          :last, :from, [:right_stack],
+          :clean_as, [:url]
+        ]
       ],
 
       'background-repeat'   => [
-        :is, [:style],
-        :clean_as, [
-          :downcase,
-          :in, %w[ repeat-all repeat-x repeat-y none ]
+        "it's a style", [
+          :last, :from, [:right_stack],
+          :clean_as, [
+            :downcase,
+            :in, %w[ repeat-all repeat-x repeat-y none ]
+          ]
         ]
       ],
 
       'font-family' => [
-        :is, [:style],
-        :grab_all,
-        :clean_as, [:fonts]
+        "it's a style", [
+          :all, :from, [:right_stack],
+          :clean_as, [:fonts]
+        ]
       ],
 
-      :color       => [
-        :is, [:style],
-        :clean_as, [:color]
+      'color' => [
+        "it's a style", [
+          :last, :from, [:right_stack],
+          :clean_as, [:color]
+        ]
       ],
 
       'font-size'  => [
-        :is, [:style],
-        :clean_as, [
-          :downcase,
-          :in, %w[ small large medium x-large ]
+        "it's a style", [
+          :last, :from, [:right_stack],
+          :clean_as, [
+            :downcase,
+            :in, %w[ small large medium x-large ]
+          ]
         ]
       ],
 
       # =============== attributes
 
-      :title      => [
-        :is       , [:attribute],
+      :title => [
         :allow_in , [:body],
-        :clean_as , [
+        "it's an attribute", [
           :string,
           :size_between, [1, 200]
         ]
       ],
 
       'max chars' => [
-        :is, [:attribute],
-        :clean_as, [
+        "it's an attribute", [
           :number_between, [1, 10_000]
         ]
       ],
 
       :href => [
-        :is, [:attribute],
         :allow_in, [:a],
-        :clean_as, [
-          :not_empty_string, :size_between, [1,200]
+        "it's an attribute", [
+          :not_empty_string,
+          :size_between, [1,200]
         ]
       ],
 
       :id => [
-        :is, [:attribute],
-        :clean_as, [
+        "it's an attribute", [
           :size_between, [1, 100],
           :match, [/\A[a-z0-9\_\-\ ]{1,100}\Z/i , "id has invalid chars"] 
         ]
       ],
 
       # =============== elements
-      :p                  => [
+      :p  => [
         :is, [:element],
         :clean_as, [:strip, :not_empty_string]
       ],

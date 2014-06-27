@@ -6,16 +6,23 @@ class WWW_Applet
   # ============================================================================================
   module Core
 
+
+    IGNORE_RETURN = {:is=>[:applet_command], :value=>:ignore_return}
+
     class << self
       def is_native name
-        Meta[name] = [:is, [:computer], :run_native]
+        Computers[name] = [:run_native, [ name ]]
       end
     end # === class self ===
 
-    Meta = {
-      :stop_applet => [:is, [:computer], :return, [STOP_APPLET]]
+    Computers = {
+      :stop_applet => [:applet_command, [:stop_applet]],
+      :ignore_return => [:applet_command, [:ignore_return]]
     }
 
+    is_native def applet_command sender, to, args
+      {:is=>[:applet_command], :value=>args.last}
+    end
 
     is_native def require_args sender, to, args
       the_args = sender.get("THE ARGS")
@@ -112,7 +119,7 @@ class WWW_Applet
       end
 
       sender.values[name] = value
-      return value
+      value
     end
 
     is_native def is_a_computer sender, to, tokens
@@ -139,7 +146,7 @@ class WWW_Applet
         }
       ]
 
-      {"IS"=> ["COMPUTER"], "VALUE"=> name}
+      {:is=> [:computer], :value=> name}
     end
 
 
