@@ -75,6 +75,12 @@ Ideas to remember, in this order:
     my own, of a better Smalltalk/Factor/Xananud system...
     outside of Nintendo-like gaming.
 
+  10. If WWW\_Applet is going to be a programming language,
+  might as well go all the way: make it an abstraction over
+  everything (ie HTML/CSS/JS and all server-side langs,
+  including Ruby and Lua). A runtime will be created for
+  each language.
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
