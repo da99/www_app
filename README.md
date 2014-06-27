@@ -4,19 +4,60 @@ WARNING:
 
 To be completed on July 6, 2019.
 
+Ideas to remember, in this order:
 
+  1. the majority of software for the Majority of Humans requires
+  customization and settings/options: in other words, configuration
+  rather than creating an app. Science and Nintendo-style
+  video games require more "power", (ie a programming language).
+
+  2. most of the action in WWW\_Applets is:
+  describing things you are doing to the
+  stacks... and things you are doing to the 
+  values on the stack.
+
+  3. universal problem solving: break up the problems
+  into re-usable components by complexing the problem
+  and comparing it to similar and different problems.
+
+I originally wanted this to be an abstraction layer over
+HTML, JS, CSS. However, during the development of "www\_applet",
+I realized I could do that w/ just Ruby
+(hence the creation of www\_script). In other words,
+I would not need a sophisticated runtime in the browser.
+Most of the work would be on the server (to generate the HTML, CSS)
+and the JS would mainly consist of calling functions in the browser
+from my own api/libs.
+
+The need for www\_applet was pushed forward, also, because
+most people do not need a common way to exchange code in programming
+languages. Instead, their needs are configuration,
+rather than a programming language or DSL/POL.
+This is more higher level than HyperCard:
+
+  Configure rather than create.
+
+Also, I realized www\_applet can become it's own programming
+language with the power to replace PHP. It sounds crazy, but
+no more crazy than the popularity of garbage like PHP and Wordpress.
+It would only require an extra 2 weeks, but this is still too much
+time that I can not afford because I am going broke.
 WWW\_Applet:
-------------
+---------
 
 Using a few simple rules, you can describe a mini-app (ie applet) as JSON.
 
 Currently, this has a Ruby and browser (ie JavaScript) version.
 
-Disclaimer:
-------------
+It is inspired from the Factor programming language
+and Alan Kay's annnual "pep talk" (ie VMs, sandboxing,
+SNMOP: scalable network/message oriented programming)
 
-This is not done yet. So please don't use it.
-Actually, it does work, but I am too lazy to right decent documentation.
+One benefit is to let the user
+be the programmer w/o sacrificing security.
+It's an old idea from the pre-1990s:
+
+  the symmetry of consuming/producing media.
 
 Ruby:
 --------------
