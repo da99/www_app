@@ -53,6 +53,28 @@ Ideas to remember, in this order:
   their own preferred language ...above all else... to generate
   HTMl/CSS/JS. That leaves app-to-app messaging (ie JSON over AJAX).
 
+  9. Most apps/applets are:
+
+    > input -> JSON/AJAX -> Server -> markup
+
+    App/applet makers do not neet programming capilities
+    outside of Nintendo-like gaming... because they will do
+    that in their favorite language on the server, then
+    send the final output to the user in the browser.
+    The "programming" happens on the server, and the client is
+    just a "dumb" GUI to collect and display input/output.
+
+    This is the closest people want to "write once/run everywhere"
+    because of their need to stick to their preferred language
+    and the limited needs of the consumer and producer (business).
+
+    Most industrial designers also do not want to run their own
+    business, but merely constant "experiment" with creating.
+    In other words, occasional invention, no innovation, and
+    constant experimenting. There is not much of a need, beyond
+    my own, of a better Smalltalk/Factor/Xananud system...
+    outside of Nintendo-like gaming.
+
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
 I realized I could do that w/ just Ruby
