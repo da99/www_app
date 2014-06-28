@@ -1,7 +1,4 @@
-WARNING:
-------------
 
-To be completed on July 6, 2019.
 
 WWW\_Applet:
 ---------
@@ -87,8 +84,6 @@ Fun fact:
 -----
 
 [JSON\ Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet.
-
-
 
 
 
