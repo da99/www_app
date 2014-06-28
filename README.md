@@ -1,4 +1,3 @@
-
 WARNING:
 ------------
 
@@ -88,9 +87,6 @@ Fun fact:
 -----
 
 [JSON\ Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet.
-
-
-
 
 
 
