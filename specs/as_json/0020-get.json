@@ -1,0 +1,38 @@
+
+[
+
+  { "it" : "pops name off stack",
+    "input" :
+    [
+      "one", "is", [1],
+      "get", ["one"]
+    ],
+    "output" : ["stack should ==", [1,1]]
+  },
+
+  {
+    "it" : "places value on the stack",
+    "input" : [
+      "the val", "is", [1],
+      2,
+      "get", ["the val"]
+    ],
+    "output" : [
+      "stack should ==", [1,2,1]
+    ]
+  },
+
+
+  {
+    "it" : "is case-insensitive",
+    "input" : [
+      "mY val", "is", [3],
+      4,
+      "get", ["my VAL"]
+    ],
+    "output" : [
+      "stack should ==", [3,4,3]
+    ]
+  }
+
+]

@@ -1,0 +1,45 @@
+#!/usr/bin/env ruby
+# -*- bash -*-
+#
+#
+
+case ARGV[0]
+
+when "help"
+
+  puts %^
+    # ===================="
+    www_applet help"
+    www_applet install"
+    # ===================="
+  ^
+
+when "install"
+
+  require "fileutils"
+  args   = ARGV.dup
+  target =`gem which www_applet`.strip
+
+  this_dir    = Dir.pwd
+  applet_dir  = File.dirname target
+  applet_file = File.join applet_dir, "www_applet.js"
+
+  target_dir = if !ARGV[1]
+                 this_dir
+               else
+                 ARGV[1]
+               end
+
+  new_file = File.join target_dir, "www_applet.js"
+  FileUtils.cp applet_file, new_file
+  puts "#=== From:  #{applet_file}"
+  puts "#=== Wrote: #{new_file}"
+
+else
+
+  abort "Unknown operation: #{ARGV.first.inspect}"
+
+end # === case
+
+
+

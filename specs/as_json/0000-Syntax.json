@@ -1,0 +1,21 @@
+
+[
+
+
+  {
+    "it" : "raises Invalid if an Array has no preceding String",
+    "input" : [
+      "my comp", "is a computer", [
+        [], [], "console print", [2]
+      ],
+      "my comp", []
+    ],
+    "output" : [
+      "should raise", ["Invalid"],
+      "message should match", ["Computer name not specified"]
+    ]
+  }
+
+]
+
+

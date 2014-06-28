@@ -1,0 +1,17 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+#
+set -u -e -o pipefail -x
+
+
+# =========================================
+ruby -c lib/www_applet.rb
+
+# =========================================
+jshint lib/www_applet.js
+
+# =========================================
+jshint specs/as_javascript/www_applet.js
+
+
