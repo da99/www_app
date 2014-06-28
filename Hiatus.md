@@ -83,8 +83,7 @@ Ideas to remember, in this order:
 
 I originally wanted this to be an abstraction layer over
 HTML, JS, CSS. However, during the development of "www\_applet",
-I realized I could do that w/ just Ruby
-(hence the creation of www\_script). In other words,
+I realized I could do that w/ just Ruby. In other words,
 I would not need a sophisticated runtime in the browser.
 Most of the work would be on the server (to generate the HTML, CSS)
 and the JS would mainly consist of calling functions in the browser
