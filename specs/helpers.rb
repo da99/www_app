@@ -2,6 +2,8 @@
 require 'Bacon_Colored'
 require 'www_applet'
 require 'pry'
+require "differ"
+Differ.format = :color
 
 def norm ugly
   ugly.split("\n").map { |s|
@@ -12,6 +14,27 @@ def norm ugly
       s
     end
   }.join("\n")
+end
+
+
+def to_html &blok
+  WWW_Applet.new(&blok).to_html
+end
+
+def should_equal actual, target
+  a = norm(actual)
+  t = norm(target)
+  if a != t
+    puts " ======== ACTUAL =========="
+    puts a
+    puts " ======== TARGET =========="
+    puts t
+    puts " =========================="
+    puts Differ.diff_by_word(a,t)
+    fail "No match"
+  else
+    a.should == t
+  end
 end
 
 class WWW_Applet_Test
