@@ -1,5 +1,5 @@
 
-Why was this put on hiatus?
+Why Services and not a programming language?
 ---------------------------
 
 
