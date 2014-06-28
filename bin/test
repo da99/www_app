@@ -33,17 +33,18 @@ if [[ "$first_opt" == "js" ]]; then
   exit 0
 fi
 
-file="$(find specs/as_ruby -maxdepth 1 -type f -iname "*$first_opt.rb" -and -not -iname "helpers.rb")"
+cmd="bundle exec bacon specs/helpers.rb"
+file="$(find specs/ -maxdepth 1 -type f -iname "*$first_opt.rb" -and -not -iname "helpers.rb")"
 if [[ -f "$file" ]]; then
   shift
-  bundle exec bacon specs/as_ruby/helpers.rb $file "$@"
+  $cmd $file "$@"
   exit 0
 fi
 
-files="$(find specs/as_ruby -maxdepth 1 -type f -iname "*.rb" -and -not -iname "helpers.rb")"
+files="$(find specs/ -maxdepth 1 -type f -iname "*.rb" -and -not -iname "helpers.rb")"
 if [[ -z "$files" ]]; then
   colorize yellow "No tests found." 1>&2
   exit 0
 else
-  bundle exec bacon specs/as_ruby/helpers.rb $files "$@"
+  $cmd $files "$@"
 fi

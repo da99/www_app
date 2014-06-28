@@ -1,17 +1,8 @@
 
+__END__
 
 require "differ"
 
-def norm ugly
-  ugly.split("\n").map { |s|
-    strip = s.strip
-    if strip.index("<") == 0
-      strip
-    else
-      s
-    end
-  }.join("\n")
-end
 
 def to_doc o
   tmpl = %^<!DOCTYPE html><html lang="en"><head>

@@ -3,6 +3,17 @@ require 'Bacon_Colored'
 require 'www_applet'
 require 'pry'
 
+def norm ugly
+  ugly.split("\n").map { |s|
+    strip = s.strip
+    if strip.index("<") == 0
+      strip
+    else
+      s
+    end
+  }.join("\n")
+end
+
 class WWW_Applet_Test
 
   def initialize applet, output
