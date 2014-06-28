@@ -3,6 +3,9 @@ require 'Bacon_Colored'
 require 'www_applet'
 require 'pry'
 require "differ"
+require "sanitize"
+require "escape_escape_escape"
+
 Differ.format = :color
 
 def norm ugly
@@ -16,12 +19,40 @@ def norm ugly
   }.join("\n")
 end
 
+def strip_each_line str
+  str.split("\n").map(&:strip).join "\n"
+end
+
+def to_doc h
+  the_css = Sanitize::CSS.stylesheet(
+    (h[:style] || ''),
+    Escape_Escape_Escape::CONFIG
+  )
+
+  the_body = Escape_Escape_Escape.html(h[:body] || '')
+
+  %^
+   <!DOCTYPE html><html lang="en"><head>
+      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+      <title>[No Title]</title>
+      <style type="text/css">#{the_css}</style>
+   </head>
+   <body>#{the_body}</body></html>
+  ^.strip
+end
 
 def to_html &blok
   WWW_Applet.new(&blok).to_html
 end
 
-def should_equal actual, target
+def should_equal *args, &blok
+  if block_given?
+    actual = to_html(&blok)
+    target = args.first
+  else
+    actual = args.first
+    target = args.last
+  end
   a = norm(actual)
   t = norm(target)
   if a != t
