@@ -79,6 +79,21 @@ class WWW_Applet
       end
     end
 
+    def to_styles h
+      h.map { |k,v|
+        %^#{k} : #{v};^
+      }.join("\n").strip
+    end
+
+    def to_style h
+      h.map { |k,styles|
+        %^#{k} {
+        #{to_styles styles}
+      }
+        ^
+      }.join.strip
+    end
+
     def to_html e = nil
       if !e
         raw_html = ""
@@ -87,20 +102,24 @@ class WWW_Applet
         }
 
         html = Escape_Escape_Escape.html(raw_html)
-        return html if !@title && @style.empty?
+        final = if !@title && @style.empty?
+                  html
+                else
+                  Document_Template.gsub(/!([a-z0-9\_]+)/) { |sub|
+                    key = $1.to_sym
+                    case key
+                    when :style
+                      Sanitize::CSS.stylesheet to_style(@style), Escape_Escape_Escape::CONFIG
+                    when :title
+                      @title || "[No Title]"
+                    when :body
+                      html
+                    end
+                  }
+                end
 
-        Document_Template.gsub(/!([a-z0-9\_]+)/) { |sub|
-          key = $1.to_sym
-          case key
-          when :style
-            Sanitize::CSS.stylesheet "", Escape_Escape_Escape::CONFIG
-          when :title
-            @title || "[No Title]"
-          when :body
-            html
-          end
-        }
-      end
+        return final
+      end # === if !e
 
       html = e[:childs].inject("") { |memo, c|
         memo << "\n#{to_html c}"
@@ -161,7 +180,9 @@ __END__
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <title>!title</title>
-    <style type="text/css">!style</style>
+    <style type="text/css">
+      !style
+    </style>
   </head>
   <body>!body</body>
 </html>

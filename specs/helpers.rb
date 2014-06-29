@@ -31,11 +31,13 @@ def to_html h
     case key
     when :style
       Sanitize::CSS.stylesheet(
-        (h[key] || ''),
+        (h[key] || '').strip,
         Escape_Escape_Escape::CONFIG
       )
-    when :body, :title
+    when :body
       Escape_Escape_Escape.html(h[key] || '')
+    when :title
+      Escape_Escape_Escape.html(h[key] || '[No Title]')
     else
       fail "Unknown key: #{key.inspect}"
     end
