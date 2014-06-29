@@ -26,7 +26,7 @@ end # === describe WWW_Applet.new ===
 describe "Style" do
 
   it "creates an style tag within html>head" do
-    target = strip_each_line to_doc(:style=>%^
+    target = to_html(:style=> %^
       p {
         background-color: #fff;
       }

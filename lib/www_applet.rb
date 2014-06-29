@@ -61,6 +61,7 @@ class WWW_Applet
     end
 
     def to_attr h
+      return '' unless h
       final = h.
         map { |k,v|
           %^#{k}="#{v}"^

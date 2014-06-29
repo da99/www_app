@@ -8,64 +8,51 @@ require "escape_escape_escape"
 
 Differ.format = :color
 
+TEMPLATE = File.read(__FILE__).
+  split('__END__').
+  last.
+  strip
+
 def norm ugly
-  ugly.split("\n").map { |s|
-    strip = s.strip
-    if strip.index("<") == 0
-      strip
-    else
-      s
-    end
-  }.join("\n")
+  ugly.
+    split("\n").
+    map(&:strip).
+    join("\n")
 end
 
 def strip_each_line str
   str.split("\n").map(&:strip).join "\n"
 end
 
-def to_doc h
-  the_css = Sanitize::CSS.stylesheet(
-    (h[:style] || ''),
-    Escape_Escape_Escape::CONFIG
-  )
-
-  the_body = Escape_Escape_Escape.html(h[:body] || '')
-
-  %^
-   <!DOCTYPE html><html lang="en"><head>
-      <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-      <title>[No Title]</title>
-      <style type="text/css">#{the_css}</style>
-   </head>
-   <body>#{the_body}</body></html>
-  ^.strip
+def to_html h
+  TEMPLATE.gsub(/!([a-z\_]+)/) { |sub|
+    key = $1.to_sym
+    case key
+    when :style
+      Sanitize::CSS.stylesheet(
+        (h[key] || ''),
+        Escape_Escape_Escape::CONFIG
+      )
+    when :body, :title
+      Escape_Escape_Escape.html(h[key] || '')
+    else
+      fail "Unknown key: #{key.inspect}"
+    end
+  }
 end
 
-def to_html &blok
-  WWW_Applet.new(&blok).to_html
-end
+def should_equal target, &blok
+  a = norm(WWW_Applet.new(&blok).to_html)
+  t = norm( target )
+  return(a.should == t) if a == t
 
-def should_equal *args, &blok
-  if block_given?
-    actual = to_html(&blok)
-    target = args.first
-  else
-    actual = args.first
-    target = args.last
-  end
-  a = norm(actual)
-  t = norm(target)
-  if a != t
-    puts " ======== ACTUAL =========="
-    puts a
-    puts " ======== TARGET =========="
-    puts t
-    puts " =========================="
-    puts Differ.diff_by_word(a,t)
-    fail "No match"
-  else
-    a.should == t
-  end
+  puts " ======== ACTUAL =========="
+  puts a
+  puts " ======== TARGET =========="
+  puts t
+  puts " =========================="
+  puts Differ.diff_by_word(a,t)
+  fail "No match"
 end
 
 class WWW_Applet_Test
@@ -158,6 +145,18 @@ class WWW_Applet_Test
 end # === class
 
 
+__END__
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <title>!title</title>
+    <style type="text/css">
+      !style
+    </style>
+  </head>
+  <body>!body</body>
+</html>
 
 
 
