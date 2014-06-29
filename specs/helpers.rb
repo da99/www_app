@@ -14,6 +14,7 @@ TEMPLATE = File.read(__FILE__).
   strip
 
 def norm ugly
+  return ugly
   ugly.
     split("\n").
     map(&:strip).
@@ -52,6 +53,7 @@ def should_equal target, &blok
   puts t
   puts " =========================="
   puts Differ.diff_by_word(a,t)
+  puts " =========================="
   fail "No match"
 end
 

@@ -16,7 +16,7 @@ describe "HTML" do
 
   it "escapes inner text" do
     should_equal %^<p>&amp; here lies jackie</p>^ do
-      p('/here/lies') { "& here lies jackie" }
+      p { "& here lies jackie" }
     end
   end
 
@@ -25,7 +25,7 @@ end # === describe WWW_Applet.new ===
 
 describe "Style" do
 
-  it "creates an style tag within html>head" do
+  it "creates a style tag within html>head" do
     target = to_html(:style=> %^
       p {
         background-color: #fff;
