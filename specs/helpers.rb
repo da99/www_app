@@ -25,6 +25,25 @@ def strip_each_line str
   str.split("\n").map(&:strip).join "\n"
 end
 
+def get_content tag, html
+  ( html.match(/\<#{tag}\>(.+)\<\/#{tag}\>/)[1] || '' ).
+    split("\n").
+    map(&:strip).
+    join "\n"
+end
+
+def style html
+  get_content 'style', html
+end
+
+def script html
+  get_content 'script', html
+end
+
+def body html
+  get_content 'body', html
+end
+
 def to_html h
   TEMPLATE.gsub(/!([a-z\_]+)/) { |sub|
     key = $1.to_sym
