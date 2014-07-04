@@ -78,6 +78,41 @@ def should_equal target, &blok
   fail "No match"
 end
 
+module Bacon
+  class Context
+    def target *args
+      @html_section = nil
+      @html_target   = nil
+      case args.size
+      when 1
+        @html_section = :body
+        @html_target   = args.first
+      when 2
+        @html_section = args.first
+        @html_target   = args.last
+      else
+        fail "Unknown args: #{args.inspect}"
+      end # === case
+    end
+
+    def actual &blok
+      raw = WWW_Applet.new(&blok).to_html
+      val = (raw[/<#{@html_section}[\ .]*>(.+)<\/#{@html_section}>/] && $1) || raw
+      norm_target = norm @html_target
+      norm_actual = norm val
+      if norm_target != norm_actual
+        puts " ======== TARGET =========="
+        puts norm_target
+        puts " ======== ACTUAL =========="
+        puts norm_actual
+        puts " =========================="
+      end
+      norm_actual.should == norm_target
+    end
+
+  end # === class Context ===
+end # === module Bacon ===
+
 class WWW_Applet_Test
 
   def initialize applet, output
