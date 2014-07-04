@@ -25,19 +25,13 @@ class WWW_Applet
       @scripts
     end
 
-    %w[ p form button splash_line div ].each { |tag|
+    %w[ a p form button splash_line div ].each { |tag|
       eval %^
       def #{tag} attr = nil, &blok
         new_tag :#{tag}, attr, &blok
       end
       ^
     }
-
-    def a href
-      new_tag :a, {:href=>href} do
-        yield
-      end
-    end
 
     def new_tag tag, attr = nil
       e = {:tag=>tag, :attr=> nil, :text=>nil, :childs=>[]}

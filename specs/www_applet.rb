@@ -5,7 +5,7 @@ describe "HTML" do
     target %^<a href="/here">Here</a>^
 
     actual do
-      a('/here' ) { "Here" }
+      a(:href=>'/here' ) { "Here" }
     end
   end
 
@@ -13,7 +13,7 @@ describe "HTML" do
     target %^<a href="&amp;%20&amp;%20&amp;">Escape</a>^ 
 
     actual do
-      a('& & &') { "Escape" }
+      a(:href=>'& & &') { "Escape" }
     end
   end
 
