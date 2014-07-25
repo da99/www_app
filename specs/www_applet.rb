@@ -10,7 +10,7 @@ describe "HTML" do
   end
 
   it "escapes :href" do
-    target %^<a href="&amp;%20&amp;%20&amp;">Escape</a>^ 
+    target %^<a href="&amp;%20&amp;%20&amp;">Escape</a>^
 
     actual do
       a(:href=>'& & &') { "Escape" }
@@ -18,7 +18,7 @@ describe "HTML" do
   end
 
   it "escapes inner text" do
-    target %^<p>&amp; here lies jackie</p>^ 
+    target %^<p>&amp; here lies jackie</p>^
 
     actual do
       p { "& here lies jackie" }
