@@ -81,25 +81,18 @@ end
 module Bacon
   class Context
     def target *args
-      @html_section = nil
-      @html_target   = nil
-      case args.size
-      when 1
-        @html_section = :body
-        @html_target   = args.first
-      when 2
-        @html_section = args.first
-        @html_target   = args.last
-      else
-        fail "Unknown args: #{args.inspect}"
-      end # === case
+      @target_args = args
     end
 
     def actual &blok
-      raw = WWW_Applet.new(&blok).to_html
-      val = (raw[/<#{@html_section}[\ .]*>(.+)<\/#{@html_section}>/] && $1) || raw
-      norm_target = norm @html_target
-      norm_actual = norm val
+      @target_args.unshift(:body) if @target_args.size == 1
+      norm_target   = norm @target_args.last
+
+      tag           = @target_args.first
+      html          = WWW_Applet.new(&blok).to_html
+      section       = (html[/<#{tag}[^\>]*>(.+)<\/#{tag}>/m] && $1) || html
+      norm_actual   = norm section
+
       if norm_target != norm_actual
         puts " ======== TARGET =========="
         puts norm_target
@@ -107,6 +100,7 @@ module Bacon
         puts norm_actual
         puts " =========================="
       end
+
       norm_actual.should == norm_target
     end
 
