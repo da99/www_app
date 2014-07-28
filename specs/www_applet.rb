@@ -42,6 +42,9 @@ describe "Style" do
     end
   end
 
+  it "sanitizes urls"
+  it "removes 'expression:'"
+
 end # === describe Style ===
 
 
