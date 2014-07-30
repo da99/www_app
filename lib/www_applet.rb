@@ -58,16 +58,70 @@ class WWW_Applet
 
   }
 
-  module Mod
+  class << self # ===================================================
+
+    def new_class file_name = nil, &blok
+      Class.new(BasicObject) {
+        include ::WWW_Applet::Mod
+
+        if file_name
+          eval(<<-EOF.strip, nil, file_name, 1-1)
+            def run
+              #{::File.read(file_name)}
+            end
+          EOF
+        else
+
+          define_method :run do
+            instance_eval &blok
+          end
+
+        end
+      }
+    end # === def new_class
+
+  end # === class self ==============================================
+
+  module Mod # ======================================================
+
+    attr_accessor :is_doc, :has_title
+    private
 
     def initialize data = nil
-      @title   = nil
-      @style   = {}
-      @scripts = []
-      @parent  = nil
-      @dom     = []
-      @data    = data || {}
+      @title     = nil
+      @curr_id   = -1
+      @style     = {}
+      @scripts   = []
+      @parent    = nil
+      @body      = []
+      @data      = data || {}
       @html_page = nil
+      @cache     = {}
+      @is_doc    = false
+      @has_title = false
+
+      @head      = new_html(:head)
+      @body      = new_html(:body)
+      @parent    = @body
+      @in        = { type: nil, name: nil }
+    end
+
+    def next_id
+      "e_#{@curr_id += 1}"
+    end
+
+    def parent c
+      origin = @parent
+      @parent = c
+      result = yield
+      @parent = origin
+      result
+    end
+
+    def capture &blok
+      h = {:childs=>[]}
+      parent(h, &blok)
+      h[:childs]
     end
 
     def title string
@@ -82,86 +136,119 @@ class WWW_Applet
       @scripts
     end
 
-    %w[ a p form button splash_line div ].each { |tag|
-      eval %^
-        def #{tag} attr = nil, &blok
-          new_tag :#{tag}, attr, &blok
-        end
-      ^
-    }
+    def new_html *args, &blok
+      new_child :html, *args, &blok
+    end
 
-    def new_tag tag, attr = nil
-      e = {:tag=>tag, :attr=> nil, :text=>nil, :childs=>[]}
+    def new_style *args, &blok
+      new_html :style, *args, &blok
+    end
 
-      e[:attr] = attr
-
-      if @parent
-        @parent[:childs] << e
-        e[:parent] = @parent
-      else
-        @dom << e
-      end
-
-      @parent = e
+    def new_child type, tag, attr=nil, &blok
+      e = {
+        type: type,
+        tag:  tag,
+        attr: attr,
+        text: nil,
+        childs: []
+      }
 
       if block_given?
-        result = yield
+        result = parent(e) {
+          yield
+        }
+
         if result.is_a? String
           e[:text] = Escape_Escape_Escape.inner_html(result)
         end
       end
 
-      @parent = e[:parent]
-      e[:parent] = nil
+      e
     end
 
-    def to_attr h
-      return '' unless h
-      final = h.
-        map { |k,v|
+    def title &blok
+      self.is_doc = true
+      self.has_title = true
+
+      c = new_html(:title, &blok)
+      if parent?(:body)
+        @head[:childs].push c
+      else
+        @parent[:childs].push c
+      end
+      c
+    end
+
+    def meta *args
+      self.is_doc = true
+
+      raise "Not allowed outside of :head" unless parent?(:body)
+      c = new_html(:meta, *args)
+      @head[:childs].push c
+      c
+    end
+
+    def script *args, &blok
+      self.is_doc = true
+
+      raise "Not allowed outside of :head" unless parent?(:body)
+      c = new_html(:script, *args, &blok)
+      @head[:childs].push c
+      c
+    end
+
+    def hash_to_text h
+      case h[:type]
+      when :attr
+        final = h.
+          map { |k,v|
           %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{Escape_Escape_Escape.inner_html(v)}"^
         }.
         join " "
 
-      if final.empty?
-        ''
-      else
-         " " << final
-      end
-    end
-
-    def to_styles h
-      h.map { |k,v|
-        %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')} : #{v};^
-      }.join("\n").strip
-    end
-
-    def to_style h
-      h.map { |k,styles|
-        %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, '_')} {
-        #{to_styles styles}
-      }
-        ^
-      }.join.strip
-    end
-
-    def element_to_html e
-      html = e[:childs].inject("") { |memo, c|
-        memo << "\n#{element_to_html c}"
-        memo
-      }
-
-      if e[:text] && !(e[:text].strip).empty?
-        if html.empty?
-          html = e[:text]
+        if final.empty?
+          ''
         else
-          html << element_to_html(new_tag(:div, :class=>'text') { e[:text] })
+          " " << final
         end
-      end
 
-      %^
+      when :styles
+        h.map { |k,styles|
+          %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, '_')} {
+              #{to_styles styles}
+            }
+          ^
+        }.join.strip
+
+      when :style
+        h.map { |k,v|
+          %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')} : #{v};^
+        }.join("\n").strip
+
+      when :html
+        html = e[:childs].inject("") { |memo, c|
+          memo << "\n#{element_to_html c}"
+          memo
+        }
+
+        if e[:text] && !(e[:text].strip).empty?
+          if html.empty?
+            html = e[:text]
+          else
+            html << element_to_html(new_tag(:div, :class=>'text') { e[:text] })
+          end
+        end
+
+        %^
         <#{e[:tag]}#{e[:attr] && to_attr(e[:attr])}>#{html}</#{e[:tag]}>
-      ^.strip
+        ^.strip
+
+      when :script
+        raise "Not ready yet."
+
+      else
+        raise "Unknown type: #{h[:text].inspect}"
+      end
     end
 
     def to_html
@@ -170,27 +257,16 @@ class WWW_Applet
 
       run
 
-      raw_html = ""
-      @dom.each { |ele|
-        raw_html << element_to_html(ele)
-      }
-
-      is_doc = @title || !@style.empty?
-
       final = if is_doc
-                raw_html
+                raise "Title not set." unless has_title
+                hash_to_text(@body)
               else
-                Document_Template.gsub(/!([a-z0-9\_]+)/) { |sub|
-                  key = $1.to_sym
-                  case key
-                  when :style
-                    to_style(@style)
-                  when :title
-                    @title || "[No Title]"
-                  when :body
-                    raw_html
-                  end
-                }
+                # Remember: to use !BODY first, because
+                # :head content might include a '!HEAD'
+                # value.
+                Document_Template.
+                  sub('!BODY', hash_to_text(@body]).
+                  sub('!HEAD', hash_to_text(@head[:childs])
               end
 
       utf_8 = Escape_Escape_Escape.clean_utf8(final)
@@ -200,45 +276,59 @@ class WWW_Applet
                    else
                      Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
                    end
+    end # === def to_html
+
+    def in_something?
+      !!@in[:type]
     end
 
-  end # === module Mod ===
-
-  class << self
-
-    def new_class file_name = nil, &blok
-      Class.new {
-        include Mod
-
-        if file_name
-          eval(<<-EOF.strip, nil, file_name, 1-1)
-            def run
-              #{File.read(file_name)}
-            end
-          EOF
-        else
-
-          define_method :run do
-            instance_eval &blok
-          end
-
+    %w[ style html script ].each { |name|
+      eval %~
+        def in_#{name}?
+          @in[:type] == :#{name}
         end
-      }
-    end # === def new_class
+      ~
+    }
 
-  end # === class self ===
+    def method_missing name, *args, &blok
+      str_name = name.to_s
+      case
 
-end # === class WWW_Applet ===
+      when in_something? && args.empty? && !blok
+        case
+        when in_style?
+        when in_html?
+        when in_script?
+        else
+          raise "Unknown type: #{name.inspect}"
+        end
+
+      when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
+        e = new_html(:name, *args. &blok)
+        @parent[:childs] << e
+
+      when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
+        # set style
+        @parent[:id] ||= next_id
+        @style[@parent_id] ||= {}
+        @style[@parent_id][css_name] = args.first
+
+      else
+        super
+
+      end
+    end # === def method_missing
+
+  end # === module Mod ==============================================
+
+end # === class WWW_Applet ==========================================
 
 __END__
 <!DOCTYPE html>
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>!title</title>
-    <style type="text/css">
-      !style
-    </style>
+    !HEAD
   </head>
-  <body>!body</body>
+  !BODY
 </html>
