@@ -89,7 +89,7 @@ module Bacon
       norm_target   = norm @target_args.last
 
       tag           = @target_args.first
-      html          = WWW_Applet.new(&blok).to_html
+      html          = WWW_Applet.new_class(&blok).new.to_html
       section       = (html[/<#{tag}[^\>]*>(.+)<\/#{tag}>/m] && $1) || html
       norm_actual   = norm section
 

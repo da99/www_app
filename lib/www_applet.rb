@@ -1,4 +1,6 @@
 
+require 'sanitize'
+
 class WWW_Applet
 
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
@@ -34,7 +36,7 @@ class WWW_Applet
       'style'      => ['type'],
       'script'     => ['type', 'src', 'language'],
       'link'       => ['rel', 'type', 'sizes', 'href', 'title'],
-      'meta'       => ['name', 'http-equiv'. 'property', 'content', 'charset'],
+      'meta'       => ['name', 'http-equiv', 'property', 'content', 'charset'],
       'html'       => ['lang']
     },
 
@@ -59,6 +61,10 @@ class WWW_Applet
   }
 
   class << self # ===================================================
+
+    def new
+      fail "Not implemented."
+    end
 
     def new_class file_name = nil, &blok
       Class.new(BasicObject) {
@@ -153,7 +159,7 @@ class WWW_Applet
         childs: []
       }
 
-      if block_given?
+      if blok
         result = parent(e) {
           yield
         }
@@ -182,7 +188,7 @@ class WWW_Applet
     def meta *args
       self.is_doc = true
 
-      raise "Not allowed outside of :head" unless parent?(:body)
+      fail "Not allowed outside of :head" unless parent?(:body)
       c = new_html(:meta, *args)
       @head[:childs].push c
       c
@@ -191,20 +197,22 @@ class WWW_Applet
     def script *args, &blok
       self.is_doc = true
 
-      raise "Not allowed outside of :head" unless parent?(:body)
+      fail "Not allowed outside of :head" unless parent?(:body)
       c = new_html(:script, *args, &blok)
       @head[:childs].push c
       c
     end
 
+    def array_to_text a
+      hash_to_text(:childs=>a)
+    end
+
     def hash_to_text h
       case h[:type]
       when :attr
-        final = h.
-          map { |k,v|
+        final = h[:value].map { |k,v|
           %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{Escape_Escape_Escape.inner_html(v)}"^
-        }.
-        join " "
+        }.join " "
 
         if final.empty?
           ''
@@ -226,60 +234,37 @@ class WWW_Applet
         }.join("\n").strip
 
       when :html
-        html = e[:childs].inject("") { |memo, c|
-          memo << "\n#{element_to_html c}"
+        html = h[:childs].inject("") { |memo, c|
+          memo << "\n#{hash_to_text c}"
           memo
         }
 
-        if e[:text] && !(e[:text].strip).empty?
+        if h[:text] && !(h[:text].strip).empty?
           if html.empty?
-            html = e[:text]
+            html = h[:text]
           else
-            html << element_to_html(new_tag(:div, :class=>'text') { e[:text] })
+            html << hash_to_text(new_html(:div, :class=>'text') { h[:text] })
           end
         end
 
-        %^
-        <#{e[:tag]}#{e[:attr] && to_attr(e[:attr])}>#{html}</#{e[:tag]}>
-        ^.strip
+        if h[:tag]
+          %^
+            <#{h[:tag]}#{h[:attr] && hash_to_text(:type=>:attr, :value=>h[:attr])}>#{html}</#{h[:tag]}>
+          ^.strip
+        else
+          html
+        end
 
       when :script
-        raise "Not ready yet."
+        fail "Not ready yet."
 
       else
-        raise "Unknown type: #{h[:text].inspect}"
+        fail "Unknown type: #{h[:text].inspect}"
       end
     end
 
-    def to_html
-
-      return @html_page if @html_page
-
-      run
-
-      final = if is_doc
-                raise "Title not set." unless has_title
-                hash_to_text(@body)
-              else
-                # Remember: to use !BODY first, because
-                # :head content might include a '!HEAD'
-                # value.
-                Document_Template.
-                  sub('!BODY', hash_to_text(@body]).
-                  sub('!HEAD', hash_to_text(@head[:childs])
-              end
-
-      utf_8 = Escape_Escape_Escape.clean_utf8(final)
-
-      @html_page = if is_doc
-                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
-                   else
-                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
-                   end
-    end # === def to_html
-
     def in_something?
-      !!@in[:type]
+      !!(@in[:type])
     end
 
     %w[ style html script ].each { |name|
@@ -290,21 +275,37 @@ class WWW_Applet
       ~
     }
 
+    %w[ fail raise ].each { |name|
+      eval %~
+        def #{name} *args
+          ::Kernel.method(:#{name}).call *args
+        end
+      ~
+    }
+
     def method_missing name, *args, &blok
+
       str_name = name.to_s
       case
 
       when in_something? && args.empty? && !blok
         case
+
         when in_style?
+          super
+
         when in_html?
+          super
+
         when in_script?
+          super
+
         else
-          raise "Unknown type: #{name.inspect}"
+          fail "Unknown type: #{name.inspect}"
         end
 
       when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
-        e = new_html(:name, *args. &blok)
+        e = new_html(:name, *args, &blok)
         @parent[:childs] << e
 
       when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
@@ -318,6 +319,37 @@ class WWW_Applet
 
       end
     end # === def method_missing
+
+    # ===============================================================
+    public # ========================================================
+    # ===============================================================
+
+    def to_html
+
+      return @html_page if @html_page
+
+      run
+
+      final = if is_doc
+                fail "Title not set." unless has_title
+                hash_to_text(@body)
+              else
+                # Remember: to use !BODY first, because
+                # :head content might include a '!HEAD'
+                # value.
+                Document_Template.
+                  sub('!BODY', hash_to_text(@body)).
+                  sub('!HEAD', array_to_text(@head[:childs]))
+              end
+
+      utf_8 = Escape_Escape_Escape.clean_utf8(final)
+
+      @html_page = if is_doc
+                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
+                   else
+                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
+                   end
+    end # === def to_html
 
   end # === module Mod ==============================================
 
