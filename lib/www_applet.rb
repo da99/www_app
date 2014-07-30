@@ -68,6 +68,7 @@ class WWW_Applet
 
     def new_class file_name = nil, &blok
       Class.new(BasicObject) {
+        include ::Kernel
         include ::WWW_Applet::Mod
 
         if file_name
@@ -204,7 +205,7 @@ class WWW_Applet
     end
 
     def array_to_text a
-      hash_to_text(:childs=>a)
+      hash_to_text(:type=>:html, :childs=>a)
     end
 
     def hash_to_text h
@@ -275,14 +276,6 @@ class WWW_Applet
       ~
     }
 
-    %w[ fail raise ].each { |name|
-      eval %~
-        def #{name} *args
-          ::Kernel.method(:#{name}).call *args
-        end
-      ~
-    }
-
     def method_missing name, *args, &blok
 
       str_name = name.to_s
@@ -301,7 +294,7 @@ class WWW_Applet
           super
 
         else
-          fail "Unknown type: #{name.inspect}"
+          fail "Unknown element: #{name.inspect}"
         end
 
       when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
