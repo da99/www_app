@@ -9,22 +9,6 @@ describe "HTML" do
     end
   end
 
-  it "escapes :href" do
-    target %^<a href="&amp;%20&amp;%20&amp;">Escape</a>^
-
-    actual do
-      a(:href=>'& & &') { "Escape" }
-    end
-  end
-
-  it "escapes inner text" do
-    target %^<p>&amp; here lies jackie</p>^
-
-    actual do
-      p { "& here lies jackie" }
-    end
-  end
-
 end # === describe WWW_Applet.new ===
 
 
@@ -41,9 +25,6 @@ describe "Style" do
       style(:p=>{'background-color'=>'#fff'})
     end
   end
-
-  it "sanitizes urls"
-  it "removes 'expression:'"
 
 end # === describe Style ===
 
