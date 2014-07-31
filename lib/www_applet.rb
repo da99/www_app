@@ -110,7 +110,7 @@ class WWW_Applet
       @head      = new_html(:head)
       @body      = new_html(:body)
       @parent    = @body
-      @in        = { type: nil, name: nil }
+      @in        = { type: nil, value: nil }
     end
 
     def fail *args
@@ -155,23 +155,32 @@ class WWW_Applet
       new_html :style, *args, &blok
     end
 
-    def new_child type, tag, attr=nil, &blok
+    def new_child type, tag, attrs=nil, &blok
       e = {
-        type: type,
-        tag:  tag,
-        attr: attr,
-        text: nil,
+        type:   type,
+        tag:    tag,
+        attrs:  attrs,
+        text:   nil,
         childs: []
       }
 
+      update_html e, attrs, blok
+
+      e
+    end
+
+    def update_html e, attrs=nil, blok
+      if args
+        e[:attrs] ||= {}
+        e[:attrs].merge! args
+      end
+
       if blok
         result = parent(e) {
-          yield
+          blok.call
         }
 
-        if result.is_a? String
-          e[:text] = Escape_Escape_Escape.inner_html(result)
-        end
+        e[:text] = result if result.is_a? String
       end
 
       e
@@ -214,8 +223,9 @@ class WWW_Applet
 
     def hash_to_text h
       case h[:type]
-      when :attr
-        final = h[:value].map { |k,v|
+      when :attrs
+        final = h[:value].map { |k,raw_v|
+          v = raw_v.is_a?(Array) ? raw_v.join(SPACE) : raw_v
           %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{Escape_Escape_Escape.inner_html(v)}"^
         }.join SPACE
 
@@ -253,7 +263,7 @@ class WWW_Applet
 
         if h[:tag]
           %^
-            <#{h[:tag]}#{h[:attr] && hash_to_text(:type=>:attr, :value=>h[:attr])}>#{html}</#{h[:tag]}>
+            <#{h[:tag]}#{h[:attrs] && hash_to_text(:type=>:attrs, :value=>h[:attrs])}>#{html}</#{h[:tag]}>
           ^.strip
         else
           html
@@ -265,6 +275,13 @@ class WWW_Applet
       else
         fail "Unknown type: #{h[:text].inspect}"
       end
+    end
+
+    def add_class html, str_or_sym
+      html[:attrs] ||= {}
+      html[:attrs][:class] ||= []
+      html[:attrs][:class] << str_or_sym
+      html
     end
 
     def in_something?
@@ -300,9 +317,36 @@ class WWW_Applet
           fail "Unknown element: #{name.inspect}"
         end
 
-      when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
-        e = new_html(name, *args, &blok)
-        @parent[:childs] << e
+      when !in_something?
+
+        case
+        when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
+          case
+          when args.empty? && !blok
+            @in = {type: :html, :value=> new_html(name)}
+            self
+          else
+            e = new_html(name, *args, &blok)
+            @parent[:childs] << e
+          end
+        else
+          super
+        end
+
+      when in_something?
+
+        case
+        when in_html?
+          add_class @in[:value], name
+          if !args.empty? || blok
+            @parent[:childs] << update_html(@in[:value], *args, blok)
+            @in = {}
+          else
+            self
+          end
+        else
+          super
+        end
 
       when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
         # set style
