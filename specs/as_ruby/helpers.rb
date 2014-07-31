@@ -79,6 +79,7 @@ end
 
 module Bacon
   class Context
+
     def target *args
       @target_args = args
     end

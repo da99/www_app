@@ -1,16 +1,4 @@
 
-describe "HTML" do
-
-  it "produces links" do
-    target %^<a href="/here">Here</a>^
-
-    actual do
-      a(:href=>'/here' ) { "Here" }
-    end
-  end
-
-end # === describe WWW_Applet.new ===
-
 
 describe "Style" do
 
@@ -62,22 +50,3 @@ describe "element styles" do
   end
 
 end # === describe
-
-describe "element scripts" do
-
-  it "adds a script based on default id" do
-    target :script, %^
-      WWW_Applet.element("#p_1").on_click("change_style", ["background-color", "#fff"]);
-    ^
-
-    actual do
-      p {
-        on_click :change_style, ['background-color', '#fff']
-      }
-    end
-  end
-
-end # === describe element scripts ===
-
-
-
