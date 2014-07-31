@@ -110,11 +110,21 @@ class WWW_Applet
       @head      = new_html(:head)
       @body      = new_html(:body)
       @parent    = @body
-      @in        = { type: nil, value: nil }
+      @in        = nil
     end
 
     def fail *args
       ::Object.new.send :fail, *args
+    end
+
+    def in?
+      !!@in
+    end
+
+    def pop
+      e = @in
+      @in = nil
+      e
     end
 
     def next_id
@@ -170,9 +180,9 @@ class WWW_Applet
     end
 
     def update_html e, attrs=nil, blok
-      if args
+      if attrs
         e[:attrs] ||= {}
-        e[:attrs].merge! args
+        e[:attrs].merge! attrs
       end
 
       if blok
@@ -284,14 +294,10 @@ class WWW_Applet
       html
     end
 
-    def in_something?
-      !!(@in[:type])
-    end
-
     %w[ style html script ].each { |name|
       eval %~
         def in_#{name}?
-          @in[:type] == :#{name}
+          in? && @in[:type] == :#{name}
         end
       ~
     }
@@ -301,7 +307,7 @@ class WWW_Applet
       str_name = name.to_s
       case
 
-      when in_something? && args.empty? && !blok
+      when in? && args.empty? && !blok
         case
 
         when in_style?
@@ -317,13 +323,13 @@ class WWW_Applet
           fail "Unknown element: #{name.inspect}"
         end
 
-      when !in_something?
+      when !in?
 
         case
         when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
           case
           when args.empty? && !blok
-            @in = {type: :html, :value=> new_html(name)}
+            @in = new_html(name)
             self
           else
             e = new_html(name, *args, &blok)
@@ -333,14 +339,13 @@ class WWW_Applet
           super
         end
 
-      when in_something?
+      when in?
 
         case
         when in_html?
-          add_class @in[:value], name
+          add_class @in, name
           if !args.empty? || blok
-            @parent[:childs] << update_html(@in[:value], *args, blok)
-            @in = {}
+            @parent[:childs] << update_html(pop, *args, blok)
           else
             self
           end
