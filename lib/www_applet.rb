@@ -179,7 +179,18 @@ class WWW_Applet
       e
     end
 
-    def update_html e, attrs=nil, blok
+    def add_classes html, *names
+      html[:attrs] ||= {}
+
+      old_class = html[:attrs][:class]
+      new_class = names.compact.join(SPACE)
+
+      return html if old_class == new_class
+      html[:attrs][:class] = [old_class, new_class].compact.join(SPACE)
+      html
+    end
+
+    def update_html e, attrs=nil, blok=nil
       if attrs
         e[:attrs] ||= {}
         e[:attrs].merge! attrs
@@ -287,13 +298,6 @@ class WWW_Applet
       end
     end
 
-    def add_class html, str_or_sym
-      html[:attrs] ||= {}
-      html[:attrs][:class] ||= []
-      html[:attrs][:class] << str_or_sym
-      html
-    end
-
     %w[ style html script ].each { |name|
       eval %~
         def in_#{name}?
@@ -343,7 +347,7 @@ class WWW_Applet
 
         case
         when in_html?
-          add_class @in, name
+          add_classes @in, name, (args.first && args.first.delete(:class))
           if !args.empty? || blok
             @parent[:childs] << update_html(pop, *args, blok)
           else

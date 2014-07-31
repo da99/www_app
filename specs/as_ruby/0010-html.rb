@@ -17,6 +17,14 @@ describe "HTML" do
     end
   end
 
+  it "merges classes: a.warning(:class=>\"super low\")" do
+    target %^<a class="warning super low" href="/now">Now</a>^
+
+    actual do
+      a.warning(:class => "super low", :href => "/now") { "Now" }
+    end
+  end
+
 end # === describe WWW_Applet.new ===
 
 

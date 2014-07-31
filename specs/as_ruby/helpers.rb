@@ -98,7 +98,7 @@ module Bacon
         puts norm_target
         puts " ======== ACTUAL =========="
         puts norm_actual
-        puts " ======== FULL ACTUAL ====="
+        puts " ====== ORIGINAL ACTUAL ==="
         puts html
         puts " =========================="
       end
