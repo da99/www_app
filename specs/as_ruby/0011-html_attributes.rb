@@ -1,5 +1,5 @@
 
-describe "HTML" do
+describe "HTML attributes" do
 
   it "produces 'a' elements with 'href'" do
     target %^<a href="/here">Here</a>^
