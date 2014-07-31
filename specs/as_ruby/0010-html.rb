@@ -9,7 +9,7 @@ describe "HTML" do
     end
   end
 
-  it "produces elements with class: a.warning => <a class=\"warning\" ..." do
+  it "adds 'class' attribute for unknown methods: a.warning(..) { }" do
     target %^<a class="warning" href="/here">Here</a>^
 
     actual do
@@ -22,6 +22,14 @@ describe "HTML" do
 
     actual do
       a.warning(:class => "super low", :href => "/now") { "Now" }
+    end
+  end
+
+  it "adds 'id' attribute for unknown bang methods: a.warn!(...) { }" do
+    target %^<a id="warn" href="/there">There</a>^
+
+    actual do
+      a.warn!(:href=>'/there') { "There" }
     end
   end
 

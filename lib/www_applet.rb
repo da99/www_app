@@ -91,6 +91,7 @@ class WWW_Applet
     attr_accessor :is_doc, :has_title
     private
 
+    BANG     = '!'
     NEW_LINE = "\n"
     SPACE    = ' '
 
@@ -179,6 +180,14 @@ class WWW_Applet
       e
     end
 
+    def add_id html, id
+      attrs = (html[:attrs] ||= {})
+      old_id = attrs && attrs[:id]
+      fail("Id already set: #{old_id} new: #{id}") if old_id
+      attrs[:id] = id
+      html
+    end
+
     def add_classes html, *names
       html[:attrs] ||= {}
 
@@ -193,6 +202,7 @@ class WWW_Applet
     def update_html e, attrs=nil, blok=nil
       if attrs
         e[:attrs] ||= {}
+        add_id(e, attrs[:id]) if attrs[:id]
         e[:attrs].merge! attrs
       end
 
@@ -347,7 +357,14 @@ class WWW_Applet
 
         case
         when in_html?
-          add_classes @in, name, (args.first && args.first.delete(:class))
+
+          str_name = name.to_s
+          if str_name[BANG]
+            add_id @in, str_name.sub(BANG, '')
+          else
+            add_classes @in, name, (args.first && args.first.delete(:class))
+          end
+
           if !args.empty? || blok
             @parent[:childs] << update_html(pop, *args, blok)
           else
