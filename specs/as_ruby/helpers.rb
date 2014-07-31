@@ -14,7 +14,6 @@ TEMPLATE = File.read(__FILE__).
   strip
 
 def norm ugly
-  return ugly
   ugly.
     split("\n").
     map(&:strip).
@@ -98,6 +97,8 @@ module Bacon
         puts norm_target
         puts " ======== ACTUAL =========="
         puts norm_actual
+        puts " ======== FULL ACTUAL ====="
+        puts html
         puts " =========================="
       end
 

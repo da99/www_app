@@ -66,7 +66,6 @@ class WWW_Applet
 
     def new_class file_name = nil, &blok
       Class.new(BasicObject) {
-        include ::Kernel
         include ::WWW_Applet::Mod
 
         if file_name
@@ -92,6 +91,9 @@ class WWW_Applet
     attr_accessor :is_doc, :has_title
     private
 
+    NEW_LINE = "\n"
+    SPACE    = ' '
+
     def initialize data = nil
       @title     = nil
       @curr_id   = -1
@@ -109,6 +111,10 @@ class WWW_Applet
       @body      = new_html(:body)
       @parent    = @body
       @in        = { type: nil, name: nil }
+    end
+
+    def fail *args
+      ::Object.new.send :fail, *args
     end
 
     def next_id
@@ -211,7 +217,7 @@ class WWW_Applet
       when :attr
         final = h[:value].map { |k,v|
           %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{Escape_Escape_Escape.inner_html(v)}"^
-        }.join " "
+        }.join SPACE
 
         if final.empty?
           ''
@@ -233,10 +239,9 @@ class WWW_Applet
         }.join("\n").strip
 
       when :html
-        html = h[:childs].inject("") { |memo, c|
-          memo << "\n#{hash_to_text c}"
-          memo
-        }
+        html = h[:childs].map { |c|
+          "#{hash_to_text c}"
+        }.join NEW_LINE
 
         if h[:text] && !(h[:text].strip).empty?
           if html.empty?
