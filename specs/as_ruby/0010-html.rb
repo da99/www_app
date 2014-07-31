@@ -25,6 +25,14 @@ describe "HTML" do
     end
   end
 
+  it "merges multiple missing methods into class: a.warn.low.super() {}" do
+    target %^<a class="warning super low" href="/today">Today</a>^
+
+    actual do
+      a.warning.super.low(:href => "/today") { "Today" }
+    end
+  end
+
   it "adds 'id' attribute for unknown bang methods: a.warn!(...) { }" do
     target %^<a id="warn" href="/there">There</a>^
 

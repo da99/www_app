@@ -321,22 +321,6 @@ class WWW_Applet
       str_name = name.to_s
       case
 
-      when in? && args.empty? && !blok
-        case
-
-        when in_style?
-          super
-
-        when in_html?
-          super
-
-        when in_script?
-          super
-
-        else
-          fail "Unknown element: #{name.inspect}"
-        end
-
       when !in?
 
         case
@@ -359,9 +343,9 @@ class WWW_Applet
         when in_html?
 
           str_name = name.to_s
-          if str_name[BANG]
+          if str_name[BANG] # === id
             add_id @in, str_name.sub(BANG, '')
-          else
+          else # === css class name
             add_classes @in, name, (args.first && args.first.delete(:class))
           end
 
