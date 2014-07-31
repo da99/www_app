@@ -40,8 +40,6 @@ class WWW_Applet
       'html'       => ['lang']
     },
 
-    :add_attributes => {'a'=>{'rel'=>'nofollow'}},
-
     :protocols=> {
       'a'          => {'href'=>['ftp', 'http', 'https', :relative]},
       'blockquote' => {'cite'=>[:relative]},
@@ -298,7 +296,7 @@ class WWW_Applet
         end
 
       when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
-        e = new_html(:name, *args, &blok)
+        e = new_html(name, *args, &blok)
         @parent[:childs] << e
 
       when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
@@ -324,15 +322,15 @@ class WWW_Applet
       run
 
       final = if is_doc
-                fail "Title not set." unless has_title
-                hash_to_text(@body)
-              else
                 # Remember: to use !BODY first, because
                 # :head content might include a '!HEAD'
                 # value.
+                fail "Title not set." unless has_title
                 Document_Template.
                   sub('!BODY', hash_to_text(@body)).
                   sub('!HEAD', array_to_text(@head[:childs]))
+              else
+                array_to_text(@body[:childs])
               end
 
       utf_8 = Escape_Escape_Escape.clean_utf8(final)
