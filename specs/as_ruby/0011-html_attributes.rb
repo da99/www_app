@@ -2,7 +2,7 @@
 describe "HTML attributes" do
 
   it "produces 'a' elements with 'href'" do
-    target %^<a href="/here">Here</a>^
+    target '<a href="/here">Here</a>'
 
     actual do
       a(:href=>'/here' ) { "Here" }
@@ -10,7 +10,7 @@ describe "HTML attributes" do
   end
 
   it "adds 'class' attribute for unknown methods: a.warning(..) { }" do
-    target %^<a class="warning" href="/here">Here</a>^
+    target '<a class="warning" href="/here">Here</a>'
 
     actual do
       a.warning(:href=>'/here' ) { "Here" }
@@ -18,7 +18,7 @@ describe "HTML attributes" do
   end
 
   it "merges classes: a.warning(:class=>\"super low\")" do
-    target %^<a class="warning super low" href="/now">Now</a>^
+    target '<a class="warning super low" href="/now">Now</a>'
 
     actual do
       a.warning(:class => "super low", :href => "/now") { "Now" }
@@ -26,7 +26,7 @@ describe "HTML attributes" do
   end
 
   it "merges multiple missing methods into class: a.warn.low.super() {}" do
-    target %^<a class="warning super low" href="/today">Today</a>^
+    target '<a class="warning super low" href="/today">Today</a>'
 
     actual do
       a.warning.super.low(:href => "/today") { "Today" }
@@ -34,7 +34,7 @@ describe "HTML attributes" do
   end
 
   it "adds 'id' attribute for unknown bang methods: a.warn!(...) { }" do
-    target %^<a id="warn" href="/there">There</a>^
+    target '<a id="warn" href="/there">There</a>'
 
     actual do
       a.warn!(:href=>'/there') { "There" }
