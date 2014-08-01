@@ -14,16 +14,17 @@ class WWW_Applet
     :allow_comments  => false,
     :remove_contents => true,
 
-    :elements => [
+    :elements => %w[
 
-      'html', 'head', 'title', 'meta', 'style', 'link',
+      html  head  title  meta  style  link 
+      body  div
 
-      'b'    , 'em', 'i', 'strong', 'u', 'a',
-      'abbr' , 'blockquote',
-      'br'   , 'cite', 'code',
-      'ul'   , 'ol', 'li', 'p', 'pre', 'q',
-      'sup'  , 'sub',
-      'form', 'input', 'button'
+      b      em     i  strong  u  a 
+      abbr   blockquote 
+      br     cite   code 
+      ul     ol     li  p  pre  q 
+      sup    sub 
+      form   input  button
 
     ],
 
@@ -392,36 +393,33 @@ class WWW_Applet
       end
     end # === def method_missing
 
-    # ===============================================================
-    public # ========================================================
-    # ===============================================================
+    public def to_html
 
-    def to_html
+    return @html_page if @html_page
 
-      return @html_page if @html_page
+    run
 
-      run
+    final = if is_doc
+              # Remember: to use !BODY first, because
+              # :head content might include a '!HEAD'
+              # value.
+              fail "Title not set." unless has_title
+              Document_Template.
+                sub('!BODY', hash_to_text(@body)).
+                sub('!HEAD', array_to_text(@head[:childs]))
+            else
+              array_to_text(@body[:childs])
+            end
 
-      final = if is_doc
-                # Remember: to use !BODY first, because
-                # :head content might include a '!HEAD'
-                # value.
-                fail "Title not set." unless has_title
-                Document_Template.
-                  sub('!BODY', hash_to_text(@body)).
-                  sub('!HEAD', array_to_text(@head[:childs]))
-              else
-                array_to_text(@body[:childs])
-              end
+    utf_8 = Escape_Escape_Escape.clean_utf8(final)
 
-      utf_8 = Escape_Escape_Escape.clean_utf8(final)
-
-      @html_page = if is_doc
-                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
-                   else
-                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
-                   end
-    end # === def to_html
+    ::Object.new.send(:binding).pry
+    @html_page = if is_doc
+                   Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
+                 else
+                   Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
+                 end
+  end # === def to_html
 
   end # === module Mod ==============================================
 
