@@ -1,6 +1,22 @@
 
 describe "HTML with inner style" do
 
+  it "adds a 'style' tag to 'head'" do
+    target :outer, :style, %^
+      <style type="text/css">
+        #the_box {
+          border-width: 10px;
+        }
+      </style>
+    ^
+
+    actual do
+      div.the_box! {
+        border_width '10px'
+      }
+    end
+  end
+
   it "uses id of element to add style" do
     target :style, %^
       #my_box {
@@ -17,9 +33,9 @@ describe "HTML with inner style" do
 
   it "uses a default id when id is not specified" do
     target :style, %^
-      #div_1 {
-        width: 20px;
-      }
+        #div_0 {
+          width: 20px;
+        }
     ^
 
     actual do

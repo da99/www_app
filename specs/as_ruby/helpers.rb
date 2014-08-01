@@ -15,6 +15,7 @@ TEMPLATE = File.read(__FILE__).
 
 def norm ugly
   ugly.
+    strip.
     split("\n").
     map(&:strip).
     join("\n")
@@ -85,12 +86,21 @@ module Bacon
     end
 
     def actual &blok
+      include_tag = if @target_args.first == :outer
+                      !!@target_args.shift
+                    end
+
       @target_args.unshift(:body) if @target_args.size == 1
       norm_target   = norm @target_args.last
 
       tag           = @target_args.first
       html          = WWW_Applet.new_class(&blok).new.to_html
-      section       = (html[/<#{tag}[^\>]*>(.+)<\/#{tag}>/m] && $1) || html
+      section       = case
+                      when include_tag
+                        html[/(<#{tag}[^\>]*>.+<\/#{tag}>)/m] && $1
+                      else
+                        html[/<#{tag}[^\>]*>(.+)<\/#{tag}>/m] && $1
+                      end || html
       norm_actual   = norm section
 
       if norm_target != norm_actual
