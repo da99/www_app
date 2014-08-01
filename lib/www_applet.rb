@@ -89,7 +89,6 @@ class WWW_Applet
 
   module Mod # ======================================================
 
-    attr_accessor :is_doc, :has_title
     private
 
     BANG     = '!'
@@ -97,22 +96,27 @@ class WWW_Applet
     SPACE    = ' '
 
     def initialize data = nil
-      @title     = nil
-      @curr_id   = -1
-      @style     = {}
-      @scripts   = []
-      @body      = []
-      @data      = data || {}
-      @html_page = nil
-      @cache     = {}
-      @is_doc    = false
-      @has_title = false
+      @title       = nil
+      @curr_id     = -1
+      @style       = {}
+      @scripts     = []
+      @body        = []
+      @data        = data || {}
+      @html_page   = nil
+      @cache       = {}
+      @has_meta    = false
+      @has_script  = false
+      @has_title   = false
       @default_ids = {}
 
       @head      = new_html(:head)
       @body      = new_html(:body)
       @parent    = @body
       @creating_html = nil
+    end
+
+    def is_doc?
+      @is_doc || !@style.empty? || @has_title
     end
 
     def fail *args
@@ -153,6 +157,10 @@ class WWW_Applet
       '#' << curr_id
     end
 
+    def parent? tag
+      @parent && @parent[:tag] == tag
+    end
+
     def parent c
       origin = @parent
       @parent = c
@@ -165,10 +173,6 @@ class WWW_Applet
       h = {:childs=>[]}
       parent(h, &blok)
       h[:childs]
-    end
-
-    def title string
-      @title = string
     end
 
     def style h
@@ -232,15 +236,22 @@ class WWW_Applet
           blok.call
         }
 
-        e[:text] = result if result.is_a? String
+        e[:text] = result if self != result && result.is_a?(String)
       end
 
       e
     end
 
+    def title string
+      @title = string
+    end
+
+    def no_title
+      title { 'No title' }
+    end
+
     def title &blok
-      self.is_doc = true
-      self.has_title = true
+      @has_title = true
 
       c = new_html(:title, &blok)
       if parent?(:body)
@@ -252,7 +263,7 @@ class WWW_Applet
     end
 
     def meta *args
-      self.is_doc = true
+      @has_meta = true
 
       fail "Not allowed outside of :head" unless parent?(:body)
       c = new_html(:meta, *args)
@@ -261,7 +272,7 @@ class WWW_Applet
     end
 
     def script *args, &blok
-      self.is_doc = true
+      @has_script = true
 
       fail "Not allowed outside of :head" unless parent?(:body)
       c = new_html(:script, *args, &blok)
@@ -379,7 +390,6 @@ class WWW_Applet
             case
             when args.empty? && !blok
               @creating_html = new_html(name)
-              self
             else
               e = new_html(name, *args, &blok)
               @parent[:childs] << e
@@ -391,6 +401,8 @@ class WWW_Applet
           end
 
       end
+
+      self
     end # === def method_missing
 
     public def to_html
@@ -399,11 +411,11 @@ class WWW_Applet
 
     run
 
-    final = if is_doc
+    final = if is_doc?
               # Remember: to use !BODY first, because
               # :head content might include a '!HEAD'
               # value.
-              fail "Title not set." unless has_title
+              no_title unless @has_title
               Document_Template.
                 sub('!BODY', hash_to_text(@body)).
                 sub('!HEAD', array_to_text(@head[:childs]))
@@ -413,8 +425,7 @@ class WWW_Applet
 
     utf_8 = Escape_Escape_Escape.clean_utf8(final)
 
-    ::Object.new.send(:binding).pry
-    @html_page = if is_doc
+    @html_page = if is_doc?
                    Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
                  else
                    Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
