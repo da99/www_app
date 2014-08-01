@@ -100,36 +100,56 @@ class WWW_Applet
       @curr_id   = -1
       @style     = {}
       @scripts   = []
-      @parent    = nil
       @body      = []
       @data      = data || {}
       @html_page = nil
       @cache     = {}
       @is_doc    = false
       @has_title = false
+      @default_ids = {}
 
       @head      = new_html(:head)
       @body      = new_html(:body)
       @parent    = @body
-      @in        = nil
+      @creating_html = nil
     end
 
     def fail *args
       ::Object.new.send :fail, *args
     end
 
-    def in?
-      !!@in
+    def creating_html?
+      !!@creating_html
     end
 
     def pop
-      e = @in
-      @in = nil
+      e = @creating_html
+      @creating_html = nil
       e
     end
 
-    def next_id
-      "e_#{@curr_id += 1}"
+    def dom_id e
+      id = e[:attrs] && e[:attrs][:id]
+      return id if id
+
+      e[:default_id] ||= begin
+                           tag = e[:tag]
+                           @default_ids[tag] ||= -1
+                           @default_ids[tag] += 1
+                           "#{tag}_#{@default_ids[tag]}"
+                         end
+    end
+
+    def curr_id
+      dom_id(@parent)
+    end
+
+    def css_id
+      if @parent[:tag] == :body
+        return '#body'
+      end
+
+      '#' << curr_id
     end
 
     def parent c
@@ -175,7 +195,7 @@ class WWW_Applet
         childs: []
       }
 
-      update_html e, attrs, blok
+      update_html e, attrs, &blok
 
       e
     end
@@ -199,7 +219,7 @@ class WWW_Applet
       html
     end
 
-    def update_html e, attrs=nil, blok=nil
+    def update_html e, attrs=nil, &blok
       if attrs
         e[:attrs] ||= {}
         add_id(e, attrs[:id]) if attrs[:id]
@@ -311,46 +331,32 @@ class WWW_Applet
     %w[ style html script ].each { |name|
       eval %~
         def in_#{name}?
-          in? && @in[:type] == :#{name}
+          creating_html? && @creating_html[:type] == :#{name}
         end
       ~
     }
 
+    #
     def method_missing name, *args, &blok
 
       str_name = name.to_s
+
       case
 
-      when !in?
-
-        case
-        when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
-          case
-          when args.empty? && !blok
-            @in = new_html(name)
-            self
-          else
-            e = new_html(name, *args, &blok)
-            @parent[:childs] << e
-          end
-        else
-          super
-        end
-
-      when in?
+      when creating_html?
 
         case
         when in_html?
 
           str_name = name.to_s
           if str_name[BANG] # === id
-            add_id @in, str_name.sub(BANG, '')
+            add_id @creating_html, str_name.sub(BANG, '')
           else # === css class name
-            add_classes @in, name, (args.first && args.first.delete(:class))
+            add_classes @creating_html, name, (args.first && args.first.delete(:class))
           end
 
           if !args.empty? || blok
-            @parent[:childs] << update_html(pop, *args, blok)
+            @parent[:childs] << update_html(pop, *args, &blok)
           else
             self
           end
@@ -358,14 +364,30 @@ class WWW_Applet
           super
         end
 
-      when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
-        # set style
-        @parent[:id] ||= next_id
-        @style[@parent_id] ||= {}
-        @style[@parent_id][css_name] = args.first
+      else # not creating_html?
 
-      else
-        super
+          case
+
+          when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
+            # set style
+            @style[curr_id] ||= {}
+            @style[curr_id][css_name] = args.first
+
+          when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
+            # === start of creating html:
+            case
+            when args.empty? && !blok
+              @creating_html = new_html(name)
+              self
+            else
+              e = new_html(name, *args, &blok)
+              @parent[:childs] << e
+            end
+
+          else
+            super
+
+          end
 
       end
     end # === def method_missing
