@@ -133,9 +133,18 @@ class WWW_Applet
       e
     end
 
+    def dom_id? e
+      e[:attrs] && e[:attrs][:id]
+    end
+
+    def first_class e
+      return nil unless e[:attrs]
+      return nil unless e[:attrs][:class]
+      e[:attrs][:class].split.first
+    end
+
     def dom_id e
-      id = e[:attrs] && e[:attrs][:id]
-      return id if id
+      return e[:attrs][:id] if dom_id?(e)
 
       e[:default_id] ||= begin
                            tag = e[:tag]
@@ -150,8 +159,31 @@ class WWW_Applet
     end
 
     def curr_css_id
-      return 'body' if parent[:tag] == :body
-      '#' << curr_id
+      return 'body' if parent?(:body)
+
+      i   = @parents.size
+      ids = []
+      while i > -1
+        e   = @parents[i]
+        id  = e[:attrs][:id] if dom_id?(e)
+        tag = e[:tag]
+
+        if id
+          ids << "##{id}"
+        else
+          _class = first_class e
+          if _class
+            (ids << "#{tag}.#{_class}")
+          else
+            ids << tag
+          end
+        end
+
+        break if id
+        i = i - 1
+      end
+
+      ids.join SPACE
     end
 
     def parent? tag
