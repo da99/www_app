@@ -313,7 +313,11 @@ class WWW_Applet
 
       when :html
         if h[:tag] == :style
-          return hash_to_text(type: :styles, value: h[:attrs])
+          return %^
+            <style type="text/css">
+              #{hash_to_text(type: :styles, value: h[:attrs])}
+            </style>
+          ^
         end
 
         html = h[:childs].map { |c|
@@ -418,6 +422,7 @@ class WWW_Applet
                 if !@style.empty?
                   @head[:childs] << new_html(:style, @style)
                 end
+
                 Document_Template.
                   sub('!BODY', hash_to_text(@body)).
                   sub('!HEAD', array_to_text(@head[:childs]))
@@ -428,9 +433,9 @@ class WWW_Applet
       utf_8 = Escape_Escape_Escape.clean_utf8(final)
 
       @html_page = if is_doc?
-                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
+                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config )
                    else
-                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
+                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config )
                    end
     end # === def to_html
 
