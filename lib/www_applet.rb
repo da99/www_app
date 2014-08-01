@@ -150,10 +150,7 @@ class WWW_Applet
     end
 
     def curr_css_id
-      if @parent[:tag] == :body
-        return '#body'
-      end
-
+      return 'body' if @parent[:tag] == :body
       '#' << curr_id
     end
 
