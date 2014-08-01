@@ -33,9 +33,9 @@ describe "HTML with inner style" do
 
   it "uses a default id when id is not specified" do
     target :style, %^
-        #div_0 {
-          width: 20px;
-        }
+      #div_0 {
+        width: 20px;
+      }
     ^
 
     actual do

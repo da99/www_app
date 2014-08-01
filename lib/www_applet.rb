@@ -111,7 +111,7 @@ class WWW_Applet
 
       @head      = new_html(:head)
       @body      = new_html(:body)
-      @parent    = @body
+      @parents   = [@body]
       @creating_html = nil
     end
 
@@ -146,23 +146,27 @@ class WWW_Applet
     end
 
     def curr_id
-      dom_id(@parent)
+      dom_id(parent)
     end
 
     def curr_css_id
-      return 'body' if @parent[:tag] == :body
+      return 'body' if parent[:tag] == :body
       '#' << curr_id
     end
 
     def parent? tag
-      @parent && @parent[:tag] == tag
+      parent[:tag] == tag
     end
 
-    def parent c
-      origin = @parent
-      @parent = c
+    def parent *args
+      if args.empty?
+        return @parents.last
+      end
+
+      c = args.first
+      @parents.push c
       result = yield
-      @parent = origin
+      @parents.pop
       result
     end
 
@@ -254,7 +258,7 @@ class WWW_Applet
       if parent?(:body)
         @head[:childs].push c
       else
-        @parent[:childs].push c
+        parent[:childs].push c
       end
       c
     end
@@ -368,7 +372,7 @@ class WWW_Applet
           end
 
           if !args.empty? || blok
-            @parent[:childs] << update_html(pop, *args, &blok)
+            parent[:childs] << update_html(pop, *args, &blok)
           else
             self
           end
@@ -392,7 +396,7 @@ class WWW_Applet
               @creating_html = new_html(name)
             else
               e = new_html(name, *args, &blok)
-              @parent[:childs] << e
+              parent[:childs] << e
             end
 
           else
