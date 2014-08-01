@@ -149,7 +149,7 @@ class WWW_Applet
       dom_id(@parent)
     end
 
-    def css_id
+    def curr_css_id
       if @parent[:tag] == :body
         return '#body'
       end
@@ -299,19 +299,23 @@ class WWW_Applet
         end
 
       when :styles
-        h.map { |k,styles|
+        h[:value].map { |k,styles|
           %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, '_')} {
-              #{to_styles styles}
+              #{hash_to_text :type=>:style, :value=>styles}
             }
           ^
         }.join.strip
 
       when :style
-        h.map { |k,v|
-          %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')} : #{v};^
+        h[:value].map { |k,v|
+          %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')}: #{v};^
         }.join("\n").strip
 
       when :html
+        if h[:tag] == :style
+          return hash_to_text(type: :styles, value: h[:attrs])
+        end
+
         html = h[:childs].map { |c|
           "#{hash_to_text c}"
         }.join NEW_LINE
@@ -340,15 +344,10 @@ class WWW_Applet
       end
     end
 
-    %w[ style html script ].each { |name|
-      eval %~
-        def in_#{name}?
-          creating_html? && @creating_html[:type] == :#{name}
-        end
-      ~
-    }
+    def in_html?
+      creating_html? && @creating_html[:type] == :html
+    end
 
-    #
     def method_missing name, *args, &blok
 
       str_name = name.to_s
@@ -382,8 +381,8 @@ class WWW_Applet
 
           when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
             # set style
-            @style[curr_id] ||= {}
-            @style[curr_id][css_name] = args.first
+            @style[curr_css_id] ||= {}
+            @style[curr_css_id][css_name] = args.first
 
           when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
             # === start of creating html:
@@ -407,30 +406,33 @@ class WWW_Applet
 
     public def to_html
 
-    return @html_page if @html_page
+      return @html_page if @html_page
 
-    run
+      run
 
-    final = if is_doc?
-              # Remember: to use !BODY first, because
-              # :head content might include a '!HEAD'
-              # value.
-              no_title unless @has_title
-              Document_Template.
-                sub('!BODY', hash_to_text(@body)).
-                sub('!HEAD', array_to_text(@head[:childs]))
-            else
-              array_to_text(@body[:childs])
-            end
+      final = if is_doc?
+                # Remember: to use !BODY first, because
+                # :head content might include a '!HEAD'
+                # value.
+                no_title unless @has_title
+                if !@style.empty?
+                  @head[:childs] << new_html(:style, @style)
+                end
+                Document_Template.
+                  sub('!BODY', hash_to_text(@body)).
+                  sub('!HEAD', array_to_text(@head[:childs]))
+              else
+                array_to_text(@body[:childs])
+              end
 
-    utf_8 = Escape_Escape_Escape.clean_utf8(final)
+      utf_8 = Escape_Escape_Escape.clean_utf8(final)
 
-    @html_page = if is_doc?
-                   Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
-                 else
-                   Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
-                 end
-  end # === def to_html
+      @html_page = if is_doc?
+                     Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config)
+                   else
+                     Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config)
+                   end
+    end # === def to_html
 
   end # === module Mod ==============================================
 
