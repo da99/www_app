@@ -97,7 +97,6 @@ class WWW_Applet
 
     def initialize data = nil
       @title       = nil
-      @curr_id     = -1
       @style       = {}
       @scripts     = []
       @body        = []
@@ -143,8 +142,23 @@ class WWW_Applet
       e[:attrs][:class].split.first
     end
 
-    def dom_id e
+    def dom_id *args
+      e = case
+          when args.empty?
+            parent
+          when args.size == 1
+            if args.first == :default
+              parent
+            else
+              args.first
+            end
+          else
+            fail "Unknown args: #{args.inspect}"
+          end
+
       return e[:attrs][:id] if dom_id?(e)
+
+      return nil unless args.first == :default
 
       e[:default_id] ||= begin
                            tag = e[:tag]
@@ -154,11 +168,26 @@ class WWW_Applet
                          end
     end
 
-    def curr_id
-      dom_id(parent)
+    def css_id *args
+      case
+      when args.size == 0
+        dom_id = dom_id()
+        if dom_id?(parent)
+          "#{dom_id(parent)}.#{name}"
+        else
+          css_id(parent, name)
+        end
+
+      when args.size == 1
+
+      when args.size == 2
+
+      else
+        fail "Unknown args: #{args.inspect}"
+      end
     end
 
-    def curr_css_id
+    def ___curr_css_id___
       return 'body' if parent?(:body)
 
       i   = @parents.size
@@ -275,10 +304,6 @@ class WWW_Applet
       e
     end
 
-    def title string
-      @title = string
-    end
-
     def no_title
       title { 'No title' }
     end
@@ -385,6 +410,11 @@ class WWW_Applet
       creating_html? && @creating_html[:type] == :html
     end
 
+    def on name
+      fail "Block required." unless block_given?
+      css_id = css_id(name)
+    end
+
     def method_missing name, *args, &blok
 
       str_name = name.to_s
@@ -418,8 +448,8 @@ class WWW_Applet
 
           when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
             # set style
-            @style[curr_css_id] ||= {}
-            @style[curr_css_id][css_name] = args.first
+            @style[css_id()] ||= {}
+            @style[css_id()][css_name] = args.first
 
           when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
             # === start of creating html:
