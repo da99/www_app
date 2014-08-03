@@ -126,14 +126,10 @@ class WWW_Applet
       !!@creating_html
     end
 
-    def pop
+    def finish_creating_html
       e = @creating_html
       @creating_html = nil
       e
-    end
-
-    def dom_id? e
-      e[:attrs] && e[:attrs][:id]
     end
 
     def first_class e
@@ -142,23 +138,47 @@ class WWW_Applet
       e[:attrs][:class].split.first
     end
 
+    def html_element? e
+      e.is_a?(Hash) && e[:type] == :html
+    end
+
+    def dom_id? e
+      e[:attrs] && e[:attrs][:id]
+    end
+
+    #
+    # Examples
+    #    dom_id             -> the current dom id of the current element
+    #    dom_id :default    -> if no dom it, set/get default of current element
+    #    dom_id e           -> dom id of e
+    #    dom_id e, :default -> if no dom it, set/get default
+    #
     def dom_id *args
-      e = case
-          when args.empty?
-            parent
-          when args.size == 1
-            if args.first == :default
-              parent
-            else
-              args.first
-            end
-          else
-            fail "Unknown args: #{args.inspect}"
-          end
+
+      case
+      when args.empty?
+        e = parent
+        use_default = false
+
+      when args.size == 1 && args.first == :default
+        e = parent
+        use_default = true
+
+      when args.size == 1 && html_element?(args.first)
+        e = args.first
+        use_default = false
+
+      when args.size == 2 && html_element?(args.first) && args.last == :default
+        e = args.first
+        use_default = !!args.last
+
+      else
+        fail "Unknown args: #{args.inspect}"
+      end
 
       return e[:attrs][:id] if dom_id?(e)
 
-      return nil unless args.first == :default
+      return nil unless use_default
 
       e[:default_id] ||= begin
                            tag = e[:tag]
@@ -166,8 +186,12 @@ class WWW_Applet
                            @default_ids[tag] += 1
                            "#{tag}_#{@default_ids[tag]}"
                          end
-    end
+    end # === def dom_id
 
+    #
+    # Examples
+    #    css_id             -> 
+    #
     def css_id *args
       case
       when args.size == 0
@@ -434,7 +458,7 @@ class WWW_Applet
           end
 
           if !args.empty? || blok
-            parent[:childs] << update_html(pop, *args, &blok)
+            parent[:childs] << update_html(finish_creating_html, *args, &blok)
           else
             self
           end
