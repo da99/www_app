@@ -10,7 +10,7 @@ describe "HTML :on" do
 
     actual do
       div.me! {
-        on.highlight {
+        on(:highlight) {
           border_color '#fff'
         }
       }

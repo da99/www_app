@@ -4,7 +4,7 @@ require 'sanitize'
 class WWW_Applet
 
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
-  INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\ ]/i
+  INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
   INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9\-\_]/i
 
   Document_Template  = File.read(__FILE__).split("__END__").last.strip
@@ -95,6 +95,7 @@ class WWW_Applet
     NEW_LINE = "\n"
     SPACE    = ' '
     STR_BODY = 'body'
+    UNDERSCORE = '_'
 
     def initialize data = nil
       @title       = nil
@@ -205,6 +206,10 @@ class WWW_Applet
     #
     #
     def css_id str_class = nil
+
+      if !str_class && parent[:css_id]
+        return parent[:css_id]
+      end
 
       start    = parents.size - 1
       i        = start
@@ -392,7 +397,7 @@ class WWW_Applet
 
       when :styles
         h[:value].map { |k,styles|
-          %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, '_')} {
+          %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
               #{hash_to_text :type=>:style, :value=>styles}
             }
           ^
@@ -444,9 +449,13 @@ class WWW_Applet
       creating_html? && @creating_html[:type] == :html
     end
 
-    def on name
-      fail "Block required." unless block_given?
-      css_id = css_id(name)
+    def on name, &blok
+      fail "Block required." unless blok
+      orig = parent[:css_id]
+      parent[:css_id] = css_id(name)
+      results = yield
+      parent[:css_id] = orig
+      results
     end
 
     def method_missing name, *args, &blok
