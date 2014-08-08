@@ -94,6 +94,7 @@ class WWW_Applet
     BANG     = '!'
     NEW_LINE = "\n"
     SPACE    = ' '
+    STR_BODY = 'body'
 
     def initialize data = nil
       @title       = nil
@@ -190,53 +191,62 @@ class WWW_Applet
 
     #
     # Examples
-    #    css_id             -> 
+    #    css_id             -> current css id of element.
+    #                          It uses the first class, if any, found.
+    #                          #id.class     -> if #id and first class found.
+    #                          #id           -> if class is missing and id given.
+    #                          #id tag.class -> if class given and ancestor has id.
+    #                          #id tag tag   -> if no class given and ancestor has id.
+    #                          tag tag tag   -> if no ancestor has class.
     #
-    def css_id *args
-      case
-      when args.size == 0
-        dom_id = dom_id()
-        if dom_id?(parent)
-          "#{dom_id(parent)}.#{name}"
-        else
-          css_id(parent, name)
-        end
+    #    css_id 'my_class'  -> same as 'css_id()' except
+    #                          'my_class' overrides :class attribute of current
+    #                          element.
+    #
+    #
+    def css_id str_class = nil
 
-      when args.size == 1
+      start    = parents.size - 1
+      i        = start
+      id_given = false
+      classes  = []
 
-      when args.size == 2
-
-      else
-        fail "Unknown args: #{args.inspect}"
-      end
-    end
-
-    def ___curr_css_id___
-      return 'body' if parent?(:body)
-
-      i   = @parents.size
-      ids = []
       while i > -1
-        e   = @parents[i]
-        id  = e[:attrs][:id] if dom_id?(e)
-        tag = e[:tag]
+        curr      = parents[i]
+        id        = dom_id(curr)
+        css_class = if start == i && str_class
+                      str_class
+                    else
+                      curr[:attrs] && curr[:attrs][:class] && curre[:attrs][:class].split.first
+                    end
 
-        if id
-          ids << "##{id}"
+        temp_id = case
+                  when id && css_class
+                    "##{id}.#{css_class}"
+                  when id
+                    "##{id}"
+                  when css_class
+                    "#{curr[:tag]}.#{css_class}"
+                  else
+                    curr[:tag]
+                  end
+
+        if temp_id == :body && !classes.empty?
+          # do nothing because
+          # we do not want 'body tag.class tag.class'
         else
-          _class = first_class e
-          if _class
-            (ids << "#{tag}.#{_class}")
-          else
-            ids << tag
-          end
+          classes.unshift temp_id
         end
 
-        break if id
+        break if id_given
         i = i - 1
       end
 
-      ids.join SPACE
+      classes.join SPACE
+    end
+
+    def parents
+      @parents
     end
 
     def parent? tag
