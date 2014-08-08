@@ -31,16 +31,20 @@ describe "HTML with inner style" do
     end
   end
 
-  it "uses a default id when id is not specified" do
+  it "uses tag hierarchy if no id found" do
     target :style, %^
-      #div_0 {
+      div div span {
         width: 20px;
       }
     ^
 
     actual do
       div {
-        width '20px'
+        div {
+          span {
+            width '20px'
+          }
+        }
       }
     end
   end
