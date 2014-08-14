@@ -192,6 +192,47 @@ class WWW_Applet
 
     #
     # Examples
+    #    selector_id   -> a series of ids and tags to be used as a JS selector
+    #                     Example:
+    #                        #id tag tag
+    #                        tag tag
+    #
+    #
+    def selector_id
+      start    = parents.size - 1
+      i        = start
+      id_given = false
+      classes  = []
+
+      while i > -1
+        curr      = parents[i]
+        id        = dom_id(curr)
+        tag       = curr[:tag]
+
+        temp_id = case
+                  when id
+                    "##{id}"
+                  else
+                    curr[:tag]
+                  end
+
+        if temp_id == :body && !classes.empty?
+          # do nothing because
+          # we do not want 'body tag.class tag.class'
+        else
+          classes.unshift temp_id
+        end
+
+        break if id_given
+        i = i - 1
+      end
+
+      return 'body' if classes.empty?
+      classes.join SPACE
+    end
+
+    #
+    # Examples
     #    css_id             -> current css id of element.
     #                          It uses the first class, if any, found.
     #                          #id.class     -> if #id and first class found.
@@ -451,10 +492,18 @@ class WWW_Applet
 
     def on name, &blok
       fail "Block required." unless blok
-      orig = parent[:css_id]
+
+      orig          = parent[:css_id]
+      orig_selector = parent[:selector_id]
+
       parent[:css_id] = css_id(name)
+      parent[:parent_selector] = selector_id()
+
       results = yield
-      parent[:css_id] = orig
+
+      parent[:css_id]          = orig
+      parent[:parent_selector] = orig_selector
+
       results
     end
 
