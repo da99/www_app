@@ -3,11 +3,13 @@ require 'sanitize'
 
 class WWW_Applet
 
+  Classes                     = []
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
   INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9\-\_]/i
 
   Document_Template  = File.read(__FILE__).split("__END__").last.strip
+
   Sanitize_Config    = {
 
     :allow_doctype   => true,
@@ -65,24 +67,37 @@ class WWW_Applet
       fail "Not implemented."
     end
 
-    def new_class file_name = nil, &blok
-      Class.new(BasicObject) {
-        include ::WWW_Applet::Mod
+    def new_class file_name = nil
+      name = "Rand_#{Classes.size}"
 
-        if file_name
-          eval(<<-EOF.strip, nil, file_name, 1-1)
-            def run
-              #{::File.read(file_name)}
-            end
-          EOF
-        else
+      code = %^
+        class #{name} << BasicObject
+          include ::WWW_Applet::Mod
+          def run
+            #{file_name ? ::File.read(file_name) : ''}
+          end
+        end
+      ^.strip
 
+      if file_name
+        eval code, nil, file_name, 1-3
+      else
+        eval code
+      end
+
+      o = self.class.const_get name
+
+      if block_given?
+        blok = Proc.new
+        o.class_eval {
           define_method :run do
             instance_eval &blok
           end
+        }
+      end
 
-        end
-      }
+      Classes << o
+      o
     end # === def new_class
 
   end # === class self ==============================================
@@ -90,104 +105,102 @@ class WWW_Applet
   module Mod # ======================================================
 
     private
+    include ::Kernel
 
-    BANG     = '!'
-    NEW_LINE = "\n"
-    SPACE    = ' '
-    STR_BODY = 'body'
+    BANG       = '!'
+    NEW_LINE   = "\n"
+    SPACE      = ' '
+    BODY       = 'body'
     UNDERSCORE = '_'
 
     def initialize data = nil
-      @title       = nil
-      @style       = {}
-      @scripts     = []
-      @body        = []
-      @data        = data || {}
-      @html_page   = nil
-      @cache       = {}
-      @has_meta    = false
-      @has_script  = false
-      @has_title   = false
-      @default_ids = {}
+      @title         = nil
+      @style         = {}
+      @scripts       = []
+      @body          = []
+      @data          = data || {}
+      @html_page     = nil
+      @cache         = {}
+      @page_title    = false
+      @default_ids   = {}
 
-      @head      = new_html(:head)
-      @body      = new_html(:body)
-      @parents   = [@body]
-      @creating_html = nil
+      @head          = tag(:head)
+      @body          = tag(:body)
+      @parents       = [@body]
+      @state         = []
+      @ids           = {}
+      @current_tag   = @body
     end
+
+    ::WWW_Applet::Sanitize_Config[:elements].each { |name|
+      eval %^
+        def #{name} *args
+          if block_given?
+            tag(:#{name}, *args) { yield }
+          else
+            tag(:#{name}, *args)
+          end
+        end
+      ^
+    }
+
+    ::WWW_Applet::Sanitize_Config[:css][:properties].each { |name|
+      eval %^
+        def #{name} *args
+          if block_given?
+            css_property(:#{name}, *args) { yield }
+          else
+            css_property(:#{name}, *args)
+          end
+        end
+      ^
+    }
 
     def is_doc?
-      @is_doc || !@style.empty? || @has_title
+      @page_title
     end
 
-    def fail *args
-      ::Object.new.send :fail, *args
-    end
-
-    def creating_html?
-      !!@creating_html
-    end
-
-    def finish_creating_html
-      e = @creating_html
-      @creating_html = nil
-      e
-    end
-
-    def first_class e
-      return nil unless e[:attrs]
-      return nil unless e[:attrs][:class]
-      e[:attrs][:class].split.first
+    def first_class
+      return nil unless tag[:attrs]
+      return nil unless tag[:attrs][:class]
+      tag[:attrs][:class].split.first
     end
 
     def html_element? e
       e.is_a?(Hash) && e[:type] == :html
     end
 
-    def dom_id? e
-      e[:attrs] && e[:attrs][:id]
+    def dom_id?
+      tag[:attrs] && tag[:attrs][:id]
     end
 
     #
     # Examples
     #    dom_id             -> the current dom id of the current element
     #    dom_id :default    -> if no dom it, set/get default of current element
-    #    dom_id e           -> dom id of e
-    #    dom_id e, :default -> if no dom it, set/get default
     #
     def dom_id *args
 
       case
       when args.empty?
-        e = parent
         use_default = false
 
       when args.size == 1 && args.first == :default
-        e = parent
         use_default = true
-
-      when args.size == 1 && html_element?(args.first)
-        e = args.first
-        use_default = false
-
-      when args.size == 2 && html_element?(args.first) && args.last == :default
-        e = args.first
-        use_default = !!args.last
 
       else
         fail "Unknown args: #{args.inspect}"
       end
 
-      return e[:attrs][:id] if dom_id?(e)
-
+      id = tag[:attrs][:id]
+      return id if id
       return nil unless use_default
 
-      e[:default_id] ||= begin
-                           tag = e[:tag]
-                           @default_ids[tag] ||= -1
-                           @default_ids[tag] += 1
-                           "#{tag}_#{@default_ids[tag]}"
-                         end
+      tag[:default_id] ||= begin
+                             key = tag[:tag]
+                             @default_ids[key] ||= -1
+                             @default_ids[key] += 1
+                           end
     end # === def dom_id
 
     #
@@ -299,86 +312,81 @@ class WWW_Applet
       parent[:tag] == tag
     end
 
-    def parent *args
-      if args.empty?
-        return @parents.last
-      end
+    def parent
+      @parents.last
+    end
 
-      c = args.first
-      @parents.push c
+    def target temp
+      orig = @current_tag
+      @current_tag = temp
       result = yield
-      @parents.pop
+      @current_tag = orig
       result
     end
 
-    def capture &blok
-      h = {:childs=>[]}
-      parent(h, &blok)
-      h[:childs]
-    end
-
-    def style h
-      @style = h
-    end
-
-    def scripts
-      @scripts
-    end
-
-    def new_html *args, &blok
+    def tag *args, &blok
       new_child :html, *args, &blok
     end
 
-    def new_style *args, &blok
-      new_html :style, *args, &blok
-    end
-
-    def new_child type, tag, attrs=nil, &blok
+    def tag name, attrs={}
       e = {
-        type:   type,
-        tag:    tag,
+        type:   :html,
+        tag:    name,
         attrs:  attrs,
         text:   nil,
         childs: []
       }
 
-      update_html e, attrs, &blok
+      target(e) do
+        if block_given
+          update_tag(attrs) { yield }
+        else
+          update_tag(attrs)
+        end
+      end
 
       e
     end
 
-    def add_id html, id
-      attrs = (html[:attrs] ||= {})
+    #
+    # Example:
+    #   div.*('my_id') { }
+    #
+    def * id
+      attrs = (tag[:attrs] ||= {})
       old_id = attrs && attrs[:id]
       fail("Id already set: #{old_id} new: #{id}") if old_id
       attrs[:id] = id
       html
     end
 
-    def add_classes html, *names
-      html[:attrs] ||= {}
-
-      old_class = html[:attrs][:class]
-      new_class = names.compact.join(SPACE)
-
-      return html if old_class == new_class
-      html[:attrs][:class] = [old_class, new_class].compact.join(SPACE)
-      html
+    def attrs key, name
+      fail("Id already taken: #{name.inspect}") if ids[name]
+      ids[name] = true
+      tag[:attrs][:id] = name
     end
 
-    def update_html e, attrs=nil, &blok
+    #
+    # Example:
+    #   div.^(:alert, :red_hot) { 'my content' }
+    #
+    def ^ *names
+      tag[:attrs][:class] ||= []
+      tag[:attrs][:class].concat(names).uniq!
+    end
+
+    def update_tag attrs={}
+      e = @current_tag
       if attrs
-        e[:attrs] ||= {}
-        add_id(e, attrs[:id]) if attrs[:id]
         e[:attrs].merge! attrs
       end
 
-      if blok
-        result = parent(e) {
-          blok.call
+      if block_given?
+        result = target(e) {
+          yield
         }
 
-        e[:text] = result if self != result && result.is_a?(String)
+        e[:text] = result if result.is_a?(String)
       end
 
       e
@@ -389,9 +397,9 @@ class WWW_Applet
     end
 
     def title &blok
-      @has_title = true
+      @page_title = true
 
-      c = new_html(:title, &blok)
+      c = tag(:title, &blok)
       if parent?(:body)
         @head[:childs].push c
       else
@@ -401,19 +409,15 @@ class WWW_Applet
     end
 
     def meta *args
-      @has_meta = true
-
       fail "Not allowed outside of :head" unless parent?(:body)
-      c = new_html(:meta, *args)
+      c = tag(:meta, *args)
       @head[:childs].push c
       c
     end
 
     def script *args, &blok
-      @has_script = true
-
       fail "Not allowed outside of :head" unless parent?(:body)
-      c = new_html(:script, *args, &blok)
+      c = tag(:script, *args, &blok)
       @head[:childs].push c
       c
     end
@@ -466,7 +470,7 @@ class WWW_Applet
           if html.empty?
             html = h[:text]
           else
-            html << hash_to_text(new_html(:div, :class=>'text') { h[:text] })
+            html << hash_to_text(tag(:div, :class=>'text') { h[:text] })
           end
         end
 
@@ -487,7 +491,11 @@ class WWW_Applet
     end
 
     def in_html?
-      creating_html? && @creating_html[:type] == :html
+      @state.last == :html
+    end
+
+    def creating_html?
+      @state.last == :create_html
     end
 
     def on name, &blok
@@ -515,23 +523,15 @@ class WWW_Applet
 
       when creating_html?
 
-        case
-        when in_html?
+        str_name = name.to_s
+        if str_name[BANG] # === id
+        else # === css class name
+        end
 
-          str_name = name.to_s
-          if str_name[BANG] # === id
-            add_id @creating_html, str_name.sub(BANG, '')
-          else # === css class name
-            add_classes @creating_html, name, (args.first && args.first.delete(:class))
-          end
-
-          if !args.empty? || blok
-            parent[:childs] << update_html(finish_creating_html, *args, &blok)
-          else
-            self
-          end
+        if !args.empty? || blok
+          parent[:childs] << update_html(finish_creating_html, *args, &blok)
         else
-          super
+          self
         end
 
       else # not creating_html?
@@ -547,9 +547,9 @@ class WWW_Applet
             # === start of creating html:
             case
             when args.empty? && !blok
-              @creating_html = new_html(name)
+              @creating_html = tag(name)
             else
-              e = new_html(name, *args, &blok)
+              e = tag(name, *args, &blok)
               parent[:childs] << e
             end
 
@@ -573,9 +573,9 @@ class WWW_Applet
                 # Remember: to use !BODY first, because
                 # :head content might include a '!HEAD'
                 # value.
-                no_title unless @has_title
+                no_title unless @page_title
                 if !@style.empty?
-                  @head[:childs] << new_html(:style, @style)
+                  @head[:childs] << tag(:style, @style)
                 end
 
                 Document_Template.
