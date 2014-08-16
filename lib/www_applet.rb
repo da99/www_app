@@ -129,7 +129,6 @@ class WWW_Applet
       @parents       = [@body]
       @state         = []
       @ids           = {}
-      @current_tag   = @body
     end
 
     ::WWW_Applet::Sanitize_Config[:elements].each { |name|
@@ -317,15 +316,20 @@ class WWW_Applet
     end
 
     def target temp
-      orig = @current_tag
-      @current_tag = temp
+      @parents.push temp
       result = yield
-      @current_tag = orig
+      @parents.pop
       result
     end
 
-    def tag *args, &blok
-      new_child :html, *args, &blok
+    def tag *args
+      return parent if args.empty? && !block_given?
+
+      if block_given?
+        new_child(:html, *args) { yield }
+      else
+        new_child(:html, *args)
+      end
     end
 
     def tag name, attrs={}
@@ -376,7 +380,7 @@ class WWW_Applet
     end
 
     def update_tag attrs={}
-      e = @current_tag
+      e = parent
       if attrs
         e[:attrs].merge! attrs
       end
