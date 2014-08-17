@@ -121,7 +121,7 @@ class WWW_Applet
       @data          = data || {}
       @html_page     = nil
       @cache         = {}
-      @page_title    = false
+      @is_doc        = false
       @default_ids   = {}
 
       @head          = tag(:head)
@@ -134,10 +134,12 @@ class WWW_Applet
     ::WWW_Applet::Sanitize_Config[:elements].each { |name|
       eval %^
         def #{name} *args
+          results = open_tag(:#{name}, *args)
+
           if block_given?
-            tag(:#{name}, *args) { yield }
+            close_tag { yield }
           else
-            tag(:#{name}, *args)
+            results
           end
         end
       ^
@@ -155,13 +157,27 @@ class WWW_Applet
       ^
     }
 
+    Allowed = {
+      :attr => {}
+    }
+
+    ::WWW_Applet::Sanitize_Config[:attributes].each { |tag, attrs|
+      next if tag == :all
+      attrs.each { |raw_attr|
+        attr_name = raw_attr.gsub('-', '_').to_sym
+        Allowed[:attr][attr_name] ||= {}
+        Allowed[:attr][attr_name][tag.to_sym] = true
+      }
+    }
+
+
     def is_doc?
-      @page_title
+      @is_doc
     end
 
     def first_class
-      return nil unless tag[:attrs]
-      return nil unless tag[:attrs][:class]
+      return nil unless tag![:attrs]
+      return nil unless tag![:attrs][:class]
       tag[:attrs][:class].first
     end
 
@@ -337,16 +353,31 @@ class WWW_Applet
         attrs:  {},
         text:   nil,
         childs: [],
-        args:   args
+        args:   args,
+        in_tree: false
       }
 
-      if block_given
-        target(e) do
-          yield
+      e
+    end
+
+    def open_tag *args
+      new_tag = tag(*args)
+      new_tag[:in_tree] = true
+      insert_into_tree new_tag
+      fail
+    end
+
+    def close_tag
+      if block_given?
+        results = yield
+        if results.is_a?(String)
+          tag![:content] = results
         end
       end
-
-      e
+      if tag![:in_tree]
+        pop_out_of_tree
+      end
+      fail
     end
 
     #
@@ -361,12 +392,14 @@ class WWW_Applet
       html
     end
 
-    ::WWW_Applet::Sanitize_Config[:attributes].reject { |k| k == :all }.values.uniq.each { |raw_meth|
+    Allowed[:attrs].each { |name, tags|
       eval %^
-        def #{raw_meth.gsub('-', '_')} val
-          attrs = ::WWW_Applet::Sanitize_Config[:attributes][tag![:tag].to_str]
-          return super unless attrs && attrs.include?(#{meth.inspect})
-          tag![:attrs][:#{meth}] = val
+        def #{name} val
+          allowed = Allowed[:attr][:name]
+          allowed = allowed && allowed[tag![:tag]]
+          return super unless allowed
+
+          tag![:attrs][:#{name}] = val
 
           if block_given?
             close_tag { yield }
@@ -392,14 +425,10 @@ class WWW_Applet
       end
     end
 
-    def no_title
-      page_title { 'No title' }
-    end
-
     def page_title
       return super unless tag?(:body)
 
-      @page_title = true
+      @is_doc = true
       @head[:childs].push tag(:title)
       close_tag { yield }
     end
