@@ -176,8 +176,6 @@ class WWW_Applet
     end
 
     def first_class
-      return nil unless tag![:attrs]
-      return nil unless tag![:attrs][:class]
       tag[:attrs][:class].first
     end
 
@@ -291,7 +289,7 @@ class WWW_Applet
         css_class = if start == i && str_class
                       str_class
                     else
-                      curr[:attrs] && curr[:attrs][:class] && curre[:attrs][:class].split.first
+                      curr[:attrs][:class].first
                     end
 
         temp_id = case
@@ -350,7 +348,7 @@ class WWW_Applet
       e = {
         type:   :html,
         tag:    sym_name,
-        attrs:  {},
+        attrs:  {:class=>[]},
         text:   nil,
         childs: [],
         args:   args,
@@ -380,18 +378,6 @@ class WWW_Applet
       fail
     end
 
-    #
-    # Example:
-    #   div.*('my_id') { }
-    #
-    def * id
-      attrs = (tag[:attrs] ||= {})
-      old_id = attrs && attrs[:id]
-      fail("Id already set: #{old_id} new: #{id}") if old_id
-      attrs[:id] = id
-      html
-    end
-
     Allowed[:attrs].each { |name, tags|
       eval %^
         def #{name} val
@@ -412,10 +398,25 @@ class WWW_Applet
 
     #
     # Example:
+    #   div.*('my_id') { }
+    #
+    def * id
+      old_id = tag![:attrs][:id]
+      fail("Id already set: #{old_id} new: #{id}") if old_id
+      tag![:attrs][:id] = id
+
+      if block_given?
+        close_tag { yield }
+      else
+        self
+      end
+    end
+
+    #
+    # Example:
     #   div.^(:alert, :red_hot) { 'my content' }
     #
     def ^ *names
-      tag[:attrs][:class] ||= []
       tag[:attrs][:class].concat(names).uniq!
 
       if block_given?
@@ -495,7 +496,7 @@ class WWW_Applet
           if html.empty?
             html = h[:text]
           else
-            html << hash_to_text(tag(:div, :class=>'text') { h[:text] })
+            html << hash_to_text(tag(:div, :class=>:text) { h[:text] })
           end
         end
 
