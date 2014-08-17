@@ -126,7 +126,7 @@ class WWW_Applet
 
       @head          = tag(:head)
       @body          = tag(:body)
-      @parents       = [@body]
+      @tree          = [@body]
       @state         = []
       @ids           = {}
     end
@@ -162,7 +162,7 @@ class WWW_Applet
     def first_class
       return nil unless tag[:attrs]
       return nil unless tag[:attrs][:class]
-      tag[:attrs][:class].split.first
+      tag[:attrs][:class].first
     end
 
     def html_element? e
@@ -211,13 +211,13 @@ class WWW_Applet
     #
     #
     def selector_id
-      start    = parents.size - 1
+      start    = @tree.size - 1
       i        = start
       id_given = false
       classes  = []
 
       while i > -1
-        curr      = parents[i]
+        curr      = @tree[i]
         id        = dom_id(curr)
         tag       = curr[:tag]
 
@@ -264,13 +264,13 @@ class WWW_Applet
         return parent[:css_id]
       end
 
-      start    = parents.size - 1
+      start    = @tree.size - 1
       i        = start
       id_given = false
       classes  = []
 
       while i > -1
-        curr      = parents[i]
+        curr      = @tree[i]
         id        = dom_id(curr)
         css_class = if start == i && str_class
                       str_class
@@ -304,48 +304,45 @@ class WWW_Applet
     end
 
     def parents
-      @parents
+      @tree.take(@tree.size - 1)
     end
 
     def parent? tag
-      parent[:tag] == tag
+      parent && parent[:tag] == tag
     end
 
     def parent
-      @parents.last
+      @tree[-2]
     end
 
     def target temp
-      @parents.push temp
+      @tree.push temp
       result = yield
-      @parents.pop
+      @tree.pop
       result
     end
 
-    def tag *args
-      return parent if args.empty? && !block_given?
-
-      if block_given?
-        new_child(:html, *args) { yield }
-      else
-        new_child(:html, *args)
-      end
+    def tag!
+      @tree.last
     end
 
-    def tag name, attrs={}
+    def tag? tag_sym
+      tag![:tag] == tag_sym
+    end
+
+    def tag sym_name, *args
       e = {
         type:   :html,
-        tag:    name,
-        attrs:  attrs,
+        tag:    sym_name,
+        attrs:  {},
         text:   nil,
-        childs: []
+        childs: [],
+        args:   args
       }
 
-      target(e) do
-        if block_given
-          update_tag(attrs) { yield }
-        else
-          update_tag(attrs)
+      if block_given
+        target(e) do
+          yield
         end
       end
 
@@ -364,11 +361,21 @@ class WWW_Applet
       html
     end
 
-    def attrs key, name
-      fail("Id already taken: #{name.inspect}") if ids[name]
-      ids[name] = true
-      tag[:attrs][:id] = name
-    end
+    ::WWW_Applet::Sanitize_Config[:attributes].reject { |k| k == :all }.values.uniq.each { |raw_meth|
+      eval %^
+        def #{raw_meth.gsub('-', '_')} val
+          attrs = ::WWW_Applet::Sanitize_Config[:attributes][tag![:tag].to_str]
+          return super unless attrs && attrs.include?(#{meth.inspect})
+          tag![:attrs][:#{meth}] = val
+
+          if block_given?
+            close_tag { yield }
+          else
+            self
+          end
+        end
+      ^
+    }
 
     #
     # Example:
@@ -377,43 +384,28 @@ class WWW_Applet
     def ^ *names
       tag[:attrs][:class] ||= []
       tag[:attrs][:class].concat(names).uniq!
-    end
-
-    def update_tag attrs={}
-      e = parent
-      if attrs
-        e[:attrs].merge! attrs
-      end
 
       if block_given?
-        result = target(e) {
-          yield
-        }
-
-        e[:text] = result if result.is_a?(String)
+        close_tag { yield }
+      else
+        self
       end
-
-      e
     end
 
     def no_title
-      title { 'No title' }
+      page_title { 'No title' }
     end
 
-    def title &blok
-      @page_title = true
+    def page_title
+      return super unless tag?(:body)
 
-      c = tag(:title, &blok)
-      if parent?(:body)
-        @head[:childs].push c
-      else
-        parent[:childs].push c
-      end
-      c
+      @page_title = true
+      @head[:childs].push tag(:title)
+      close_tag { yield }
     end
 
     def meta *args
-      fail "Not allowed outside of :head" unless parent?(:body)
+      fail "Not allowed outside of :head" unless tag?(:body)
       c = tag(:meta, *args)
       @head[:childs].push c
       c
