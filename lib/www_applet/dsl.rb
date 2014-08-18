@@ -1,21 +1,4 @@
 
-about :a do
-  a('String') {
-    attrs :href=>args.first
-  }
-end
-
-about :form do
-  form(:Symbol) {
-    attrs :method=>'post'
-    input(:hidden, :_method=>args.first)
-  }
-
-  form('String', :Symbol) {
-    attrs :id=>args.first, :class=>args.last
-  }
-end
-
 about(:input) {
   self_close
 

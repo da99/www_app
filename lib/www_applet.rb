@@ -67,8 +67,7 @@ class WWW_Applet
       fail "Not implemented."
     end
 
-    def new_class file_name = nil
-      fail("Not allowed: both file and block") if file_name && block_given?
+    def new_class *files
 
       name = "Rand_#{Classes.size}"
 
@@ -79,15 +78,29 @@ class WWW_Applet
       EOF
       o = self.class.const_get name
 
-      if file_name
+      meth_names = []
+      files.each_with_index { |file_name, i|
+
+        meth_name = "run_#{i}"
+        meth_names << meth_name
+
         eval <<-EOF.strip, nil, file_name, 1-3
           class #{name}
-            def run
+            def #{meth_name}
               #{file_name ? ::File.read(file_name) : ''}
             end
           end
         EOF
-      end
+
+      }
+
+      eval <<-EOF.strip
+        class #{name}
+          def run
+            #{meth_names.join "\n".freeze}
+          end
+        end
+      EOF
 
       if block_given?
         blok = Proc.new
@@ -173,6 +186,24 @@ class WWW_Applet
         Allowed[:attr][attr_name][tag.to_sym] = true
       }
     }
+
+    # -----------------------------------------------
+    def section
+      fail
+    end
+
+    def on_top_of
+      fail
+    end
+
+    def in_middle_of
+      fail
+    end
+
+    def at_bottom_of
+      fail
+    end
+    # -----------------------------------------------
 
     def is_doc?
       @is_doc
