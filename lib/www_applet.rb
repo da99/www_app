@@ -68,24 +68,26 @@ class WWW_Applet
     end
 
     def new_class file_name = nil
+      fail("Not allowed: both file and block") if file_name && block_given?
+
       name = "Rand_#{Classes.size}"
 
-      code = %^
+      eval <<-EOF.strip
         class #{name} << BasicObject
           include ::WWW_Applet::Mod
-          def run
-            #{file_name ? ::File.read(file_name) : ''}
-          end
         end
-      ^.strip
+      EOF
+      o = self.class.const_get name
 
       if file_name
-        eval code, nil, file_name, 1-3
-      else
-        eval code
+        eval <<-EOF.strip, nil, file_name, 1-3
+          class #{name}
+            def run
+              #{file_name ? ::File.read(file_name) : ''}
+            end
+          end
+        EOF
       end
-
-      o = self.class.const_get name
 
       if block_given?
         blok = Proc.new
@@ -119,16 +121,18 @@ class WWW_Applet
       @scripts       = []
       @body          = []
       @data          = data || {}
-      @html_page     = nil
+      @compiled      = nil
       @cache         = {}
       @is_doc        = false
       @default_ids   = {}
 
       @head          = tag(:head)
       @body          = tag(:body)
-      @tree          = [@body]
-      @state         = []
+      @state         = [:create]
       @ids           = {}
+
+      @tree          = [@head, @body]
+      @current_tag   = @body
     end
 
     ::WWW_Applet::Sanitize_Config[:elements].each { |name|
@@ -170,13 +174,12 @@ class WWW_Applet
       }
     }
 
-
     def is_doc?
       @is_doc
     end
 
     def first_class
-      tag[:attrs][:class].first
+      tag![:attrs][:class].first
     end
 
     def html_element? e
@@ -184,7 +187,7 @@ class WWW_Applet
     end
 
     def dom_id?
-      tag[:attrs] && tag[:attrs][:id]
+      tag![:attrs][:id]
     end
 
     #
@@ -205,12 +208,12 @@ class WWW_Applet
         fail "Unknown args: #{args.inspect}"
       end
 
-      id = tag[:attrs][:id]
+      id = tag![:attrs][:id]
       return id if id
       return nil unless use_default
 
-      tag[:default_id] ||= begin
-                             key = tag[:tag]
+      tag![:default_id] ||= begin
+                             key = tag![:tag]
                              @default_ids[key] ||= -1
                              @default_ids[key] += 1
                            end
@@ -233,7 +236,6 @@ class WWW_Applet
       while i > -1
         curr      = @tree[i]
         id        = dom_id(curr)
-        tag       = curr[:tag]
 
         temp_id = case
                   when id
@@ -321,8 +323,8 @@ class WWW_Applet
       @tree.take(@tree.size - 1)
     end
 
-    def parent? tag
-      parent && parent[:tag] == tag
+    def parent? sym_tag
+      parent && parent[:tag] == sym_tag
     end
 
     def parent
@@ -340,8 +342,8 @@ class WWW_Applet
       @tree.last
     end
 
-    def tag? tag_sym
-      tag![:tag] == tag_sym
+    def tag? sym_tag
+      tag![:tag] == sym_tag
     end
 
     def tag sym_name, *args
@@ -361,19 +363,27 @@ class WWW_Applet
     def open_tag *args
       new_tag = tag(*args)
       new_tag[:in_tree] = true
-      insert_into_tree new_tag
-      fail
+      new_tag[:parent_index]  = @tree.size - 1
+      @current_tag[:childs] << new_tag
+      @current_tag = new_tag
+
+      if block_given?
+        close_tag { yield }
+      else
+        self
+      end
     end
 
     def close_tag
       if block_given?
         results = yield
         if results.is_a?(String)
-          tag![:content] = results
+          tag![:text] = results
         end
       end
+
       if tag![:in_tree]
-        pop_out_of_tree
+        @current_tag = @tree[@current_tag[:parent_index]]
       end
       fail
     end
@@ -417,7 +427,7 @@ class WWW_Applet
     #   div.^(:alert, :red_hot) { 'my content' }
     #
     def ^ *names
-      tag[:attrs][:class].concat(names).uniq!
+      tag![:attrs][:class].concat(names).uniq!
 
       if block_given?
         close_tag { yield }
@@ -541,57 +551,12 @@ class WWW_Applet
       results
     end
 
-    def method_missing name, *args, &blok
-
-      str_name = name.to_s
-
-      case
-
-      when creating_html?
-
-        str_name = name.to_s
-        if str_name[BANG] # === id
-        else # === css class name
-        end
-
-        if !args.empty? || blok
-          parent[:childs] << update_html(finish_creating_html, *args, &blok)
-        else
-          self
-        end
-
-      else # not creating_html?
-
-          case
-
-          when args.size == 1 && !blok && ::Sanitize::Config::RELAXED[:css][:properties].include?(css_name = str_name.gsub('_', '-'))
-            # set style
-            @style[css_id()] ||= {}
-            @style[css_id()][css_name] = args.first
-
-          when ::Sanitize::Config::RELAXED[:elements].include?(str_name)
-            # === start of creating html:
-            case
-            when args.empty? && !blok
-              @creating_html = tag(name)
-            else
-              e = tag(name, *args, &blok)
-              parent[:childs] << e
-            end
-
-          else
-            super
-
-          end
-
-      end
-
-      self
-    end # === def method_missing
+    def run
+    end
 
     public def to_html
 
-      return @html_page if @html_page
+      return @compiled  if @compiled
 
       run
 
@@ -613,7 +578,7 @@ class WWW_Applet
 
       utf_8 = Escape_Escape_Escape.clean_utf8(final)
 
-      @html_page = if is_doc?
+      @compiled  = if is_doc?
                      Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config )
                    else
                      Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config )
