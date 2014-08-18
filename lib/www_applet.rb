@@ -74,6 +74,7 @@ class WWW_Applet
       eval <<-EOF.strip
         class #{name} << BasicObject
           include ::WWW_Applet::Mod
+          include ::WWW_Applet::Customized_Tags
         end
       EOF
       o = self.class.const_get name
@@ -149,6 +150,8 @@ class WWW_Applet
     end
 
     ::WWW_Applet::Sanitize_Config[:elements].each { |name|
+      next if name == 'html'.freeze
+      next if name == 'head'.freeze
       eval %^
         def #{name} *args
           results = open_tag(:#{name}, *args)
@@ -617,6 +620,20 @@ class WWW_Applet
     end # === def to_html
 
   end # === module Mod ==============================================
+
+  module Customized_Tags # ==========================================
+
+    def input *args
+      case
+      when args.size === 3
+        open_tag(:input).type(args[0]).name(args[1]).value(args[2])
+        close_tag
+      else
+        super
+      end
+    end
+
+  end # === module Customized_Tags ==================================
 
 end # === class WWW_Applet ==========================================
 
