@@ -1,4 +1,12 @@
 
+A
+=========================
+
+If :href is a Symbol
+  onclick, cancel default event
+  and run event named in
+  :href Symbol.
+
 Buttons
 =========================
 
@@ -37,3 +45,70 @@ This behaviour is special to inputs:
         value is set to last arg.
   else
     return super
+
+Attaching Events to Tags and Parents
+====================================
+
+```
+  div {
+    observe :submit
+    form.action('...') {
+      button.^(:submit)
+    }
+```
+
+If no parent observes action name:
+  then attach to nearest :form tag.
+  else attach to tag (in this case, :button)
+
+CSS + JS
+========
+
+```
+  div {
+
+    on(:click) {
+
+      border '1px solid #fff'
+
+      when_eq :my_var, 'some js' do
+        emit :my_box_was_clicked
+      end
+
+      if_not_then do
+        emit :dont_know_what
+      end
+
+    }
+
+  }
+```
+
+JS Templates
+============
+
+```ruby
+  div.*(:mine) {
+
+    observe :delete, :record
+
+    span.^(:empty) { 'No records.' }
+
+    div.^(:list).template(:record, records) { |o|
+
+      div.^(:record) do
+
+        border_width '1px'
+
+        on(:delete) {
+          background 'some image'
+          server :delete
+        }
+
+        span.^(:title) { o[:title] }
+        a.href(:delete) { 'Delete' }
+      end
+    }
+
+  }
+```

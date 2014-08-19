@@ -82,7 +82,7 @@ class WWW_Applet
       meth_names = []
       files.each_with_index { |file_name, i|
 
-        meth_name = "run_#{i}"
+        meth_name = "generate_scroll_#{i}"
         meth_names << meth_name
 
         eval <<-EOF.strip, nil, file_name, 1-3
@@ -97,7 +97,7 @@ class WWW_Applet
 
       eval <<-EOF.strip
         class #{name}
-          def run
+          def generate_the_scroll
             #{meth_names.join "\n".freeze}
           end
         end
