@@ -50,58 +50,48 @@ class WWW_Applet
 
       # From: Sanitize::Config::RELAXED[:css][:properties]
       :properties     => %w[
-        align_content              border_top_style           font_variant_alternates    padding_top
-        align_items                border_top_width           font_variant_caps          page_break_after
-        align_self                 border_width               font_variant_east_asian    page_break_before
-        animation                  bottom                     font_variant_ligatures     page_break_inside
-        animation_delay            box_decoration_break       font_variant_numeric       perspective
-        animation_direction        box_shadow                 font_variant_position      perspective_origin
-        animation_duration         box_sizing                 font_weight                position
-        animation_fill_mode        break_after                height                     quotes
-        animation_iteration_count  break_before               hyphens                    resize
-        animation_name             break_inside               icon                       right
-        animation_play_state       caption_side               image_orientation          tab_size
-        animation_timing_function  clear                      image_rendering            table_layout
-        backface_visibility        clip                       image_resolution           text_align
-        background                 clip_path                  ime_mode                   text_align_last
-        background_attachment      color                      justify_content            text_combine_horizontal
-        background_clip            column_count               left                       text_decoration
-        background_color           column_fill                letter_spacing             text_decoration_color
-        background_image           column_gap                 line_height                text_decoration_line
-        background_origin          column_rule                list_style                 text_decoration_style
-        background_position        column_rule_color          list_style_image           text_indent
-        background_repeat          column_rule_style          list_style_position        text_orientation
-        background_size            column_rule_width          list_style_type            text_overflow
-        border                     column_span                margin                     text_rendering
-        border_bottom              column_width               margin_bottom              text_shadow
-        border_bottom_color        columns                    margin_left                text_transform
-        border_bottom_left_radius  content                    margin_right               text_underline_position
-        border_bottom_right_radius counter_increment          margin_top                 top
-        border_bottom_style        counter_reset              marks                      touch_action
-        border_bottom_width        cursor                     mask                       transform
-        border_collapse            direction                  mask_type                  transform_origin
-        border_color               display                    max_height                 transform_style
-        border_image               empty_cells                max_width                  transition
-        border_image_outset        filter                     min_height                 transition_delay
-        border_image_repeat        flex                       min_width                  transition_duration
-        border_image_slice         flex_basis                 object_fit                 transition_property
-        border_image_source        flex_direction             object_position            transition_timing_function
-        border_image_width         flex_flow                  opacity                    unicode_bidi
-        border_left                flex_grow                  order                      unicode_range
-        border_left_color          flex_shrink                orphans                    vertical_align
-        border_left_style          flex_wrap                  outline                    visibility
-        border_left_width          float                      outline_color              white_space
-        border_radius              font                       outline_offset             widows
-        border_right               font_family                outline_style              width
-        border_right_color         font_feature_settings      outline_width              word_break
-        border_right_style         font_kerning               overflow                   word_spacing
-        border_right_width         font_language_override     overflow_wrap              word_wrap
-        border_spacing             font_size                  overflow_x                 writing_mode
-        border_style               font_size_adjust           overflow_y                 z_index
-        border_top                 font_stretch               padding
-        border_top_color           font_style                 padding_bottom
-        border_top_left_radius     font_synthesis             padding_left
-        border_top_right_radius    font_variant               padding_right
+        background                 bottom                     font_variant_numeric       position
+        background_attachment      box_decoration_break       font_variant_position      quotes
+        background_clip            box_shadow                 font_weight                resize
+        background_color           box_sizing                 height                     right
+        background_image           clear                      hyphens                    tab_size
+        background_origin          clip                       icon                       table_layout
+        background_position        clip_path                  image_orientation          text_align
+        background_repeat          color                      image_rendering            text_align_last
+        background_size            column_count               image_resolution           text_combine_horizontal
+        border                     column_fill                ime_mode                   text_decoration
+        border_bottom              column_gap                 justify_content            text_decoration_color
+        border_bottom_color        column_rule                left                       text_decoration_line
+        border_bottom_left_radius  column_rule_color          letter_spacing             text_decoration_style
+        border_bottom_right_radius column_rule_style          line_height                text_indent
+        border_bottom_style        column_rule_width          list_style                 text_orientation
+        border_bottom_width        column_span                list_style_image           text_overflow
+        border_collapse            column_width               list_style_position        text_rendering
+        border_color               columns                    list_style_type            text_shadow
+        border_image               content                    margin                     text_transform
+        border_image_outset        counter_increment          margin_bottom              text_underline_position
+        border_image_repeat        counter_reset              margin_left                top
+        border_image_slice         cursor                     margin_right               touch_action
+        border_image_source        direction                  margin_top                 transform
+        border_image_width         display                    marks                      transform_origin
+        border_left                empty_cells                mask                       transform_style
+        border_left_color          filter                     mask_type                  transition
+        border_left_style          float                      max_height                 transition_delay
+        border_left_width          font                       max_width                  transition_duration
+        border_radius              font_family                min_height                 transition_property
+        border_right               font_feature_settings      min_width                  transition_timing_function
+        border_right_color         font_kerning               opacity                    unicode_bidi
+        border_right_style         font_language_override     order                      unicode_range
+        border_right_width         font_size                  orphans                    vertical_align
+        border_spacing             font_size_adjust           overflow                   visibility
+        border_style               font_stretch               overflow_wrap              white_space
+        border_top                 font_style                 overflow_x                 widows
+        border_top_color           font_synthesis             overflow_y                 width
+        border_top_left_radius     font_variant               padding                    word_break
+        border_top_right_radius    font_variant_alternates    padding_bottom             word_spacing
+        border_top_style           font_variant_caps          padding_left               word_wrap
+        border_top_width           font_variant_east_asian    padding_right              z_index
+        border_width               font_variant_ligatures     padding_top
       ].map(&:to_sym)
     }
 

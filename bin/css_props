@@ -11,7 +11,7 @@ class Row
 
     def init
       @limit_x       = 4
-      @limit_y       = 52
+      @limit_y       = 42
       @rows          = []
       @max_word_size = 0
       @curr_row      = nil
@@ -40,7 +40,6 @@ class Row
           end
         }.join(' '.freeze)
       }.map(&:strip).join("\n".freeze)
-        
     end
 
     private # ================================================
@@ -94,7 +93,10 @@ Sanitize::Config::RELAXED[:css][:properties].
   map { |s| s.gsub('-', '_') }.
   # sort { |a, b| a.size <=> b.size }.
   sort.
-  reject { |s| s[/_(moz|webkit|ms)/] }.
+  reject { |s|
+    s[/_(moz|webkit|ms)/] ||
+      s[/^(align|animation|backface|page|break|caption|flex|writing|outline|persp|object)/]
+  }.
   map { |s|  Row << s }
 
 puts Row.print
