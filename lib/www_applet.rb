@@ -146,6 +146,67 @@ class WWW_Applet < BasicObject
     @mustache.render *args
   end
 
+  Allowed = {
+    :attr => {}
+  }
+
+  Methods[:attributes].each { |tag, attrs|
+    next if tag == :all
+    attrs.each { |raw_attr|
+      attr_name = raw_attr.to_s.gsub('-', '_').to_sym
+      Allowed[:attr][attr_name] ||= {}
+      Allowed[:attr][attr_name][tag.to_sym] = true
+    }
+  }
+
+  Allowed[:attr].each { |name, tags|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name} val
+        allowed = Allowed[:attr][:#{name}]
+        allowed = allowed && allowed[tag![:tag]]
+        return super unless allowed
+
+        tag![:attrs][:#{name}] = val
+
+        if block_given?
+          close_tag { yield }
+        else
+          self
+        end
+      end
+    EOF
+  }
+
+  #
+  # Example:
+  #   div.*('my_id') { }
+  #
+  def * id
+    old_id = tag![:attrs][:id]
+    fail("Id already set: #{old_id} new: #{id}") if old_id
+    tag![:attrs][:id] = id
+
+    if block_given?
+      close_tag { yield }
+    else
+      self
+    end
+  end
+
+  #
+  # Example:
+  #   div.^(:alert, :red_hot) { 'my content' }
+  #
+  def ^ *names
+    tag![:attrs][:class].concat(names).uniq!
+
+    if block_given?
+      close_tag { yield }
+    else
+      self
+    end
+  end
+
   private # =========================================================
 
   Methods[:elements].each { |name|
@@ -175,19 +236,6 @@ class WWW_Applet < BasicObject
         end
       end
     ^
-  }
-
-  Allowed = {
-    :attr => {}
-  }
-
-  Methods[:attributes].each { |tag, attrs|
-    next if tag == :all
-    attrs.each { |raw_attr|
-      attr_name = raw_attr.to_s.gsub('-', '_').to_sym
-      Allowed[:attr][attr_name] ||= {}
-      Allowed[:attr][attr_name][tag.to_sym] = true
-    }
   }
 
   # -----------------------------------------------
@@ -422,54 +470,6 @@ class WWW_Applet < BasicObject
     fail
   end
 
-  Allowed[:attr].each { |name, tags|
-    eval %^
-      def #{name} val
-        allowed = Allowed[:attr][:name]
-        allowed = allowed && allowed[tag![:tag]]
-        return super unless allowed
-
-        tag![:attrs][:#{name}] = val
-
-        if block_given?
-          close_tag { yield }
-        else
-          self
-        end
-      end
-    ^
-  }
-
-  #
-  # Example:
-  #   div.*('my_id') { }
-  #
-  def * id
-    old_id = tag![:attrs][:id]
-    fail("Id already set: #{old_id} new: #{id}") if old_id
-    tag![:attrs][:id] = id
-
-    if block_given?
-      close_tag { yield }
-    else
-      self
-    end
-  end
-
-  #
-  # Example:
-  #   div.^(:alert, :red_hot) { 'my content' }
-  #
-  def ^ *names
-    tag![:attrs][:class].concat(names).uniq!
-
-    if block_given?
-      close_tag { yield }
-    else
-      self
-    end
-  end
-
   def page_title
     return super unless tag?(:body)
 
@@ -585,10 +585,7 @@ class WWW_Applet < BasicObject
     results
   end
 
-  def run
-  end
-
-  public def to_html
+  def to_html
 
     return @compiled  if @compiled
 
