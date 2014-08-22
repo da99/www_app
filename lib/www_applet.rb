@@ -115,7 +115,6 @@ class WWW_Applet < BasicObject
     @style         = {}
     @scripts       = []
     @body          = []
-    @data          = data || {}
     @compiled      = nil
     @cache         = {}
     @is_doc        = false
@@ -135,10 +134,10 @@ class WWW_Applet < BasicObject
     }
 
     if block_given?
-      instance_eval(&(Proc.new))
+      instance_eval(&(::Proc.new))
     end
 
-    @mustache = Mustache.new
+    @mustache = ::Mustache.new
     @mustache.template = to_html
 
   end # === def new_class
@@ -185,7 +184,7 @@ class WWW_Applet < BasicObject
   Methods[:attributes].each { |tag, attrs|
     next if tag == :all
     attrs.each { |raw_attr|
-      attr_name = raw_attr.gsub('-', '_').to_sym
+      attr_name = raw_attr.to_s.gsub('-', '_').to_sym
       Allowed[:attr][attr_name] ||= {}
       Allowed[:attr][attr_name][tag.to_sym] = true
     }
@@ -423,7 +422,7 @@ class WWW_Applet < BasicObject
     fail
   end
 
-  Allowed[:attrs].each { |name, tags|
+  Allowed[:attr].each { |name, tags|
     eval %^
       def #{name} val
         allowed = Allowed[:attr][:name]
