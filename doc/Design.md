@@ -90,7 +90,7 @@ JS Templates
 ```ruby
   div.*(:mine) {
 
-    observe :delete, :record
+    observe :record
 
     span.^(:empty) { 'No records.' }
 
@@ -112,3 +112,12 @@ JS Templates
 
   }
 ```
+1) Parent and selectors.
+2) Passing the message to target + observers.
+3) Default message receivers:
+   Current tag, -> Parents -> Form
+
+
+
+
+
