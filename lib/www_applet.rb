@@ -144,7 +144,7 @@ class WWW_Applet < BasicObject
     end
 
     @mustache = ::Mustache.new
-    @mustache.template = to_html
+    @mustache.template = to_mustache
 
   end # === def new_class
 
@@ -613,7 +613,7 @@ class WWW_Applet < BasicObject
     results
   end
 
-  def to_html
+  def to_mustache
 
     return @compiled  if @compiled
 
@@ -636,7 +636,7 @@ class WWW_Applet < BasicObject
     utf_8 = ::Escape_Escape_Escape.clean_utf8(final)
 
     @compiled  = utf_8
-  end # === def to_html
+  end # === def to_mustache
 
 
   def input *args
