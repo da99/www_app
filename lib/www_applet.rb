@@ -1,5 +1,6 @@
 
 require 'mustache'
+require 'escape_escape_escape'
 
 class WWW_Applet < BasicObject
 
@@ -21,7 +22,6 @@ class WWW_Applet < BasicObject
   Methods    = {
     :elements => %w[
 
-      html  head  title  meta  style  link 
       body  div
 
       b      em     i  strong  u  a 
@@ -120,14 +120,20 @@ class WWW_Applet < BasicObject
     @is_doc        = false
     @default_ids   = {}
 
-    @head          = tag(:head)
-    @body          = tag(:body)
     @state         = [:create]
     @ids           = {}
 
-    @tree          = [@head, @body]
-    @current_tag   = @body
-    @mustache      = nil
+    @tag_arr          = []
+    @current_tag_index = @tag_arr.size - 1
+    @mustache          = nil
+
+    open_tag(:head)
+    @head = tag!
+    close_tag
+
+    open_tag(:body)
+    @body = tag!
+    close_tag
 
     files.each { |file_name|
       eval ::File.read(file_name), nil, file_name
@@ -209,9 +215,22 @@ class WWW_Applet < BasicObject
 
   private # =========================================================
 
+  #
+  # NOTE: Properties are defined first,
+  # so tag methods over-write them,
+  # just in case there are duplicates.
+  Methods[:css][:properties].each { |name|
+    str_name = name.to_s.gsub('_', '-')
+    eval %^
+      def #{name} *args
+        css_property('#{str_name}'.freeze, *args) { 
+          yield if block_given?
+        }
+      end
+    ^
+  }
+
   Methods[:elements].each { |name|
-    next if name == 'html'.freeze
-    next if name == 'head'.freeze
     eval %^
       def #{name} *args
         results = open_tag(:#{name}, *args)
@@ -220,19 +239,6 @@ class WWW_Applet < BasicObject
           close_tag { yield }
         else
           results
-        end
-      end
-    ^
-  }
-
-  Methods[:css][:properties].each { |name|
-    str_name = name.to_s.gsub('_', '-')
-    eval %^
-      def #{name} *args
-        if block_given?
-          css_property('#{str_name}'.freeze, *args) { yield }
-        else
-          css_property('#{str_name}'.freeze, *args)
         end
       end
     ^
@@ -310,13 +316,13 @@ class WWW_Applet < BasicObject
   #
   #
   def selector_id
-    start    = @tree.size - 1
+    start    = @tag_arr.size - 1
     i        = start
     id_given = false
     classes  = []
 
     while i > -1
-      curr      = @tree[i]
+      curr      = @tag_arr[i]
       id        = dom_id(curr)
 
       temp_id = case
@@ -362,13 +368,13 @@ class WWW_Applet < BasicObject
       return parent[:css_id]
     end
 
-    start    = @tree.size - 1
+    start    = @tag_arr.size - 1
     i        = start
     id_given = false
     classes  = []
 
     while i > -1
-      curr      = @tree[i]
+      curr      = @tag_arr[i]
       id        = dom_id(curr)
       css_class = if start == i && str_class
                     str_class
@@ -402,7 +408,7 @@ class WWW_Applet < BasicObject
   end
 
   def parents
-    @tree.take(@tree.size - 1)
+    fail "not done"
   end
 
   def parent? sym_tag
@@ -410,18 +416,11 @@ class WWW_Applet < BasicObject
   end
 
   def parent
-    @tree[-2]
-  end
-
-  def target temp
-    @tree.push temp
-    result = yield
-    @tree.pop
-    result
+    @tag_arr[tag![:parent_index]]
   end
 
   def tag!
-    @tree.last
+    @tag_arr[@current_tag_index]
   end
 
   def tag? sym_tag
@@ -436,46 +435,74 @@ class WWW_Applet < BasicObject
       text:   nil,
       childs: [],
       args:   args,
-      in_tree: false
+      parent_index: nil,
+      is_closed: false,
+      tag_index: @tag_arr.size
     }
 
+    @tag_arr << e
     e
+  end
+
+  def slash_tag t
+    if block_given?
+      results = yield
+      if results.is_a?(::String)
+        t[:text] = results
+      end
+    end
+
+    t[:is_closed] = true
+    t
+  end
+
+  def in_tag t
+    orig = @current_tag_index
+    @current_tag_index = t[:tag_index]
+    yield
+    @current_tag_index = orig
+    self
   end
 
   def open_tag *args
     new_tag = tag(*args)
-    new_tag[:in_tree] = true
-    new_tag[:parent_index]  = @tree.size - 1
-    @current_tag[:childs] << new_tag
-    @current_tag = new_tag
 
-    if block_given?
-      close_tag { yield }
+    if @tag_arr.empty?
+      # do nothing else.
     else
-      self
+      new_tag[:parent_index] = @tag_arr.size - 1
+      tag![:childs] << new_tag
     end
+
+    @current_tag_index = @tag_arr.size - 1
+    self
   end
 
   def close_tag
+
     if block_given?
-      results = yield
-      if results.is_a?(String)
-        tag![:text] = results
-      end
+      slash_tag(tag!) { yield }
+    else
+      slash_tag tag!
     end
 
-    if tag![:in_tree]
-      @current_tag = @tree[@current_tag[:parent_index]]
+    if tag![:parent_index]
+      @current_tag_index = tag![:parent_index]
     end
-    fail
+
+    self
   end
 
   def page_title
     return super unless tag?(:body)
 
     @is_doc = true
-    @head[:childs].push tag(:title)
-    close_tag { yield }
+    in_tag(@head) {
+      open_tag(:title)
+      close_tag { yield }
+    }
+
+    self
   end
 
   def meta *args
@@ -500,8 +527,9 @@ class WWW_Applet < BasicObject
     case h[:type]
     when :attrs
       final = h[:value].map { |k,raw_v|
-        v = raw_v.is_a?(Array) ? raw_v.join(SPACE) : raw_v
-        %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{Escape_Escape_Escape.inner_html(v)}"^
+        next if raw_v.is_a?(::Array) && raw_v.empty?
+        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+        %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
       }.join SPACE
 
       if final.empty?
@@ -589,8 +617,6 @@ class WWW_Applet < BasicObject
 
     return @compiled  if @compiled
 
-    run
-
     final = if is_doc?
               # Remember: to use !BODY first, because
               # :head content might include a '!HEAD'
@@ -607,13 +633,9 @@ class WWW_Applet < BasicObject
               array_to_text(@body[:childs])
             end
 
-    utf_8 = Escape_Escape_Escape.clean_utf8(final)
+    utf_8 = ::Escape_Escape_Escape.clean_utf8(final)
 
-    @compiled  = if is_doc?
-                   Sanitize.document( utf_8 , WWW_Applet::Sanitize_Config )
-                 else
-                   Sanitize.fragment( utf_8 , WWW_Applet::Sanitize_Config )
-                 end
+    @compiled  = utf_8
   end # === def to_html
 
 
