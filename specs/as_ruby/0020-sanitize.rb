@@ -17,6 +17,10 @@ describe "Sanitize" do
     end
   end
 
+  it "strips out W3C unallowed Unicode chars"
+
+  it "removes javacript: protocol"
+
 end # === describe HTML ===
 
 
