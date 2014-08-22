@@ -8,12 +8,7 @@ class WWW_Applet
 
   Document_Template  = File.read(__FILE__).split("__END__").last.strip
 
-  Sanitize_Config    = {
-
-    :allow_doctype   => true,
-    :allow_comments  => false,
-    :remove_contents => true,
-
+  Methods    = {
     :elements => %w[
 
       html  head  title  meta  style  link 
@@ -26,72 +21,88 @@ class WWW_Applet
       sup    sub 
       form   input  button
 
-    ],
+    ].map(&:to_sym),
 
     :attributes => {
-      :all         => ['id', 'class'],
-      'a'          => ['href'],
-      'blockquote' => ['cite'],
-      'form'       => ['action', 'method', 'accept-charset'],
-      'input'      => ['type', 'name', 'value'],
-      'style'      => ['type'],
-      'script'     => ['type', 'src', 'language'],
-      'link'       => ['rel', 'type', 'sizes', 'href', 'title'],
-      'meta'       => ['name', 'http-equiv', 'property', 'content', 'charset'],
-      'html'       => ['lang']
+      :all         => [:id, :class],
+      :a           => [:href],
+      :blockquote  => [:cite],
+      :form        => [:action, :method, :accept_charset],
+      :input       => [:type, :name, :value],
+      :style       => [:type],
+      :script      => [:type, :src, :language],
+      :link        => [:rel, :type, :sizes, :href, :title],
+      :meta        => [:name, :http_equiv, :property, :content, :charset],
+      :html        => [:lang]
     },
 
     :protocols=> {
-      'a'          => {'href'=>['ftp', 'http', 'https', :relative]},
-      'blockquote' => {'cite'=>[:relative]},
-      'form'       => {'action'=>[:relative]},
-      'script'     => {'src'=>[:relative]},
-      'link'       => {'href'=>[:relative]}
+      :a          => {:href=>['ftp', 'http', 'https', :relative]},
+      :blockquote => {:cite=>['http', 'https', :relative]},
+      :form       => {:action=>[:relative]},
+      :script     => {:src=>[:relative]},
+      :link       => {:href=>[:relative]}
     },
 
     :css => {
-      :allow_comments => false,
-      :allow_hacks    => false,
       :at_rules       => [ 'font-face', 'media' ],
       :protocols      => [ :relative ],
-      :properties     => [
-        # From: Sanitize::Config::RELAXED[:css][:properties]
-        :align_content, :align_items, :align_self, :animation, :animation_delay, 
-        :animation_direction, :animation_duration, :animation_fill_mode, :animation_iteration_count, :animation_name, :animation_play_state, 
-        :animation_timing_function, :backface_visibility, :background, :background_attachment, :background_clip, :background_color, 
-        :background_image, :background_origin, :background_position, :background_repeat, :background_size, :border, 
-        :border_bottom, :border_bottom_color, :border_bottom_left_radius, :border_bottom_right_radius, :border_bottom_style, :border_bottom_width, 
-        :border_collapse, :border_color, :border_image, :border_image_outset, :border_image_repeat, :border_image_slice, 
-        :border_image_source, :border_image_width, :border_left, :border_left_color, :border_left_style, :border_left_width, 
-        :border_radius, :border_right, :border_right_color, :border_right_style, :border_right_width, :border_spacing, 
-        :border_style, :border_top, :border_top_color, :border_top_left_radius, :border_top_right_radius, :border_top_style, 
-        :border_top_width, :border_width, :bottom, :box_decoration_break, :box_shadow, :box_sizing, 
-        :break_after, :break_before, :break_inside, :caption_side, :clear, :clip, 
-        :clip_path, :color, :column_count, :column_fill, :column_gap, :column_rule, 
-        :column_rule_color, :column_rule_style, :column_rule_width, :column_span, :column_width, :columns, 
-        :content, :counter_increment, :counter_reset, :cursor, :direction, :display, 
-        :empty_cells, :filter, :flex, :flex_basis, :flex_direction, :flex_flow, 
-        :flex_grow, :flex_shrink, :flex_wrap, :float, :font, :font_family, 
-        :font_feature_settings, :font_kerning, :font_language_override, :font_size, :font_size_adjust, :font_stretch, 
-        :font_style, :font_synthesis, :font_variant, :font_variant_alternates, :font_variant_caps, :font_variant_east_asian, 
-        :font_variant_ligatures, :font_variant_numeric, :font_variant_position, :font_weight, :height, :hyphens, 
-        :icon, :image_orientation, :image_rendering, :image_resolution, :ime_mode, :justify_content, 
-        :left, :letter_spacing, :line_height, :list_style, :list_style_image, :list_style_position, 
-        :list_style_type, :margin, :margin_bottom, :margin_left, :margin_right, :margin_top, 
-        :marks, :mask, :mask_type, :max_height, :max_width, :min_height, 
-        :min_width, :object_fit, :object_position, :opacity, :order, :orphans, 
-        :outline, :outline_color, :outline_offset, :outline_style, :outline_width, :overflow, 
-        :overflow_wrap, :overflow_x, :overflow_y, :padding, :padding_bottom, :padding_left, 
-        :padding_right, :padding_top, :page_break_after, :page_break_before, :page_break_inside, :perspective, 
-        :perspective_origin, :position, :quotes, :resize, :right, :tab_size, 
-        :table_layout, :text_align, :text_align_last, :text_combine_horizontal, :text_decoration, :text_decoration_color, 
-        :text_decoration_line, :text_decoration_style, :text_indent, :text_orientation, :text_overflow, :text_rendering, 
-        :text_shadow, :text_transform, :text_underline_position, :top, :touch_action, :transform, 
-        :transform_origin, :transform_style, :transition, :transition_delay, :transition_duration, :transition_property, 
-        :transition_timing_function, :unicode_bidi, :unicode_range, :vertical_align, :visibility, :white_space, 
-        :widows, :width, :word_break, :word_spacing, :word_wrap, :writing_mode, 
-        :z_index
-      ]
+
+      # From: Sanitize::Config::RELAXED[:css][:properties]
+      :properties     => %w[
+        align_content              border_top_style           font_variant_alternates    padding_top
+        align_items                border_top_width           font_variant_caps          page_break_after
+        align_self                 border_width               font_variant_east_asian    page_break_before
+        animation                  bottom                     font_variant_ligatures     page_break_inside
+        animation_delay            box_decoration_break       font_variant_numeric       perspective
+        animation_direction        box_shadow                 font_variant_position      perspective_origin
+        animation_duration         box_sizing                 font_weight                position
+        animation_fill_mode        break_after                height                     quotes
+        animation_iteration_count  break_before               hyphens                    resize
+        animation_name             break_inside               icon                       right
+        animation_play_state       caption_side               image_orientation          tab_size
+        animation_timing_function  clear                      image_rendering            table_layout
+        backface_visibility        clip                       image_resolution           text_align
+        background                 clip_path                  ime_mode                   text_align_last
+        background_attachment      color                      justify_content            text_combine_horizontal
+        background_clip            column_count               left                       text_decoration
+        background_color           column_fill                letter_spacing             text_decoration_color
+        background_image           column_gap                 line_height                text_decoration_line
+        background_origin          column_rule                list_style                 text_decoration_style
+        background_position        column_rule_color          list_style_image           text_indent
+        background_repeat          column_rule_style          list_style_position        text_orientation
+        background_size            column_rule_width          list_style_type            text_overflow
+        border                     column_span                margin                     text_rendering
+        border_bottom              column_width               margin_bottom              text_shadow
+        border_bottom_color        columns                    margin_left                text_transform
+        border_bottom_left_radius  content                    margin_right               text_underline_position
+        border_bottom_right_radius counter_increment          margin_top                 top
+        border_bottom_style        counter_reset              marks                      touch_action
+        border_bottom_width        cursor                     mask                       transform
+        border_collapse            direction                  mask_type                  transform_origin
+        border_color               display                    max_height                 transform_style
+        border_image               empty_cells                max_width                  transition
+        border_image_outset        filter                     min_height                 transition_delay
+        border_image_repeat        flex                       min_width                  transition_duration
+        border_image_slice         flex_basis                 object_fit                 transition_property
+        border_image_source        flex_direction             object_position            transition_timing_function
+        border_image_width         flex_flow                  opacity                    unicode_bidi
+        border_left                flex_grow                  order                      unicode_range
+        border_left_color          flex_shrink                orphans                    vertical_align
+        border_left_style          flex_wrap                  outline                    visibility
+        border_left_width          float                      outline_color              white_space
+        border_radius              font                       outline_offset             widows
+        border_right               font_family                outline_style              width
+        border_right_color         font_feature_settings      outline_width              word_break
+        border_right_style         font_kerning               overflow                   word_spacing
+        border_right_width         font_language_override     overflow_wrap              word_wrap
+        border_spacing             font_size                  overflow_x                 writing_mode
+        border_style               font_size_adjust           overflow_y                 z_index
+        border_top                 font_stretch               padding
+        border_top_color           font_style                 padding_bottom
+        border_top_left_radius     font_synthesis             padding_left
+        border_top_right_radius    font_variant               padding_right
+      ].map(&:to_sym)
     }
 
   }

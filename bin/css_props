@@ -5,15 +5,99 @@
 require "sanitize"
 
 Sanitize::Config::RELAXED[:css][:properties]
-i = 0
-val = Sanitize::Config::RELAXED[:css][:properties].
-  map { |s| ':' + s.gsub('-', '_') }.
+
+class Row
+  class << self
+
+    def init
+      @limit_x       = 4
+      @limit_y       = 52
+      @rows          = []
+      @max_word_size = 0
+      @curr_row      = nil
+    end
+
+    def rows
+      @rows
+    end
+
+    def << raw_val
+      val = raw_val.to_s
+      if val.size > @max_word_size
+        @max_word_size = val.size
+      end
+      push_y val
+    end
+
+    def print
+      rows.
+        map { |r|
+        r.map { |word|
+          if word.size < @max_word_size
+            word + (' ' * (@max_word_size - word.size))
+          else
+            word
+          end
+        }.join(' '.freeze)
+      }.map(&:strip).join("\n".freeze)
+        
+    end
+
+    private # ================================================
+
+    def new_row_x
+      @curr_row = []
+      @rows << @curr_row
+      @curr_row
+    end
+
+    def push_x val
+      if !@curr_row
+        new_row_x
+      end
+
+      if @curr_row.size != 0 && @curr_row.size % @limit_x == 0
+        new_row_x
+      end
+      @curr_row << val
+    end
+
+    def new_row_y
+      if @curr_row.nil?
+        @curr_row = -1
+      end
+
+      if @rows.size < @limit_y
+        @rows << []
+        @curr_row = @rows.size - 1
+      else
+        @curr_row = @curr_row + 1
+        if @curr_row >= @limit_y
+          @curr_row = 0
+        end
+      end
+
+      @curr_row
+    end
+
+    def push_y val
+      new_row_y
+      @rows[@curr_row] << val
+    end
+  end
+
+  init
+end
+
+
+Sanitize::Config::RELAXED[:css][:properties].
+  map { |s| s.gsub('-', '_') }.
+  # sort { |a, b| a.size <=> b.size }.
   sort.
   reject { |s| s[/_(moz|webkit|ms)/] }.
-  map { |s| i = i + 1; i % 6 == 0 ? "\n#{s}" : s}.
-  join ", "
+  map { |s|  Row << s }
 
-puts val
+puts Row.print
 
 
 
