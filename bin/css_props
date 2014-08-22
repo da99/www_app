@@ -1,0 +1,19 @@
+#!/usr/bin/env ruby
+# -*- ruby -*-
+#
+
+require "sanitize"
+
+Sanitize::Config::RELAXED[:css][:properties]
+i = 0
+val = Sanitize::Config::RELAXED[:css][:properties].
+  map { |s| ':' + s.gsub('-', '_') }.
+  sort.
+  reject { |s| s[/_(moz|webkit|ms)/] }.
+  map { |s| i = i + 1; i % 6 == 0 ? "\n#{s}" : s}.
+  join ", "
+
+puts val
+
+
+
