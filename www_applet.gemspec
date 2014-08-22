@@ -27,6 +27,7 @@ Gem::Specification.new do |spec|
   spec.add_dependency "yajl-ruby"            , ">= 1.2"
   spec.add_dependency "multi_json"           , ">= 1.10"
   spec.add_dependency "escape_escape_escape" , ">= 0.2"
+  spec.add_dependency "mustache"             , ">= 0.99"
 
   spec.add_development_dependency "sanitize"      , ">= 3.0.0"
   spec.add_development_dependency "pry"           , ">= 0.9"
