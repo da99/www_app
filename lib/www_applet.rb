@@ -525,37 +525,12 @@ class WWW_Applet < BasicObject
 
   def hash_to_text h
     case h[:type]
-    when :attrs
-      final = h[:value].map { |k,raw_v|
-        next if raw_v.is_a?(::Array) && raw_v.empty?
-        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-        %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
-      }.join SPACE
-
-      if final.empty?
-        ''
-      else
-        " " << final
-      end
-
-    when :styles
-      h[:value].map { |k,styles|
-        %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
-            #{hash_to_text :type=>:style, :value=>styles}
-          }
-        ^
-      }.join.strip
-
-    when :style
-      h[:value].map { |k,v|
-        %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')}: #{v};^
-      }.join("\n").strip
 
     when :html
       if h[:tag] == :style
         return %^
           <style type="text/css">
-            #{hash_to_text(type: :styles, value: h[:attrs])}
+            #{style_classes_to_text(h[:attrs])}
           </style>
         ^
       end
@@ -574,7 +549,7 @@ class WWW_Applet < BasicObject
 
       if h[:tag]
         %^
-          <#{h[:tag]}#{h[:attrs] && hash_to_text(:type=>:attrs, :value=>h[:attrs])}>#{html}</#{h[:tag]}>
+          <#{h[:tag]}#{tag_attrs_to_text(h[:attrs])}>#{html}</#{h[:tag]}>
         ^.strip
       else
         html
@@ -586,6 +561,35 @@ class WWW_Applet < BasicObject
     else
       fail "Unknown type: #{h[:text].inspect}"
     end
+  end
+
+  def styles_to_text h
+    h.map { |k,v|
+      %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')}: #{v};^
+    }.join("\n").strip
+  end
+
+  def style_classes_to_text h
+    h.map { |k,styles|
+      %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
+          #{styles_to_text styles}
+        }
+      ^
+    }.join.strip
+  end
+
+  def tag_attrs_to_text h
+      final = h.map { |k,raw_v|
+        next if raw_v.is_a?(::Array) && raw_v.empty?
+        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+        %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
+      }.join SPACE
+
+      if final.empty?
+        ''
+      else
+        " " << final
+      end
   end
 
   def in_html?
