@@ -9,10 +9,5 @@ describe "HTML contents" do
     end
   end
 
-  it "creates an :a tag w/ :href:" do
-    target %^<a href="/hello">hello</a>^
+end # === describe HTML contents
 
-    actual { a.href('/hello') { 'hello' } }
-  end
-
-end # === describe
