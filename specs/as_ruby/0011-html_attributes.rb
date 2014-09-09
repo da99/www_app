@@ -1,21 +1,29 @@
 
-describe "HTML attributes" do
+describe :href do
 
   it "produces 'a' elements with 'href'" do
     target '<a href="/here">Here</a>'
 
     actual do
-      a(:href=>'/here' ) { "Here" }
+      a.href('/here') { "Here" }
     end
   end
 
-  it "adds 'class' attribute for unknown methods: a.warning(..) { }" do
-    target '<a class="warning" href="/here">Here</a>'
+end # === describe :href
+
+describe :^ do
+
+  it "adds 'class' attribute: a.^(:warning, :red) { }" do
+    target '<a class="warning red" href="/here">Here</a>'
 
     actual do
-      a.warning(:href=>'/here' ) { "Here" }
+      a.^(:warning, :red).href('/here') { "Here" }
     end
   end
+
+end # === describe :^
+
+describe "HTML attributes" do
 
   it "merges classes: a.warning(:class=>\"super low\")" do
     target '<a class="warning super low" href="/now">Now</a>'
