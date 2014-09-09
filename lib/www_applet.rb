@@ -580,17 +580,17 @@ class WWW_Applet < BasicObject
   end
 
   def tag_attrs_to_text h
-      final = h.map { |k,raw_v|
-        next if raw_v.is_a?(::Array) && raw_v.empty?
-        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-        %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
-      }.join SPACE
+    final = h.map { |k,raw_v|
+      next if raw_v.is_a?(::Array) && raw_v.empty?
+      v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+      %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
+    }.compact.join SPACE
 
-      if final.empty?
-        ''
-      else
-        " " << final
-      end
+    if final.empty?
+      ''
+    else
+      " " << final
+    end
   end
 
   def in_html?
