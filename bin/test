@@ -21,7 +21,7 @@ if [[ "$first_opt" == "all" ]]; then
 fi
 
 # === Find file by partial file name.
-cmd="bundle exec bacon specs/as_ruby/helpers.rb"
+cmd="bundle exec bacon specs/lib/helpers.rb"
 file="$( find specs/as_ruby -maxdepth 1 -type f -regextype posix-extended -regex '.*[0-9]{4}-.*'${first_opt}'.*\.rb' )"
 if [[ -f "$file" ]]; then
   shift

@@ -149,6 +149,7 @@ class WWW_Applet < BasicObject
   end # === def new_class
 
   def render *args
+    (args << {}) if args.empty?
     @mustache.render *args
   end
 

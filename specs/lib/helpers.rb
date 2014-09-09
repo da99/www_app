@@ -94,7 +94,7 @@ module Bacon
       norm_target   = norm @target_args.last
 
       tag           = @target_args.first
-      html          = WWW_Applet.new_class(&blok).new.to_html
+      html          = WWW_Applet.new(&blok).render
       section       = case
                       when include_tag
                         html[/(<#{tag}[^\>]*>.+<\/#{tag}>)/m] && $1
