@@ -583,7 +583,7 @@ class WWW_Applet < BasicObject
     final = h.map { |k,raw_v|
       next if raw_v.is_a?(::Array) && raw_v.empty?
       v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-      %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.inner_html(v)}"^
+      %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.html(v.to_s)}"^
     }.compact.join SPACE
 
     if final.empty?

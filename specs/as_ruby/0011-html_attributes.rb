@@ -21,31 +21,23 @@ describe :^ do
     end
   end
 
+  it "merges classes: a.^(:super).^(:low)" do
+    target '<a class="super low" href="/now">Now</a>'
+
+    actual do
+      a.^(:super).^(:low).href("/now") { "Now" }
+    end
+  end
+
 end # === describe :^
 
-describe "HTML attributes" do
+describe :* do
 
-  it "merges classes: a.warning(:class=>\"super low\")" do
-    target '<a class="warning super low" href="/now">Now</a>'
-
-    actual do
-      a.warning(:class => "super low", :href => "/now") { "Now" }
-    end
-  end
-
-  it "merges multiple missing methods into class: a.warn.low.super() {}" do
-    target '<a class="warning super low" href="/today">Today</a>'
+  it "adds 'id' attribute: a.*(:warning)(...) { }" do
+    target '<a id="warning" href="/there">There</a>'
 
     actual do
-      a.warning.super.low(:href => "/today") { "Today" }
-    end
-  end
-
-  it "adds 'id' attribute for unknown bang methods: a.warn!(...) { }" do
-    target '<a id="warn" href="/there">There</a>'
-
-    actual do
-      a.warn!(:href=>'/there') { "There" }
+      a.*(:warning).href('/there') { "There" }
     end
   end
 
