@@ -133,8 +133,11 @@ class WWW_Applet < BasicObject
   end # === class self ==============================================
 
   def initialize *files
+    @style       = {}
+    @css_arr     = []
+    @current_css = nil
+
     @title         = nil
-    @style         = {}
     @scripts       = []
     @body          = []
     @compiled      = nil
@@ -246,7 +249,7 @@ class WWW_Applet < BasicObject
     str_name = name.to_s.gsub('_', '-')
     eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
-        css_property('#{str_name}'.freeze, *args) { 
+        css_property(:#{str_name}, *args) { 
           yield if block_given?
         }
       end
@@ -430,17 +433,36 @@ class WWW_Applet < BasicObject
     classes.join SPACE
   end
 
+  # =================================================================
+  #                    Parent-related methods
+  # =================================================================
+
   def parents
     fail "not done"
   end
 
-  def parent? sym_tag
-    parent && parent[:tag] == sym_tag
+  def parent? *args
+    return(!!parent) if args.empty?
+    fail("Unknown args: #{args.first}") if args.size > 1
+    return false unless parent
+
+    sym_tag = args.first
+
+    case sym_tag
+    when :html. :css, :script
+      parent[:type] == sym_tag
+    else
+      parent[:tag] == sym_tag
+    end
   end
 
   def parent
     @tag_arr[tag![:parent_index]]
   end
+
+  # =================================================================
+  #                    Tag (aka element)-related methods
+  # =================================================================
 
   def tag!
     @tag_arr[@current_tag_index]
@@ -450,14 +472,13 @@ class WWW_Applet < BasicObject
     tag![:tag] == sym_tag
   end
 
-  def tag sym_name, *args
+  def tag sym_name
     e = {
       type:   :html,
       tag:    sym_name,
       attrs:  {:class=>[]},
       text:   nil,
       childs: [],
-      args:   args,
       parent_index: nil,
       is_closed: false,
       tag_index: @tag_arr.size
@@ -515,6 +536,37 @@ class WWW_Applet < BasicObject
 
     self
   end
+
+  # =================================================================
+  #                    CSS-related methods
+  # =================================================================
+
+  def css_property *args
+    case args.size
+    when 0
+      val = nil
+    when 1
+      val = args.first
+    else
+      fail "Unknown args: #{args.inspect}"
+    end
+
+    case
+    when parent?
+    when parent?(:html)
+    when parent?(:css)
+    else
+      fail "Unknown parent type: #{parent}"
+    end
+
+    orig = @current_css
+    @current_css = something
+    yield if block_given?
+    @current_css = orig
+  end
+
+
+  # =================================================================
 
   def page_title
     return super unless tag?(:body)
