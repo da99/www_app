@@ -240,17 +240,17 @@ class WWW_Applet < BasicObject
 
   #
   # NOTE: Properties are defined first,
-  # so tag methods over-write them,
+  # so :elements methods can over-write them,
   # just in case there are duplicates.
   Methods[:css][:properties].each { |name|
     str_name = name.to_s.gsub('_', '-')
-    eval %^
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
         css_property('#{str_name}'.freeze, *args) { 
           yield if block_given?
         }
       end
-    ^
+    EOF
   }
 
   Methods[:elements].each { |name|
