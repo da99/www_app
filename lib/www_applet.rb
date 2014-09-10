@@ -2,14 +2,36 @@
 require 'mustache'
 require 'escape_escape_escape'
 
+class Symbol
+
+  def to_html_attr_name
+    WWW_Applet::SYM_CACHE[:attrs][self] ||= begin
+                                      str = to_s.gsub(WWW_Applet::INVALID_ATTR_CHARS, '_')
+                                      return str unless str.empty?
+                                      fail "Invalid name for html attr: #{self.inspect}" 
+                                    end
+  end # === def to_html_attr_name
+
+  def to_css_prop_name
+    WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
+                                      str = to_s.gsub(WWW_Applet::INVALID_CSS_PROP_NAME_CHARS, '_')
+                                      return str unless str.empty?
+                                      fail "Invalid name for css property name: #{self.inspect}" 
+                                    end
+  end
+
+end # === class Symbol
+
 class WWW_Applet < BasicObject
 
   include ::Kernel
 
+  SYM_CACHE = { attrs: {}, css_props: {}}
+
   Classes                     = []
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
-  INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9\-\_]/i
+  INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9\_-]/i
 
   BANG       = '!'
   NEW_LINE   = "\n"
@@ -566,7 +588,7 @@ class WWW_Applet < BasicObject
 
   def styles_to_text h
     h.map { |k,v|
-      %^#{k.to_s.gsub(INVALID_CSS_PROP_NAME_CHARS, '_')}: #{v};^
+      %^#{k.to_css_prop_name}: #{::Escape_Escape_Escape.css v};^
     }.join("\n").strip
   end
 
@@ -583,7 +605,7 @@ class WWW_Applet < BasicObject
     final = h.map { |k,raw_v|
       next if raw_v.is_a?(::Array) && raw_v.empty?
       v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-      %^#{k.to_s.gsub(INVALID_ATTR_CHARS,'_')}="#{::Escape_Escape_Escape.html(v.to_s)}"^
+      %^#{k.to_html_attr_name}="#{::Escape_Escape_Escape.html(v.to_s)}"^
     }.compact.join SPACE
 
     if final.empty?
