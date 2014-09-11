@@ -14,7 +14,7 @@ class Symbol
 
   def to_css_prop_name
     WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
-                                      str = to_s.gsub(WWW_Applet::INVALID_CSS_PROP_NAME_CHARS, '_')
+                                      str = to_s.gsub(WWW_Applet::INVALID_CSS_PROP_NAME_CHARS, '-')
                                       return str unless str.empty?
                                       fail "Invalid name for css property name: #{self.inspect}" 
                                     end
@@ -31,7 +31,7 @@ class WWW_Applet < BasicObject
   Classes                     = []
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
-  INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9\_-]/i
+  INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9-]/i
 
   BANG       = '!'
   NEW_LINE   = "\n"
@@ -547,10 +547,10 @@ class WWW_Applet < BasicObject
     prop = {:name=>name, :value=>val, :parent=>parent}
 
     id = css_id
-    @style[id] ||= {}
+    @style[:css][id] ||= {}
 
     @css_arr << prop
-    @style[id][@css_arr.join('_').to_sym] = val
+    @style[:css][id][@css_arr.map { |c| c[:name] }.join('_').to_sym] = val
     yield if block_given?
     @css_arr.pop
   end
