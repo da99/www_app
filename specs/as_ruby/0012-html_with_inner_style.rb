@@ -25,7 +25,7 @@ describe "HTML with inner style" do
     ^
 
     actual do
-      div.my_box! {
+      div.*(:my_box) {
         border_width '1px'
       }
     end

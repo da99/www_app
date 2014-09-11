@@ -44,7 +44,7 @@ class WWW_Applet < BasicObject
   Methods    = {
     :elements => %w[
 
-      body  div
+      body   div    span
 
       b      em     i  strong  u  a 
       abbr   blockquote 
