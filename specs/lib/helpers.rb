@@ -18,8 +18,7 @@ def norm ugly
     strip.
     split("\n").
     map(&:strip).
-    join("\n").
-    gsub('/', '&#47;')
+    join("\n")
 end
 
 def strip_each_line str

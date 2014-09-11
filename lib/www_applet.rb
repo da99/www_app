@@ -133,32 +133,31 @@ class WWW_Applet < BasicObject
   end # === class self ==============================================
 
   def initialize *files
-    @style       = {}
-    @css_arr     = []
-    @current_css = nil
+    @style   = {}
+    @css_arr = []
 
-    @title         = nil
-    @scripts       = []
-    @body          = []
-    @compiled      = nil
-    @cache         = {}
-    @is_doc        = false
-    @default_ids   = {}
+    @title       = nil
+    @scripts     = []
+    @body        = []
+    @compiled    = nil
+    @cache       = {}
+    @is_doc      = false
+    @default_ids = {}
 
-    @state         = [:create]
-    @ids           = {}
+    @state = [:create]
+    @ids   = {}
 
-    @tag_arr          = []
+    @tag_arr           = []
     @current_tag_index = @tag_arr.size - 1
     @mustache          = nil
 
-    open_tag(:head)
-    @head = tag!
-    close_tag
+    tag(:head) {
+      @head = tag!
+    }
 
-    open_tag(:body)
-    @body = tag!
-    close_tag
+    tag(:body) {
+      @body = tag!
+    }
 
     files.each { |file_name|
       eval ::File.read(file_name), nil, file_name
@@ -249,7 +248,7 @@ class WWW_Applet < BasicObject
     str_name = name.to_s.gsub('_', '-')
     eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
-        css_property(:#{str_name}, *args) { 
+        css_property(:#{name}, *args) { 
           yield if block_given?
         }
       end
@@ -259,12 +258,10 @@ class WWW_Applet < BasicObject
   Methods[:elements].each { |name|
     eval %^
       def #{name} *args
-        results = open_tag(:#{name}, *args)
-
         if block_given?
-          close_tag { yield }
+          tag(:#{name}, *args) { yield }
         else
-          results
+          tag(:#{name}, *args)
         end
       end
     ^
@@ -289,7 +286,7 @@ class WWW_Applet < BasicObject
   # -----------------------------------------------
 
   def is_doc?
-    @is_doc
+    @is_doc || !@style.empty?
   end
 
   def first_class
@@ -308,26 +305,34 @@ class WWW_Applet < BasicObject
   # Examples
   #    dom_id             -> the current dom id of the current element
   #    dom_id :default    -> if no dom it, set/get default of current element
+  #    dom_id {:element:} -> dom id of element: {:type=>:html, :tag=>...}
   #
   def dom_id *args
 
+    use_default = false
+
     case
     when args.empty?
-      use_default = false
+      e = tag!
+      # do nothing else
 
     when args.size == 1 && args.first == :default
+      e = tag!
       use_default = true
+
+    when args.size == 1 && args.first.is_a?(::Hash) && args.first[:type]==:html
+      e = args.first
 
     else
       fail "Unknown args: #{args.inspect}"
     end
 
-    id = tag![:attrs][:id]
+    id = e[:attrs][:id]
     return id if id
     return nil unless use_default
 
-    tag![:default_id] ||= begin
-                           key = tag![:tag]
+    e[:default_id] ||= begin
+                           key = e[:tag]
                            @default_ids[key] ||= -1
                            @default_ids[key] += 1
                          end
@@ -437,6 +442,10 @@ class WWW_Applet < BasicObject
   #                    Parent-related methods
   # =================================================================
 
+  def css_parent?
+    !@css_arr.empty?
+  end
+
   def parents
     fail "not done"
   end
@@ -449,7 +458,7 @@ class WWW_Applet < BasicObject
     sym_tag = args.first
 
     case sym_tag
-    when :html. :css, :script
+    when :html, :css, :script
       parent[:type] == sym_tag
     else
       parent[:tag] == sym_tag
@@ -474,30 +483,35 @@ class WWW_Applet < BasicObject
 
   def tag sym_name
     e = {
-      type:   :html,
-      tag:    sym_name,
-      attrs:  {:class=>[]},
-      text:   nil,
-      childs: [],
-      parent_index: nil,
-      is_closed: false,
-      tag_index: @tag_arr.size
+      :type         =>  :html,
+      :tag          =>  sym_name,
+      :attrs        =>  {:class=>[]},
+      :text         =>  nil,
+      :childs       =>  [],
+      :parent_index =>  nil,
+      :is_closed    =>  false,
+      :tag_index    =>  @tag_arr.size
     }
 
     @tag_arr << e
-    e
-  end
 
-  def slash_tag t
-    if block_given?
-      results = yield
-      if results.is_a?(::String)
-        t[:text] = results
-      end
+    # === open tag
+    orig_tag_index = @current_tag_index
+    @current_tag_index = e[:tag_index]
+
+    if @tag_arr[orig_tag_index][:is_closed]
+      # do nothing else
+    else
+      e[:parent_index] = orig_tag_index
+      @tag_arr[orig_tag_index][:childs] << e
     end
 
-    t[:is_closed] = true
-    t
+    if block_given?
+      close_tag { yield }
+    end
+    # ============
+
+    self
   end
 
   def in_tag t
@@ -508,94 +522,65 @@ class WWW_Applet < BasicObject
     self
   end
 
-  def open_tag *args
-    new_tag = tag(*args)
-
-    if @tag_arr.empty?
-      # do nothing else.
-    else
-      new_tag[:parent_index] = @tag_arr.size - 1
-      tag![:childs] << new_tag
-    end
-
-    @current_tag_index = @tag_arr.size - 1
-    self
-  end
-
   def close_tag
-
     if block_given?
-      slash_tag(tag!) { yield }
-    else
-      slash_tag tag!
+      results = yield
+      (tag![:text] = results) if results.is_a?(::String)
     end
 
-    if tag![:parent_index]
-      @current_tag_index = tag![:parent_index]
-    end
+    tag![:is_closed] = true
+    @current_tag_index = tag![:parent_index]
 
-    self
+    nil
   end
 
   # =================================================================
   #                    CSS-related methods
   # =================================================================
 
-  def css_property *args
-    case args.size
-    when 0
-      val = nil
-    when 1
-      val = args.first
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
+  def css_property name, val = nil
+    prop = {:name=>name, :value=>val, :parent=>parent}
 
-    case
-    when parent?
-    when parent?(:html)
-    when parent?(:css)
-    else
-      fail "Unknown parent type: #{parent}"
-    end
+    id = css_id
+    @style[id] ||= {}
 
-    orig = @current_css
-    @current_css = something
+    @css_arr << prop
+    @style[id][@css_arr.join('_').to_sym] = val
     yield if block_given?
-    @current_css = orig
+    @css_arr.pop
   end
 
 
   # =================================================================
 
   def page_title
-    return super unless tag?(:body)
-
     @is_doc = true
     in_tag(@head) {
-      open_tag(:title)
-      close_tag { yield }
+      tag(:title) { yield }
     }
-
     self
   end
 
   def meta *args
-    fail "Not allowed outside of :head" unless tag?(:body)
-    c = tag(:meta, *args)
-    @head[:childs].push c
+    fail "No block allowed." if block_given?
+    fail "Not allowed here." unless tag?(:body)
+    c = nil
+    in_tag(@tag) { c = tag(:meta, *args) }
     c
   end
 
-  def script *args, &blok
-    fail "Not allowed outside of :head" unless parent?(:body)
-    c = tag(:script, *args, &blok)
-    @head[:childs].push c
-    c
+  def script *args
+    fail "No block allowed for now." if block_given?
+    fail "Not allowed here." unless parent?(:body)
+    s = nil
+    in_tag(@head) { s = tag(:script, *args) }
+    s
   end
 
   def array_to_text a
-    hash_to_text(:type=>:html, :childs=>a)
+    a.map { |o|
+      hash_to_text(o)
+    }.join NEW_LINE
   end
 
   def hash_to_text h
@@ -605,7 +590,7 @@ class WWW_Applet < BasicObject
       if h[:tag] == :style
         return %^
           <style type="text/css">
-            #{style_classes_to_text(h[:attrs])}
+            #{style_classes_to_text(h[:childs])}
           </style>
         ^
       end
@@ -700,9 +685,10 @@ class WWW_Applet < BasicObject
               # Remember: to use !BODY first, because
               # :head content might include a '!HEAD'
               # value.
-              no_title unless @page_title
+              (page_title { 'Unknown Page Title' }) unless @page_title
               if !@style.empty?
-                @head[:childs] << tag(:style, @style)
+                @head[:childs] << tag(:style)
+                @head[:childs].last[:childs] << @style
               end
 
               Document_Template.
@@ -721,8 +707,7 @@ class WWW_Applet < BasicObject
   def input *args
     case
     when args.size === 3
-      open_tag(:input).type(args[0]).name(args[1]).value(args[2])
-      close_tag
+      tag(:input).type(args[0]).name(args[1]).value(args[2])
     else
       super
     end

@@ -20,9 +20,10 @@ if [[ "$first_opt" == "all" ]]; then
   exit 0
 fi
 
-# === Find file by partial file name.
 cmd="bundle exec bacon specs/lib/helpers.rb"
-file="$( find specs/as_ruby -maxdepth 1 -type f -regextype posix-extended -regex '.*[0-9]{4}-.*'${first_opt}'.*\.rb' )"
+
+# === Find file by partial file name.
+file="$(echo specs/as_ruby/*-${first_opt}.rb)"
 if [[ -f "$file" ]]; then
   shift
   $cmd $file "$@"
@@ -30,7 +31,7 @@ if [[ -f "$file" ]]; then
 fi
 
 # === Run all ruby files in proper order.
-files="$( find specs/as_ruby -maxdepth 1 -type f -regextype posix-extended -regex '.*[0-9]{4}-.*\.rb' | sort )"
+files="$( echo specs/as_ruby/*.rb | tr ' ' "\n" | sort)"
 if [[ -z "$files" ]]; then
   colorize yellow "No tests found." 1>&2
   exit 0
