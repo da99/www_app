@@ -602,97 +602,107 @@ class WWW_Applet < BasicObject
     s
   end
 
-  def array_to_text a
-    a.map { |tag_index|
-      hash_to_text(@tag_arr[tag_index])
-    }.join NEW_LINE
-  end
+  def to_clean_text type, vals
+    case
 
-  def hash_to_text h
-    case h[:type]
-
-    when :html
-      if h[:tag] == :style
-        return %^
-          <style type="text/css">
-            #{style_classes_to_text(h[:css])}
-          </style>
-        ^
-      end
-
-      html = h[:childs].map { |tag_index|
-        "#{hash_to_text @tag_arr[tag_index]}"
+    when type == :html && vals.is_a?(::Array)
+      a = vals
+      a.map { |tag_index|
+        to_clean_text(:html, @tag_arr[tag_index])
       }.join NEW_LINE
 
-      if h[:text] && !(h[:text].strip.empty?)
-        if html.empty?
-          html = ::Escape_Escape_Escape.html(h[:text])
-        else
-          html << hash_to_text(tag(:div, :class=>:text) { h[:text] })
-        end
-      end
-
-      if h[:tag]
-        %^
-          <#{h[:tag]}#{tag_attrs_to_text(h[:attrs])}>#{html}</#{h[:tag]}>
-        ^.strip
-      else
-        html
-      end
-
-    when :script
-      fail "Not ready yet."
-
-    else
-      fail "Unknown type: #{h[:text].inspect}"
-    end
-  end
-
-  def styles_to_text h
-    h.map { |k,raw_v|
-      name = k.to_css_prop_name
-      v = case
-          when name[IMAGE_AT_END]
-            case raw_v
-            when 'inherit', 'none'
-              raw_v
-            else
-              "url(#{::Escape_Escape_Escape.href(raw_v)})"
-            end
+    when type == :attrs && vals.is_a?(::Hash)
+      h = vals
+      final = h.map { |k,raw_v|
+        next if raw_v.is_a?(::Array) && raw_v.empty?
+        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+        %^#{k.to_html_attr_name}="#{
+          case k
+          when :href
+            ::Escape_Escape_Escape.href(v)
           else
-            ::Escape_Escape_Escape.css raw_v
+            ::Escape_Escape_Escape.html(v.to_s)
           end
-      %^#{name}: #{v};^
-    }.join("\n").strip
-  end
+        }"^
+      }.compact.join SPACE
 
-  def style_classes_to_text h
-    h.map { |k,styles|
-      %^#{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
-          #{styles_to_text styles}
-        }
-      ^
-    }.join.strip
-  end
+      if final.empty?
+        ''
+      else
+        " " << final
+      end
 
-  def tag_attrs_to_text h
-    final = h.map { |k,raw_v|
-      next if raw_v.is_a?(::Array) && raw_v.empty?
-      v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-      %^#{k.to_html_attr_name}="#{
-        case k
-        when :href
-          ::Escape_Escape_Escape.href(v)
-        else
-          ::Escape_Escape_Escape.html(v.to_s)
+    when type == :styles && vals.is_a?(::Hash)
+      h = vals
+      h.map { |k,raw_v|
+        name = k.to_css_prop_name
+        v = case
+            when name[IMAGE_AT_END]
+              case raw_v
+              when 'inherit', 'none'
+                raw_v
+              else
+                "url(#{::Escape_Escape_Escape.href(raw_v)})"
+              end
+            else
+              ::Escape_Escape_Escape.css raw_v
+            end
+        %^#{name}: #{v};^
+      }.join("\n").strip
+
+    when type == :style_classes && vals.is_a?(::Hash)
+      h = vals
+      h.map { |k,styles|
+        <<-EOF
+          #{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
+            #{to_clean_text :styles, styles}
+          }
+        EOF
+      }.join.strip
+
+    when type == :html && vals.is_a?(::Hash)
+      h = vals
+      case h[:type]
+
+      when :html
+        if h[:tag] == :style
+          return %^
+            <style type="text/css">
+              #{to_clean_text :style_classes, h[:css]}
+            </style>
+          ^
         end
-      }"^
-    }.compact.join SPACE
 
-    if final.empty?
-      ''
+        html = h[:childs].map { |tag_index|
+          "#{to_clean_text :html, @tag_arr[tag_index]}"
+        }.join NEW_LINE
+
+        if h[:text] && !(h[:text].strip.empty?)
+          if html.empty?
+            html = ::Escape_Escape_Escape.html(h[:text])
+          else
+            html << to_clean_text(:html, tag(:div, :class=>:text) { h[:text] })
+          end
+        end
+
+        if h[:tag]
+          %^
+            <#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>#{html}</#{h[:tag]}>
+          ^.strip
+        else
+          html
+        end
+
+      when :script
+        fail "Not ready yet."
+
+      else
+        fail "Unknown type: #{h[:text].inspect}"
+      end
+
     else
-      " " << final
+      fail "Unknown vals: #{type.inspect}, #{vals.inspect}"
+
     end
   end
 
@@ -726,10 +736,10 @@ class WWW_Applet < BasicObject
               (page_title { 'Unknown Page Title' }) unless @page_title
 
               Document_Template.
-                sub('!BODY', hash_to_text(@body)).
-                sub('!HEAD', array_to_text(@head[:childs]))
+                sub('!BODY', to_clean_text(:html, @body)).
+                sub('!HEAD', to_clean_text(:html, @head[:childs]))
             else
-              array_to_text(@body[:childs])
+              to_clean_text(:html, @body[:childs])
             end
 
     utf_8 = ::Escape_Escape_Escape.clean_utf8(final)
