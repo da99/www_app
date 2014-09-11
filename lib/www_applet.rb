@@ -448,7 +448,7 @@ class WWW_Applet < BasicObject
         elsif first_class
           classes.unshift "#{e[:tag]}.#{first_class}"
         else
-          if e[:tag] != :body
+          if e[:tag] != :body || (classes.empty?)
             classes.unshift "#{e[:tag]}"
           end
         end # if first_class
@@ -457,7 +457,7 @@ class WWW_Applet < BasicObject
 
       break if id_given
       i = e[:parent_index]
-      break if !i || i == @body[:tag_index]
+      break if !i || (i == @body[:tag_index] && !classes.empty?)
     end
 
     classes.join SPACE
