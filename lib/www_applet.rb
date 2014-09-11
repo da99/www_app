@@ -653,7 +653,12 @@ class WWW_Applet < BasicObject
       name = k.to_css_prop_name
       v = case
           when name[IMAGE_AT_END]
-            "url(#{::Escape_Escape_Escape.href(raw_v)})"
+            case raw_v
+            when 'inherit', 'none'
+              raw_v
+            else
+              "url(#{::Escape_Escape_Escape.href(raw_v)})"
+            end
           else
             ::Escape_Escape_Escape.css raw_v
           end

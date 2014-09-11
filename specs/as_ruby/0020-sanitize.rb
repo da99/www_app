@@ -32,7 +32,6 @@ describe "Sanitize" do
   end
 
   it "raises Invalid_HREF for :href: javacript:" do
-    target %^a^
     should.raise(Escape_Escape_Escape::Invalid_HREF) {
       actual do
         a.href('javascript://alert()') { 'hello' }
@@ -59,7 +58,35 @@ describe "Style" do
     end
   end
 
-  it "removes 'expression:'"
+  it "raises Invalid if contains 'expression:'" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'solid expression:'
+        }
+      end
+    }.message.should.match /expression:/
+  end
+
+  it "raises Invalid if contains 'expression&'" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'solid expression&'
+        }
+      end
+    }.message.should.match /expression&/
+  end
+
+  it "raises Invalid non-css allowed chars: * ( + ) etc." do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'something *'
+        }
+      end
+    }.message.should.match /something \*/
+  end
 
 end # === describe Style ===
 
