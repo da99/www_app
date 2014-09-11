@@ -151,13 +151,16 @@ class WWW_Applet < BasicObject
     @current_tag_index = nil
     @mustache          = nil
 
-    tag(:head) { @head = tag!  }
+    tag(:head) {
 
-    in_tag(@head) {
-      tag(:style) { @style = tag! }
-    }
+      @head = tag!
 
-    @style[:css] = {}
+      tag(:style) {
+        @style = tag!
+        @style[:css] = {}
+      }
+
+    } # === tag :head
 
     tag(:body) {
 
