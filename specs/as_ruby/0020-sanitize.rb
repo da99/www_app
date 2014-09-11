@@ -24,9 +24,21 @@ describe "Sanitize" do
     end
   end
 
-  it "strips out W3C unallowed Unicode chars"
+  it "strips out W3C unallowed Unicode chars" do
+    target %^<div>hello      hello</div>^
+    actual do
+      div { "hello \u0340\u0341\u17a3\u17d3\u2028\u2029 hello" }
+    end
+  end
 
-  it "removes javacript: protocol"
+  it "raises Invalid_HREF for :href: javacript:" do
+    target %^a^
+    should.raise(Escape_Escape_Escape::Invalid_HREF) {
+      actual do
+        a.href('javascript://alert()') { 'hello' }
+      end
+    }.message.should.match /javascript/
+  end
 
 end # === describe HTML ===
 
