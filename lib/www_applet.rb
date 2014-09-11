@@ -265,7 +265,7 @@ class WWW_Applet < BasicObject
   }
 
   Methods[:elements].each { |name|
-    eval %^
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
         if block_given?
           tag(:#{name}, *args) { yield }
@@ -273,7 +273,7 @@ class WWW_Applet < BasicObject
           tag(:#{name}, *args)
         end
       end
-    ^
+    EOF
   }
 
   # -----------------------------------------------
@@ -624,9 +624,9 @@ class WWW_Applet < BasicObject
         "#{hash_to_text @tag_arr[tag_index]}"
       }.join NEW_LINE
 
-      if h[:text] && !(h[:text].strip).empty?
+      if h[:text] && !(h[:text].strip.empty?)
         if html.empty?
-          html = h[:text]
+          html = ::Escape_Escape_Escape.html(h[:text])
         else
           html << hash_to_text(tag(:div, :class=>:text) { h[:text] })
         end
