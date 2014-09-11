@@ -479,7 +479,8 @@ class WWW_Applet < BasicObject
   end
 
   def parent
-    fail "No tag defined." unless tag!
+    fail "Not in a tag." unless tag!
+    fail "No parent: #{tag![:tag].inspect}, #{tag![:tag_index]}" if !tag![:parent_index]
     @tag_arr[tag![:parent_index]]
   end
 
@@ -551,7 +552,7 @@ class WWW_Applet < BasicObject
   # =================================================================
 
   def css_property name, val = nil
-    prop = {:name=>name, :value=>val, :parent=>parent}
+    prop = {:name=>name, :value=>val, :parent=>parent? ? parent : nil}
 
     id = css_id
     @style[:css][id] ||= {}
