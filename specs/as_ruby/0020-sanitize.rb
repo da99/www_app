@@ -1,7 +1,14 @@
 
 describe "Sanitize" do
 
-  it "escapes chars in 'href' attributes" do
+  it "escapes attributes" do
+    target %^<a rel="&lt;hello">hello</a>^
+    actual {
+      a.rel('<hello') { 'hello' }
+    }
+  end
+
+  it "escapes chars in 'href' attributes as a url" do
     target %^<a href="&#47;home&#47;?a&amp;b">home</a>^
 
     actual do

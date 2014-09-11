@@ -59,15 +59,14 @@ class WWW_Applet < BasicObject
 
     :attributes => {
       :all         => [:id, :class],
-      :a           => [:href],
+      :a           => [:href, :rel],
       :blockquote  => [:cite],
       :form        => [:action, :method, :accept_charset],
       :input       => [:type, :name, :value],
       :style       => [:type],
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
-      :meta        => [:name, :http_equiv, :property, :content, :charset],
-      :html        => [:lang]
+      :meta        => [:name, :http_equiv, :property, :content, :charset]
     },
 
     :protocols=> {
