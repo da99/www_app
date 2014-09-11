@@ -394,18 +394,24 @@ class WWW_Applet < BasicObject
   #                          #id tag tag   -> if no class given and ancestor has id.
   #                          tag tag tag   -> if no ancestor has class.
   #
-  #    css_id 'my_class'  -> same as 'css_id()' except
+  #    css_id :my_class   -> same as 'css_id()' except
   #                          'my_class' overrides :class attribute of current
   #                          element.
   #
   #
-  def css_id str_class = nil
+  def css_id *args
 
-    if !str_class && parent[:css_id]
-      return parent[:css_id]
+    case args.size
+    when 0
+      fail "Not in a tag." unless tag!
+      return tag![:css_id] if tag![:css_id]
+    when 1
+      str_class = args.first
+    else
+      fail "Unknown args: #{args.inspect}"
     end
 
-    start    = @tag_arr.size - 1
+    start    = tag![:tag_index]
     i        = start
     id_given = false
     classes  = []
@@ -438,7 +444,8 @@ class WWW_Applet < BasicObject
       end
 
       break if id_given
-      i = i - 1
+      i = @tag_arr[i][:parent_index]
+      break if !i || i == @body[:tag_index]
     end
 
     classes.join SPACE
