@@ -667,7 +667,14 @@ class WWW_Applet < BasicObject
     final = h.map { |k,raw_v|
       next if raw_v.is_a?(::Array) && raw_v.empty?
       v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-      %^#{k.to_html_attr_name}="#{::Escape_Escape_Escape.html(v.to_s)}"^
+      %^#{k.to_html_attr_name}="#{
+        case k
+        when :href
+          ::Escape_Escape_Escape.href(v)
+        else
+          ::Escape_Escape_Escape.html(v.to_s)
+        end
+      }"^
     }.compact.join SPACE
 
     if final.empty?
