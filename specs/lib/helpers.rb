@@ -86,6 +86,10 @@ module Bacon
     end
 
     def actual &blok
+      if !@target_args
+        return WWW_Applet.new(&blok).render
+      end
+
       include_tag = if @target_args.first == :outer
                       !!@target_args.shift
                     end

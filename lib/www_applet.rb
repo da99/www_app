@@ -14,7 +14,7 @@ class Symbol
 
   def to_css_prop_name
     WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
-                                      str = ::Escape_Escape_Escape.css_property(self.to_s)
+                                      str = ::Escape_Escape_Escape.css_attr(self.to_s.gsub('_','-'))
                                       return str unless str.empty?
                                       fail "Invalid name for css property name: #{self.inspect}" 
                                     end
@@ -616,7 +616,7 @@ class WWW_Applet < BasicObject
                 "url(#{::Escape_Escape_Escape.href(raw_v)})"
               end
             else
-              ::Escape_Escape_Escape.css raw_v
+              ::Escape_Escape_Escape.css_value raw_v
             end
         %^#{name}: #{v};^
       }.join("\n").strip

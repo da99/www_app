@@ -1,5 +1,5 @@
 
-describe "Sanitize" do
+describe "Sanitize: html" do
 
   it "escapes attributes" do
     target %^<a rel="&lt;hello">hello</a>^
@@ -42,7 +42,7 @@ describe "Sanitize" do
 end # === describe HTML ===
 
 
-describe "Style" do
+describe "Sanitize: css values" do
 
   it "sanitizes urls" do
     target :style, <<-EOF
@@ -88,7 +88,34 @@ describe "Style" do
     }.message.should.match /something \*/
   end
 
-end # === describe Style ===
+end # === Sanitize css values
+
+
+describe "Sanitize: css selectors" do
+
+  it 'raises Invalid if css selector has invalid chars: *' do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div.^(:"s*s") { border '1px'}
+      end
+    }.message.should.match /invalid chars/
+  end
+
+  it 'allows css selectors with valid chars: #my_box div.box' do
+    target :style, <<-EOF
+      #my_box div.box {
+        border: 1px;
+      }
+    EOF
+
+    actual {
+      div.*(:my_box) {
+        div.^(:box) { border '1px' }
+      }
+    }
+  end
+
+end # === sanitize css selectors
 
 
 
