@@ -32,6 +32,7 @@ class WWW_Applet < BasicObject
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
   INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9-]/i
+  IMAGE_AT_END                = /image\z/i
 
   HASH       = '#'
   DOT        = '.'
@@ -648,8 +649,15 @@ class WWW_Applet < BasicObject
   end
 
   def styles_to_text h
-    h.map { |k,v|
-      %^#{k.to_css_prop_name}: #{::Escape_Escape_Escape.css v};^
+    h.map { |k,raw_v|
+      name = k.to_css_prop_name
+      v = case
+          when name[IMAGE_AT_END]
+            "url(#{::Escape_Escape_Escape.href(raw_v)})"
+          else
+            ::Escape_Escape_Escape.css raw_v
+          end
+      %^#{name}: #{v};^
     }.join("\n").strip
   end
 

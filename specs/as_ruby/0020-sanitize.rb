@@ -45,7 +45,19 @@ end # === describe HTML ===
 
 describe "Style" do
 
-  it "sanitizes urls"
+  it "sanitizes urls" do
+    target :style, <<-EOF
+      div.box {
+        background-image: url(http:&#47;&#47;www.example.com&#47;back.png);
+      }
+    EOF
+
+    actual do
+      div.^(:box) {
+        background_image 'http://www.example.com/back.png'
+      }
+    end
+  end
 
   it "removes 'expression:'"
 
