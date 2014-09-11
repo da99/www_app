@@ -14,7 +14,7 @@ class Symbol
 
   def to_css_prop_name
     WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
-                                      str = to_s.gsub(WWW_Applet::INVALID_CSS_PROP_NAME_CHARS, '-')
+                                      str = ::Escape_Escape_Escape.css_property(self.to_s)
                                       return str unless str.empty?
                                       fail "Invalid name for css property name: #{self.inspect}" 
                                     end
@@ -30,8 +30,6 @@ class WWW_Applet < BasicObject
 
   Classes                     = []
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
-  INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
-  INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9-]/i
   IMAGE_AT_END                = /image\z/i
 
   HASH       = '#'
@@ -605,33 +603,6 @@ class WWW_Applet < BasicObject
   def to_clean_text type, vals
     case
 
-    when type == :html && vals.is_a?(::Array)
-      a = vals
-      a.map { |tag_index|
-        to_clean_text(:html, @tag_arr[tag_index])
-      }.join NEW_LINE
-
-    when type == :attrs && vals.is_a?(::Hash)
-      h = vals
-      final = h.map { |k,raw_v|
-        next if raw_v.is_a?(::Array) && raw_v.empty?
-        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-        %^#{k.to_html_attr_name}="#{
-          case k
-          when :href
-            ::Escape_Escape_Escape.href(v)
-          else
-            ::Escape_Escape_Escape.html(v.to_s)
-          end
-        }"^
-      }.compact.join SPACE
-
-      if final.empty?
-        ''
-      else
-        " " << final
-      end
-
     when type == :styles && vals.is_a?(::Hash)
       h = vals
       h.map { |k,raw_v|
@@ -654,57 +625,78 @@ class WWW_Applet < BasicObject
       h = vals
       h.map { |k,styles|
         <<-EOF
-          #{k.to_s.gsub(INVALID_CSS_CLASS_CHARS, UNDERSCORE)} {
+          #{::Escape_Escape_Escape.css_selector k.to_s} {
             #{to_clean_text :styles, styles}
           }
         EOF
       }.join.strip
 
-    when type == :html && vals.is_a?(::Hash)
+    when type == :attrs && vals.is_a?(::Hash)
       h = vals
-      case h[:type]
+      final = h.map { |k,raw_v|
+        next if raw_v.is_a?(::Array) && raw_v.empty?
+        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+        <<-EOF
+          #{k.to_html_attr_name}="#{
+            case k
+            when :href
+              ::Escape_Escape_Escape.href(v)
+            else
+              ::Escape_Escape_Escape.html(v.to_s)
+            end
+          }"
+        EOF
+      }.compact.join SPACE
 
-      when :html
-        if h[:tag] == :style
-          return %^
-            <style type="text/css">
-              #{to_clean_text :style_classes, h[:css]}
-            </style>
-          ^
-        end
+      final.empty? ?
+        '' :
+        (" " << final)
 
-        html = h[:childs].map { |tag_index|
-          "#{to_clean_text :html, @tag_arr[tag_index]}"
-        }.join NEW_LINE
+    when type == :html && vals.is_a?(::Array)
+      a = vals
+      a.map { |tag_index|
+        to_clean_text(:html, @tag_arr[tag_index])
+      }.join NEW_LINE
 
-        if h[:text] && !(h[:text].strip.empty?)
-          if html.empty?
-            html = ::Escape_Escape_Escape.html(h[:text])
-          else
-            html << to_clean_text(:html, tag(:div, :class=>:text) { h[:text] })
-          end
-        end
+    when type == :html && vals.is_a?(::Hash)
 
-        if h[:tag]
-          %^
-            <#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>#{html}</#{h[:tag]}>
-          ^.strip
+      h = vals
+
+      fail("Unknown type: #{h.inspect}") if h[:type] != :html
+
+      if h[:tag] == :style
+        return <<-EOF
+          <style type="text/css">
+            #{to_clean_text :style_classes, h[:css]}
+          </style>
+        EOF
+      end
+
+      html = h[:childs].map { |tag_index|
+        "#{to_clean_text :html, @tag_arr[tag_index]}"
+      }.join NEW_LINE
+
+      if h[:text] && !(h[:text].strip.empty?)
+        if html.empty?
+          html = ::Escape_Escape_Escape.html(h[:text])
         else
-          html
+          html << to_clean_text(:html, tag(:div, :class=>:text) { h[:text] })
         end
+      end
 
-      when :script
-        fail "Not ready yet."
-
+      if h[:tag]
+        <<-EOF.strip
+          <#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>#{html}</#{h[:tag]}>
+        EOF
       else
-        fail "Unknown type: #{h[:text].inspect}"
+        html
       end
 
     else
       fail "Unknown vals: #{type.inspect}, #{vals.inspect}"
 
-    end
-  end
+    end # case
+  end # def to_clean_text
 
   def in_html?
     @state.last == :html
