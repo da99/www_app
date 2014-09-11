@@ -636,7 +636,7 @@ class WWW_Applet < BasicObject
       final = h.map { |k,raw_v|
         next if raw_v.is_a?(::Array) && raw_v.empty?
         v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
-        <<-EOF
+        <<-EOF.strip
           #{k.to_html_attr_name}="#{
             case k
             when :href
