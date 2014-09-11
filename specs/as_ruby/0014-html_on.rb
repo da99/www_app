@@ -9,15 +9,26 @@ describe "HTML :on" do
     ^
 
     actual do
-      div.me! {
-        on(:highlight) {
-          border_color '#fff'
-        }
+      div.*(:me) {
+        on(:highlight) { border_color '#fff' }
       }
     end
   end
 
-end # === describe
+  it "adds a psuedo class if passed a String" do
+    target :style, <<-EOF
+      a:hover {
+        border: 12px;
+      }
+    EOF
 
+    actual {
+      a.href('/home') {
+        on(':hover') { border '12px' }
+      }
+    }
+  end
+
+end # === describe
 
 

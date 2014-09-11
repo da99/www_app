@@ -39,14 +39,14 @@ describe "HTML with inner style" do
     ^
 
     actual do
-      div {
-        div {
-          span {
-            width '20px'
-          }
-        }
-      }
+      div { div { span { width '20px' } } }
     end
   end
 
 end # === describe
+
+
+
+
+
+

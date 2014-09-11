@@ -135,6 +135,7 @@ class WWW_Applet < BasicObject
   def initialize *files
     @style   = {}
     @css_arr = []
+    @css_id_override = nil
 
     @title       = nil
     @scripts     = []
@@ -401,10 +402,12 @@ class WWW_Applet < BasicObject
   #
   def css_id *args
 
+    str_class = nil
+
     case args.size
     when 0
       fail "Not in a tag." unless tag!
-      return tag![:css_id] if tag![:css_id]
+      str_class = @css_id_override
     when 1
       str_class = args.first
     else
@@ -676,16 +679,10 @@ class WWW_Applet < BasicObject
   def on name, &blok
     fail "Block required." unless blok
 
-    orig          = parent[:css_id]
-    orig_selector = parent[:selector_id]
-
-    parent[:css_id] = css_id(name)
-    parent[:parent_selector] = selector_id()
-
-    results = yield
-
-    parent[:css_id]          = orig
-    parent[:parent_selector] = orig_selector
+    orig             = @css_id_override
+    @css_id_override = name
+    results          = yield
+    @css_id_override = orig
 
     results
   end
