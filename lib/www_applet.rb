@@ -148,24 +148,27 @@ class WWW_Applet < BasicObject
     @ids   = {}
 
     @tag_arr           = []
-    @current_tag_index = @tag_arr.size - 1
+    @current_tag_index = nil
     @mustache          = nil
 
-    tag(:head) {
-      @head = tag!
+    tag(:head) { @head = tag!  }
+
+    in_tag(@head) {
+      tag(:style) { @style = tag! }
     }
+
+    @style[:css] = {}
 
     tag(:body) {
+
       @body = tag!
-    }
 
-    files.each { |file_name|
-      eval ::File.read(file_name), nil, file_name
-    }
+      files.each { |file_name|
+        eval ::File.read(file_name), nil, file_name
+      }
 
-    if block_given?
-      instance_eval(&(::Proc.new))
-    end
+      instance_eval(&(::Proc.new)) if block_given?
+    }
 
     @mustache = ::Mustache.new
     @mustache.template = to_mustache
@@ -286,7 +289,7 @@ class WWW_Applet < BasicObject
   # -----------------------------------------------
 
   def is_doc?
-    @is_doc || !@style.empty?
+    @is_doc || !@style[:css].empty?
   end
 
   def first_class
@@ -451,7 +454,7 @@ class WWW_Applet < BasicObject
   end
 
   def parent? *args
-    return(!!parent) if args.empty?
+    return(tag! && !tag![:parent_index].nil?) if args.empty?
     fail("Unknown args: #{args.first}") if args.size > 1
     return false unless parent
 
@@ -466,6 +469,7 @@ class WWW_Applet < BasicObject
   end
 
   def parent
+    fail "No tag defined." unless tag!
     @tag_arr[tag![:parent_index]]
   end
 
@@ -474,6 +478,7 @@ class WWW_Applet < BasicObject
   # =================================================================
 
   def tag!
+    return nil unless @current_tag_index.is_a?(::Numeric)
     @tag_arr[@current_tag_index]
   end
 
@@ -488,30 +493,27 @@ class WWW_Applet < BasicObject
       :attrs        =>  {:class=>[]},
       :text         =>  nil,
       :childs       =>  [],
-      :parent_index =>  nil,
+      :parent_index =>  @current_tag_index,
       :is_closed    =>  false,
       :tag_index    =>  @tag_arr.size
     }
 
     @tag_arr << e
-
-    # === open tag
-    orig_tag_index = @current_tag_index
     @current_tag_index = e[:tag_index]
 
-    if @tag_arr[orig_tag_index][:is_closed]
-      # do nothing else
+    if parent?
+      parent[:childs] << e[:tag_index]
     else
-      e[:parent_index] = orig_tag_index
-      @tag_arr[orig_tag_index][:childs] << e
+      if !([:head, :body].include? e[:tag])
+        fail "No parent found for: #{sym_name.inspect}"
+      end
     end
 
     if block_given?
       close_tag { yield }
+    else
+      self
     end
-    # ============
-
-    self
   end
 
   def in_tag t
@@ -519,7 +521,7 @@ class WWW_Applet < BasicObject
     @current_tag_index = t[:tag_index]
     yield
     @current_tag_index = orig
-    self
+    nil
   end
 
   def close_tag
@@ -578,8 +580,8 @@ class WWW_Applet < BasicObject
   end
 
   def array_to_text a
-    a.map { |o|
-      hash_to_text(o)
+    a.map { |tag_index|
+      hash_to_text(@tag_arr[tag_index])
     }.join NEW_LINE
   end
 
@@ -590,13 +592,13 @@ class WWW_Applet < BasicObject
       if h[:tag] == :style
         return %^
           <style type="text/css">
-            #{style_classes_to_text(h[:childs])}
+            #{style_classes_to_text(h[:css])}
           </style>
         ^
       end
 
-      html = h[:childs].map { |c|
-        "#{hash_to_text c}"
+      html = h[:childs].map { |tag_index|
+        "#{hash_to_text @tag_arr[tag_index]}"
       }.join NEW_LINE
 
       if h[:text] && !(h[:text].strip).empty?
@@ -686,10 +688,6 @@ class WWW_Applet < BasicObject
               # :head content might include a '!HEAD'
               # value.
               (page_title { 'Unknown Page Title' }) unless @page_title
-              if !@style.empty?
-                @head[:childs] << tag(:style)
-                @head[:childs].last[:childs] << @style
-              end
 
               Document_Template.
                 sub('!BODY', hash_to_text(@body)).
