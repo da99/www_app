@@ -43,6 +43,22 @@ describe "HTML with inner style" do
     end
   end
 
+  it "does not include parents when element has id" do
+    target :style, <<-EOF
+      #my_box div.box {
+        border: 15px;
+      }
+    EOF
+
+    actual do
+      div.^(:top) {
+        div.*(:my_box) {
+          div.^(:box) { border '15px' }
+        }
+      }
+    end
+  end
+
 end # === describe
 
 

@@ -33,6 +33,8 @@ class WWW_Applet < BasicObject
   INVALID_CSS_CLASS_CHARS     = /[^a-z0-9\#\:\_\-\.\ ]/i
   INVALID_CSS_PROP_NAME_CHARS = /[^a-z0-9-]/i
 
+  HASH       = '#'
+  DOT        = '.'
   BANG       = '!'
   NEW_LINE   = "\n"
   SPACE      = ' '
@@ -420,34 +422,41 @@ class WWW_Applet < BasicObject
     classes  = []
 
     while i > -1
-      curr      = @tag_arr[i]
-      id        = dom_id(curr)
-      css_class = if start == i && str_class
-                    str_class
-                  else
-                    curr[:attrs][:class].first
-                  end
+      e           = @tag_arr[i]
+      id          = dom_id e
+      first_class = e[:attrs][:class].first
 
-      temp_id = case
-                when id && css_class
-                  "##{id}.#{css_class}"
-                when id
-                  "##{id}"
-                when css_class
-                  "#{curr[:tag]}.#{css_class}"
-                else
-                  curr[:tag]
-                end
+      if id
+        id_given = true
+        if str_class
+          classes.unshift(
+            str_class.is_a?(::Symbol) ?
+            "##{id}.#{str_class}" :
+            "##{id}#{str_class}"
+          )
+        else
+          classes.unshift "##{id}"
+        end
 
-      if temp_id == :body && !classes.empty?
-        # do nothing because
-        # we do not want 'body tag.class tag.class'
-      else
-        classes.unshift temp_id
-      end
+      else # no id given
+        if str_class
+          classes.unshift(
+            str_class.is_a?(::Symbol) ?
+            "#{e[:tag]}.#{str_class}" :
+            "#{e[:tag]}#{str_class}"
+          )
+        elsif first_class
+          classes.unshift "#{e[:tag]}.#{first_class}"
+        else
+          if e[:tag] != :body
+            classes.unshift "#{e[:tag]}"
+          end
+        end # if first_class
+
+      end # if id
 
       break if id_given
-      i = @tag_arr[i][:parent_index]
+      i = e[:parent_index]
       break if !i || i == @body[:tag_index]
     end
 
