@@ -10,23 +10,42 @@ require 'escape_escape_escape'
 Mustache.raise_on_context_miss = true
 
 class Mustache
+
   class Context
-
-    def fetch name, default = nil
-      @stack.each { |frame|
-        if frame.is_a?(Hash) && frame.has_key?(name)
-          return frame[name]
-        end
-      }
-
-      raise ContextMiss.new("Can't find #{name.inspect}")
-    end
 
     def find *args
       fail "No longer needed."
     end
 
+    def fetch meth, key
+      @stack.each { |frame|
+        if frame.is_a?(Hash) && frame.has_key?(key)
+          return ::Escape_Escape_Escape.send(meth, frame[key])
+        end
+      }
+
+      raise ContextMiss.new("Can't find .#{meth}(#{key.inspect})")
+    end
+
+    alias_method :[], :fetch
+
   end # === class Context
+
+  class Generator
+
+    alias_method :w_syms_on_fetch, :on_fetch
+    WWW_Applet_Call = /([^\-]+)-(.+)/i
+
+    def on_fetch(names)
+      if names.length == 1 && names.first[WWW_Applet_Call]
+        "ctx[#{$1.to_sym.inspect}, #{$2.to_sym.inspect}]"
+      else
+        w_syms_on_fetch(names)
+      end
+    end
+
+  end # === class Generator
+
 end # === class Mustache
 # ===================================================================
 
@@ -821,7 +840,7 @@ class WWW_Applet < BasicObject
       def method_missing name, *args
         case
         when args.size == 1 && args.first.is_a?(Symbol)
-          "{{{#{args.first}}}}"
+          "{{{#{name}-#{args.first}}}}"
         else
           ::Escape_Escape_Escape.send(name, *args)
         end

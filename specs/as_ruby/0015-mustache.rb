@@ -17,7 +17,7 @@ describe :mustache do
       actual name: 'Bob' do
         div { :object_id }
       end
-    }.message.should.match /Can't find :object_id/i
+    }.message.should.match /Can't find \.html\(:object_id\)/i
   end
 
   it "raises ContextMiss when an unknown value is requested" do
