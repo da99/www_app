@@ -28,4 +28,17 @@ describe :mustache do
     }.message.should.match /object_ids/
   end
 
+  it "escapes html" do
+    target <<-EOF
+      <div>&amp; &#47; hello</div>
+    EOF
+
+    actual :hello=>'& / hello' do
+      div { :hello }
+    end
+  end
+
 end # === describe :mustache
+
+
+

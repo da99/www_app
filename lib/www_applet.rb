@@ -75,6 +75,7 @@ class WWW_Applet < BasicObject
   BANG       = '!'
   NEW_LINE   = "\n"
   SPACE      = ' '
+  BLANK      = ''
   BODY       = 'body'
   UNDERSCORE = '_'
 
@@ -738,24 +739,14 @@ class WWW_Applet < BasicObject
 
       html = h[:childs].map { |tag_index|
         "#{to_clean_text :html, @tag_arr[tag_index]}"
-      }.join(NEW_LINE)
+      }.join(NEW_LINE).strip
 
-      if html.strip.empty?
-        html = case h[:text]
-
-               when ::Symbol
-                 Sanitize.html h[:text]
-
-               when ::String
-                 txt = h[:text].strip
-                 txt.empty? ?
-                   '' :
-                   Sanitize.html(txt)
-
-               else
-                 ''
-
-               end
+      if html.empty?
+        html = Sanitize.html(
+          h[:text].is_a?(::Symbol) ?
+          h[:text] :
+          (h[:text] || BLANK).strip 
+        )
       end # === if html.empty?
 
       if h[:tag]
