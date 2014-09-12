@@ -34,11 +34,10 @@ class Mustache
   class Generator
 
     alias_method :w_syms_on_fetch, :on_fetch
-    WWW_Applet_Call = /([^\-]+)-(.+)/i
 
     def on_fetch(names)
-      if names.length == 1 && names.first[WWW_Applet_Call]
-        "ctx[#{$1.to_sym.inspect}, #{$2.to_sym.inspect}]"
+      if names.length == 2
+        "ctx[#{names.first.to_sym.inspect}, #{names.last.to_sym.inspect}]"
       else
         w_syms_on_fetch(names)
       end
@@ -840,7 +839,7 @@ class WWW_Applet < BasicObject
       def method_missing name, *args
         case
         when args.size == 1 && args.first.is_a?(Symbol)
-          "{{{#{name}-#{args.first}}}}"
+          "{{{#{name}.#{args.first}}}}"
         else
           ::Escape_Escape_Escape.send(name, *args)
         end
