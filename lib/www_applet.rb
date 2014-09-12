@@ -677,16 +677,21 @@ class WWW_Applet < BasicObject
       }.join(NEW_LINE)
 
       if html.strip.empty?
-        if h[:text].is_a?(::Symbol)
-          html = Sanitize.html h[:text]
-        elsif h[:text].is_a?(::String)
-          txt = h[:text].strip
-          html = txt.empty? ?
-            '' :
-            Sanitize.html(txt)
-        else
-          html = ''
-        end
+        html = case h[:text]
+
+               when ::Symbol
+                 Sanitize.html h[:text]
+
+               when ::String
+                 txt = h[:text].strip
+                 txt.empty? ?
+                   '' :
+                   Sanitize.html(txt)
+
+               else
+                 ''
+
+               end
       end # === if html.empty?
 
       if h[:tag]
