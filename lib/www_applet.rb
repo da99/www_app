@@ -4,6 +4,29 @@ require 'escape_escape_escape'
 
 Mustache.raise_on_context_miss = true
 
+class Mustache
+  class Context
+    def fetch name, default = nil
+      @stack.each { |frame|
+        next unless frame.is_a?(Hash)
+        value = if frame.has_key?(name)
+                  frame[name]
+                else
+                  :__missing
+                end
+        return value if value != :__missing
+      }
+
+      raise ContextMiss.new("Can't find #{name.inspect}")
+    end
+
+    def find *args
+      fail "No longer needed."
+    end
+
+  end # === class Context
+end # === class Mustache
+
 class Symbol
 
   def to_html_attr_name
@@ -181,9 +204,35 @@ class WWW_Applet < BasicObject
 
   end # === def new_class
 
-  def render *args
-    (args << {}) if args.empty?
-    @mustache.render *args
+  def render raw_data = {}
+    data = ::Class.new(::BasicObject) {
+      instance_methods.each { |name|
+        private name
+      }
+
+      def initialize vals
+        @data = vals
+        vals.each { |k, v|
+          instance_eval <<-EOF, __FILE__, __LINE__ + 1
+            def #{k}
+              @data[#{k.inspect}]
+            end
+          EOF
+        }
+      end
+
+      def is_a? o
+        false
+      end
+
+      def to_s
+        raise "unknown"
+        'custom class'
+      end
+
+    }.new(raw_data)
+
+    @mustache.render raw_data
   end
 
   Allowed = {

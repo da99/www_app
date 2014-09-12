@@ -11,7 +11,14 @@ describe :mustache do
     end
   end
 
-  it "does not get unauthorized values: :object_id"
+  it "raises ContextMiss for unauthorized methods" do
+    should.raise(Mustache::ContextMiss) {
+      target "nothing"
+      actual name: 'Bob' do
+        div { :object_id }
+      end
+    }.message.should.match /Can't find :object_id/i
+  end
 
   it "raises ContextMiss when an unknown value is requested" do
     should.raise(Mustache::ContextMiss) {
