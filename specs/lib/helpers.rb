@@ -85,9 +85,9 @@ module Bacon
       @target_args = args
     end
 
-    def actual &blok
+    def actual vals = {}, &blok
       if !@target_args
-        return WWW_Applet.new(&blok).render
+        return WWW_Applet.new(&blok).render(vals)
       end
 
       include_tag = if @target_args.first == :outer
@@ -98,7 +98,7 @@ module Bacon
       norm_target   = norm @target_args.last
 
       tag           = @target_args.first
-      html          = WWW_Applet.new(&blok).render
+      html          = WWW_Applet.new(&blok).render(vals)
       section       = case
                       when include_tag
                         html[/(<#{tag}[^\>]*>.+<\/#{tag}>)/m] && $1

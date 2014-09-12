@@ -14,7 +14,7 @@ class Symbol
 
   def to_css_prop_name
     WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
-                                      str = ::Escape_Escape_Escape.css_attr(self.to_s.gsub('_','-'))
+                                      str = WWW_Applet::Sanitize.css_attr(self.to_s.gsub('_','-'))
                                       return str unless str.empty?
                                       fail "Invalid name for css property name: #{self.inspect}" 
                                     end
@@ -548,7 +548,7 @@ class WWW_Applet < BasicObject
   def close_tag
     if block_given?
       results = yield
-      (tag![:text] = results) if results.is_a?(::String)
+      (tag![:text] = results) if results.is_a?(::String) || results.is_a?(::Symbol)
     end
 
     tag![:is_closed] = true
@@ -613,10 +613,10 @@ class WWW_Applet < BasicObject
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{::Escape_Escape_Escape.href(raw_v)})"
+                "url(#{Sanitize.href(raw_v)})"
               end
             else
-              ::Escape_Escape_Escape.css_value raw_v
+              Sanitize.css_value raw_v
             end
         %^#{name}: #{v};^
       }.join("\n").strip
@@ -625,7 +625,7 @@ class WWW_Applet < BasicObject
       h = vals
       h.map { |k,styles|
         <<-EOF
-          #{::Escape_Escape_Escape.css_selector k.to_s} {
+          #{Sanitize.css_selector k.to_s} {
             #{to_clean_text :styles, styles}
           }
         EOF
@@ -640,9 +640,9 @@ class WWW_Applet < BasicObject
           #{k.to_html_attr_name}="#{
             case k
             when :href
-              ::Escape_Escape_Escape.href(v)
+              Sanitize.href(v)
             else
-              ::Escape_Escape_Escape.html(v.to_s)
+              Sanitize.html(v.to_s)
             end
           }"
         EOF
@@ -674,15 +674,20 @@ class WWW_Applet < BasicObject
 
       html = h[:childs].map { |tag_index|
         "#{to_clean_text :html, @tag_arr[tag_index]}"
-      }.join NEW_LINE
+      }.join(NEW_LINE)
 
-      if h[:text] && !(h[:text].strip.empty?)
-        if html.empty?
-          html = ::Escape_Escape_Escape.html(h[:text])
-        else
-          html << to_clean_text(:html, tag(:div, :class=>:text) { h[:text] })
+      if html.strip.empty?
+        if h[:text].is_a?(::Symbol)
+          html = Sanitize.html h[:text]
+        elsif h[:text].is_a?(String)
+          txt = h[:text].strip
+          if txt.empty?
+            html = Sanitize.html txt
+          else
+            html << to_clean_text(:html, tag(:div, :class=>:text) { txt })
+          end
         end
-      end
+      end # === if html.empty?
 
       if h[:tag]
         <<-EOF.strip
@@ -734,7 +739,7 @@ class WWW_Applet < BasicObject
               to_clean_text(:html, @body[:childs])
             end
 
-    utf_8 = ::Escape_Escape_Escape.clean_utf8(final)
+    utf_8 = Sanitize.clean_utf8(final)
 
     @compiled  = utf_8
   end # === def to_mustache
@@ -748,6 +753,22 @@ class WWW_Applet < BasicObject
       super
     end
   end
+
+
+  class Sanitize
+    class << self
+
+      def method_missing name, *args
+        case
+        when args.size == 1 && args.first.is_a?(Symbol)
+          "{{{#{args.first}}}}"
+        else
+          ::Escape_Escape_Escape.send(name, *args)
+        end
+      end
+
+    end # === class << self
+  end # === class Sanitize
 
 end # === class WWW_Applet ==========================================
 
