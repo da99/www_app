@@ -679,12 +679,12 @@ class WWW_Applet < BasicObject
       if html.strip.empty?
         if h[:text].is_a?(::Symbol)
           html = Sanitize.html h[:text]
-        elsif h[:text].is_a?(String)
+        elsif h[:text].is_a?(::String)
           txt = h[:text].strip
           if txt.empty?
-            html = Sanitize.html txt
+            html = ''
           else
-            html << to_clean_text(:html, tag(:div, :class=>:text) { txt })
+            html = Sanitize.html txt
           end
         end
       end # === if html.empty?
