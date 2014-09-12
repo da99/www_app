@@ -2,6 +2,8 @@
 require 'mustache'
 require 'escape_escape_escape'
 
+Mustache.raise_on_context_miss = true
+
 class Symbol
 
   def to_html_attr_name
