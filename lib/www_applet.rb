@@ -6,15 +6,12 @@ Mustache.raise_on_context_miss = true
 
 class Mustache
   class Context
+
     def fetch name, default = nil
       @stack.each { |frame|
-        next unless frame.is_a?(Hash)
-        value = if frame.has_key?(name)
-                  frame[name]
-                else
-                  :__missing
-                end
-        return value if value != :__missing
+        if frame.is_a?(Hash) && frame.has_key?(name)
+          return frame[name]
+        end
       }
 
       raise ContextMiss.new("Can't find #{name.inspect}")
