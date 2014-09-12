@@ -681,11 +681,11 @@ class WWW_Applet < BasicObject
           html = Sanitize.html h[:text]
         elsif h[:text].is_a?(::String)
           txt = h[:text].strip
-          if txt.empty?
-            html = ''
-          else
-            html = Sanitize.html txt
-          end
+          html = txt.empty? ?
+            '' :
+            Sanitize.html(txt)
+        else
+          html = ''
         end
       end # === if html.empty?
 
