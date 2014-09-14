@@ -10,24 +10,21 @@ when "help"
   puts %^
     # ===================="
     www_applet help"
-    www_applet install"
+    www_applet install_js"
     # ===================="
   ^
 
-when "install"
+when "install_js"
 
   require "fileutils"
   args   = ARGV.dup
-  target =`gem which www_applet`.strip
 
-  this_dir    = Dir.pwd
-  applet_dir  = File.dirname target
-  applet_file = File.join applet_dir, "www_applet.js"
+  applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_applet.js"
 
-  target_dir = if !ARGV[1]
-                 this_dir
-               else
+  target_dir = if ARGV[1]
                  ARGV[1]
+               else
+                 Dir.pwd
                end
 
   new_file = File.join target_dir, "www_applet.js"
