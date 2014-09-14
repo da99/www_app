@@ -2,6 +2,7 @@
 
 require 'mustache'
 require 'escape_escape_escape'
+require 'multi_json'
 
 
 # ===================================================================
@@ -699,7 +700,7 @@ class WWW_Applet < BasicObject
     case
 
     when type == :javascript && vals.is_a?(::Array)
-      vals.inspect
+      ::MultiJson.dump(vals, pretty: true)
 
     when type == :styles && vals.is_a?(::Hash)
       h = vals
@@ -833,7 +834,7 @@ class WWW_Applet < BasicObject
     if args.empty?
       @js.last
     else
-      @js.concat args
+      @js.last.concat args
     end
   end
 

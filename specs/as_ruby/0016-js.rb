@@ -4,11 +4,10 @@ describe :JS do
   it "renders js" do
     target :script, <<-EOF
       WWW_Applet.compile(
-        "create_event", [
-          "#my_box", "click",
-          "add_class", ["hello"]
-        ]
-      )
+        #{
+          MultiJson.dump( ["create_event", [ "#my_box", "click", "add_class", ["hello"] ] ], pretty: true)
+        }
+      );
     EOF
 
     actual {
