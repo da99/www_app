@@ -214,6 +214,7 @@ class WWW_Applet < BasicObject
   end # === class self ==============================================
 
   def initialize *files
+    @js      = []
     @style   = {}
     @css_arr = []
     @css_id_override = nil
@@ -240,6 +241,10 @@ class WWW_Applet < BasicObject
       tag(:style) {
         @style = tag!
         @style[:css] = {}
+      }
+
+      tag(:script) {
+        tag![:content] = @js
       }
 
     } # === tag :head
@@ -383,7 +388,7 @@ class WWW_Applet < BasicObject
   # -----------------------------------------------
 
   def is_doc?
-    @is_doc || !@style[:css].empty?
+    @is_doc || !@style[:css].empty? || !@js.empty?
   end
 
   def first_class
@@ -693,6 +698,9 @@ class WWW_Applet < BasicObject
   def to_clean_text type, vals
     case
 
+    when type == :javascript && vals.is_a?(::Array)
+      vals.inspect
+
     when type == :styles && vals.is_a?(::Hash)
       h = vals
       h.map { |k,raw_v|
@@ -762,6 +770,16 @@ class WWW_Applet < BasicObject
         EOF
       end
 
+      if h[:tag] == :script && h[:content] && !h[:content].empty?
+        return <<-EOF
+          <script type="text/css">
+            WWW_Applet.compile(
+             #{to_clean_text :javascript, h[:content]}
+            );
+          </script>
+        EOF
+      end
+
       html = h[:childs].map { |tag_index|
         "#{to_clean_text :html, @tag_arr[tag_index]}"
       }.join(NEW_LINE).strip
@@ -810,13 +828,30 @@ class WWW_Applet < BasicObject
     @state.last == :create_html
   end
 
+  def js *args
+    fail("No js event defined.") if @js.empty?
+    if args.empty?
+      @js.last
+    else
+      @js.concat args
+    end
+  end
+
   def on name, &blok
     fail "Block required." unless blok
+
+    @js << "create_event"
+    @js << [selector_id, name]
 
     orig             = @css_id_override
     @css_id_override = name
     results          = yield
     @css_id_override = orig
+
+    if @js.last.size == 2
+      @js.pop
+      @js.pop
+    end
 
     results
   end
@@ -853,6 +888,9 @@ class WWW_Applet < BasicObject
     end
   end
 
+  def add_class name
+    js("add_class", [Sanitize.css_attr(name)])
+  end
 
   class Sanitize
     class << self
