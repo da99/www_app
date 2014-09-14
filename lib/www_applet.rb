@@ -20,7 +20,13 @@ class Mustache
     def fetch meth, key
       @stack.each { |frame|
         if frame.is_a?(Hash) && frame.has_key?(key)
-          return ::Escape_Escape_Escape.send(meth, frame[key])
+          if meth == :coll
+            target = frame[key]
+            return target if target == true || target == false  || target == nil || target.is_a?(Array) || target.is_a?(Hash)
+            fail "Array or Hash required: #{key.inspect}"
+          else
+            return ::Escape_Escape_Escape.send(meth, frame[key])
+          end
         end
       }
 
@@ -235,6 +241,16 @@ class WWW_Applet < BasicObject
     @mustache.template = to_mustache
 
   end # === def new_class
+
+  def render_if name
+    tag(:render_if) { tag![:attrs][:key] = name; yield }
+    nil
+  end
+
+  def render_unless name
+    tag(:render_unless) { tag![:attrs][:key] = name; yield }
+    nil
+  end
 
   def render raw_data = {}
     data = ::Class.new(::BasicObject) {
@@ -759,18 +775,32 @@ class WWW_Applet < BasicObject
         "#{to_clean_text :html, @tag_arr[tag_index]}"
       }.join(NEW_LINE).strip
 
-      if html.empty?
+      if html.empty? && h[:text]
         html = Sanitize.html(
           h[:text].is_a?(::Symbol) ?
           h[:text] :
-          (h[:text] || BLANK).strip 
+          h[:text].strip 
         )
       end # === if html.empty?
 
+      (html = nil) if html.empty?
+
+      case h[:tag]
+      when :render_if
+        key   = h[:attrs][:key]
+        open  = "{{# coll.#{key} }}"
+        close = "{{/ coll.#{key} }}"
+      when :render_unless
+        key   = h[:attrs][:key]
+        open  = "{{^ coll.#{key} }}"
+        close = "{{/ coll.#{key} }}"
+      else
+        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>"
+        close = "</#{h[:tag]}>"
+      end
+
       if h[:tag]
-        <<-EOF.strip
-          <#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>#{html}</#{h[:tag]}>
-        EOF
+        [open, html, close].compact.join
       else
         html
       end

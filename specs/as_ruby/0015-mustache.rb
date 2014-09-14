@@ -18,6 +18,13 @@ describe :mustache do
         div { :object_id }
       end
     }.message.should.match /Can't find \.html\(:object_id\)/i
+
+    should.raise(Mustache::ContextMiss) {
+      target "nothing"
+      actual name: 'Bob' do
+        div { :to_s }
+      end
+    }.message.should.match /Can't find \.html\(:to_s\)/i
   end
 
   it "raises ContextMiss when an unknown value is requested" do
@@ -26,16 +33,6 @@ describe :mustache do
         div { :object_ids }
       end
     }.message.should.match /object_ids/
-  end
-
-  it "escapes html" do
-    target <<-EOF
-      <div>&amp; &#47; hello</div>
-    EOF
-
-    actual :hello=>'& / hello' do
-      div { :hello }
-    end
   end
 
 end # === describe :mustache
