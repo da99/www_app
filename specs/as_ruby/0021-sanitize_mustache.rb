@@ -27,6 +27,17 @@ describe "Sanitize mustache" do
     }
   end
 
+  it "escapes :href in nested values" do
+    target %^<div><div><a href="&#47;hello">hello</a></div></div>^
+    actual(o: {url: '/hello', msg: 'hello'}) {
+      div {
+        render_if(:o) {
+          div { a.href(:url) { :msg } }
+        }
+      }
+    }
+  end
+
 end # === describe Sanitize mustache ===
 
 
