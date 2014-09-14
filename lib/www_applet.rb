@@ -11,6 +11,18 @@ Mustache.raise_on_context_miss = true
 
 class Mustache
 
+  def render(data = template, ctx = {})
+    ctx = data
+    tpl = templateify(template)
+
+    begin
+      context.push(ctx)
+      tpl.render(context)
+    ensure
+      context.pop
+    end
+  end # === def render
+
   class Context
 
     def find *args
@@ -19,14 +31,20 @@ class Mustache
 
     def fetch meth, key
       @stack.each { |frame|
-        if frame.is_a?(Hash) && frame.has_key?(key)
-          if meth == :coll
+        case
+        when frame.is_a?(Hash) && meth == :coll && !frame.has_key?(key)
+          return false
+
+        when frame.is_a?(Hash) && meth == :coll && frame.has_key?(key)
             target = frame[key]
-            return target if target == true || target == false  || target == nil || target.is_a?(Array) || target.is_a?(Hash)
-            fail "Array or Hash required: #{key.inspect}"
-          else
-            return ::Escape_Escape_Escape.send(meth, frame[key])
-          end
+            if target == true || target == false  || target == nil || target.is_a?(Array) || target.is_a?(Hash)
+              return target
+            end
+            fail "Invalid value: #{key.inspect} (#{key.class})"
+
+        when frame.is_a?(Hash) && frame.has_key?(key)
+          return ::Escape_Escape_Escape.send(meth, frame[key])
+
         end
       }
 
@@ -253,33 +271,6 @@ class WWW_Applet < BasicObject
   end
 
   def render raw_data = {}
-    data = ::Class.new(::BasicObject) {
-      instance_methods.each { |name|
-        private name
-      }
-
-      def initialize vals
-        @data = vals
-        vals.each { |k, v|
-          instance_eval <<-EOF, __FILE__, __LINE__ + 1
-            def #{k}
-              @data[#{k.inspect}]
-            end
-          EOF
-        }
-      end
-
-      def is_a? o
-        false
-      end
-
-      def to_s
-        raise "unknown"
-        'custom class'
-      end
-
-    }.new(raw_data)
-
     @mustache.render raw_data
   end
 

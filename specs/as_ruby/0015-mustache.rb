@@ -35,6 +35,16 @@ describe :mustache do
     }.message.should.match /object_ids/
   end
 
+  it "renders if inverted section and key is not defined" do
+    target <<-EOF
+      <div>hello</div>
+    EOF
+
+    actual {
+      render_unless(:here) { div { 'hello' } }
+    }
+  end
+
 end # === describe :mustache
 
 
