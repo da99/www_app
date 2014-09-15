@@ -264,6 +264,7 @@ class WWW_Applet < BasicObject
     @mustache = ::Mustache.new
     @mustache.template = to_mustache
 
+    freeze
   end # === def new_class
 
   def render_if name
@@ -450,31 +451,28 @@ class WWW_Applet < BasicObject
   #
   #
   def selector_id
-    start    = @tag_arr.size - 1
-    i        = start
+    i        = tag![:tag_index]
     id_given = false
     classes  = []
 
-    while i > -1
-      curr      = @tag_arr[i]
-      id        = dom_id(curr)
+    while !id_given && i && i > -1
+      e         = @tag_arr[i]
+      id        = dom_id e
+      (id_given = true) if id
 
-      temp_id = case
-                when id
-                  "##{id}"
-                else
-                  curr[:tag]
-                end
-
-      if temp_id == :body && !classes.empty?
+      if e[:tag] == :body && !classes.empty?
         # do nothing because
         # we do not want 'body tag.class tag.class'
       else
-        classes.unshift temp_id
-      end
+        case
+        when id
+          classes << "##{id}"
+        else
+          classes << e[:tag]
+        end # === case
+      end # === if
 
-      break if id_given
-      i = i - 1
+      i = tag![:parent_index]
     end
 
     return 'body' if classes.empty?
@@ -510,8 +508,7 @@ class WWW_Applet < BasicObject
       fail "Unknown args: #{args.inspect}"
     end
 
-    start    = tag![:tag_index]
-    i        = start
+    i        = tag![:tag_index]
     id_given = false
     classes  = []
 
