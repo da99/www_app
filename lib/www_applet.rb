@@ -512,7 +512,7 @@ class WWW_Applet < BasicObject
     id_given = false
     classes  = []
 
-    while i > -1
+    while !id_given && i && i > -1
       e           = @tag_arr[i]
       id          = dom_id e
       first_class = e[:attrs][:class].first
@@ -546,9 +546,8 @@ class WWW_Applet < BasicObject
 
       end # if id
 
-      break if id_given
       i = e[:parent_index]
-      break if !i || (i == @body[:tag_index] && !classes.empty?)
+      break if i == @body[:tag_index] && !classes.empty?
     end
 
     classes.join SPACE
