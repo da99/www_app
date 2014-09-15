@@ -472,7 +472,7 @@ class WWW_Applet < BasicObject
         end # === case
       end # === if
 
-      i = tag![:parent_index]
+      i = e[:parent_index]
     end
 
     return 'body' if classes.empty?
