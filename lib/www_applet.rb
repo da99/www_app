@@ -650,9 +650,20 @@ class WWW_Applet < BasicObject
   end
 
   def close_tag
+    orig_tag = tag!
+
     if block_given?
       results = yield
-      (tag![:text] = results) if results.is_a?(::String) || results.is_a?(::Symbol)
+
+      # The :yield may have left some opened tags, :input, :br/
+      # So we make sure we are in the original tag/element
+      # when we want to make some final changes.
+      in_tag(orig_tag) {
+        if tag?(:form)
+          input(:hidden, :auth_token, Sanitize.html(:auth_token))
+        end
+        (tag![:text] = results) if results.is_a?(::String) || results.is_a?(::Symbol)
+      }
     end
 
     tag![:is_closed] = true
@@ -763,7 +774,7 @@ class WWW_Applet < BasicObject
           #{k.to_html_attr_name}="#{
             case k
             when :href, :action
-              Sanitize.href(v)
+              Sanitize.href(v.to_s)
             else
               Sanitize.html(v.to_s)
             end
@@ -829,8 +840,14 @@ class WWW_Applet < BasicObject
         open  = "{{^ coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
       else
-        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}>"
-        close = "</#{h[:tag]}>"
+        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}"
+        if h[:is_closed]
+          open += '>'
+          close = "</#{h[:tag]}>"
+        else
+          open += ' />'
+          close = nil
+        end
       end
 
       if h[:tag]
