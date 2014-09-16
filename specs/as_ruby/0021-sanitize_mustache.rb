@@ -38,6 +38,14 @@ describe "Sanitize mustache" do
     }
   end
 
+  it "raises ContextMiss if encounters unescaped value" do
+    should.raise(Mustache::ContextMiss) {
+      actual(blue: 'hello<') {
+        div { '-- {{{ blue }}}' }
+      }
+    }.message.should /blue/
+  end
+
 end # === describe Sanitize mustache ===
 
 

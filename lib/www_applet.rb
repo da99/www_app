@@ -75,6 +75,27 @@ end # === class Mustache
 
 
 # ===================================================================
+# === String customizations: ========================================
+# ===================================================================
+class String
+
+  def escape_type type = :_return_
+    if type == :_return_
+      @escape_type
+    else
+      @escape_type = type
+    end
+  end
+
+  def escape_escape_escape
+    fail(WWW_Applet::Unescaped, "#{inspect}") unless escape_type
+    WWW_Applet::Sanitize.send(escape_type, self)
+  end
+
+end # === class String
+# ===================================================================
+
+# ===================================================================
 # === Symbol customizations: ========================================
 # ===================================================================
 class Symbol
@@ -106,6 +127,8 @@ class WWW_Applet < BasicObject
 # ===================================================================
 
   include ::Kernel
+
+  Unescaped = ::Class.new(::RuntimeError)
 
   SYM_CACHE = { attrs: {}, css_props: {}}
 
@@ -258,7 +281,14 @@ class WWW_Applet < BasicObject
         eval ::File.read(file_name), nil, file_name
       }
 
-      instance_eval(&(::Proc.new)) if block_given?
+      if block_given?
+        case
+        when !ENV['IS_DEV']
+          fail "Blocks not allowed during non-dev."
+        when ENV['IS_DEV']
+          instance_eval(&(::Proc.new))
+        end # === case
+      end
     }
 
     @mustache = ::Mustache.new
@@ -696,7 +726,21 @@ class WWW_Applet < BasicObject
     case
 
     when type == :javascript && vals.is_a?(::Array)
-      ::MultiJson.dump(vals, pretty: true)
+      clean_vals = vals.map { |x|
+        binding.pry
+        case x
+        when ::String
+          x.escape_escape_escape
+        when ::Numeric
+          x
+        when ::Array
+          to_clean_text(:javascript, x)
+        else
+          fail "Unknown type: #{x.inspect}"
+        end
+      }
+
+      ::MultiJson.dump(clean_vals, pretty: true)
 
     when type == :styles && vals.is_a?(::Hash)
       h = vals
@@ -837,7 +881,7 @@ class WWW_Applet < BasicObject
   def on name, &blok
     fail "Block required." unless blok
 
-    @js << "create_event"
+    @js << 'create_event'.escape_type('js_func_name')
     @js << [selector_id, name]
 
     orig             = @css_id_override

@@ -17,6 +17,12 @@ It's an old idea from the pre-1990s:
 
   > the symmetry of consuming/producing media.
 
+Security:
+-----------
+
+1) All data from user should be run through `:render` to
+ensure sanitization/escaping.
+
 Ruby:
 --------------
 
