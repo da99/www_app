@@ -43,7 +43,7 @@ describe "Sanitize mustache" do
       actual(blue: 'hello<') {
         div { '-- {{{ blue }}}' }
       }
-    }.message.should /blue/
+    }.message.should.match /blue/
   end
 
 end # === describe Sanitize mustache ===

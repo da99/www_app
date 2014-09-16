@@ -30,7 +30,11 @@ class Mustache
       fail "No longer needed."
     end
 
-    def fetch meth, key
+    def fetch *args
+      raise ContextMiss.new("Can't find: #{args.inspect}") if args.size != 2
+
+      meth, key = args
+
       @stack.each { |frame|
         case
         when frame.is_a?(Hash) && meth == :coll && !frame.has_key?(key)
@@ -283,9 +287,9 @@ class WWW_Applet < BasicObject
 
       if block_given?
         case
-        when !ENV['IS_DEV']
+        when !::ENV['IS_DEV']
           fail "Blocks not allowed during non-dev."
-        when ENV['IS_DEV']
+        when ::ENV['IS_DEV']
           instance_eval(&(::Proc.new))
         end # === case
       end
@@ -727,7 +731,6 @@ class WWW_Applet < BasicObject
 
     when type == :javascript && vals.is_a?(::Array)
       clean_vals = vals.map { |x|
-        binding.pry
         case x
         when ::String
           x.escape_escape_escape
