@@ -20,15 +20,21 @@ It's an old idea from the pre-1990s:
 Security:
 -----------
 
-1) All data from user should be run through `:render` to
+1) Server-side: All data from user should be run through `:render` to
 ensure sanitization/escaping.
 
-2) `:inner_html/:inner_text` -- only uses content from the server
-after it has been sanitized/escaped.
+2) Server-side: All JS meant for :script tags should be escaped before encoded into JSON.
 
-3) No client-side sanitization/escaping. Too many bugs and security issues
+3) Client-side: No untrusted data presented to user: `:inner_html/:inner_text`:
+only uses content from the server after it has been sanitized/escaped.
+
+4) Client-side: No client-side sanitization/escaping. Too many bugs and security issues
 because of browser incompability/implementations. Content
 to be used in client-size JS can only come from the server using "lockboxed vars".
+
+5) Client-side: When using `:inner_html`, check for: `/<script/i` in String.
+
+6) All forms require a CSRF token.
 
 Ruby:
 --------------
