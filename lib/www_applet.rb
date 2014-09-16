@@ -2,7 +2,6 @@
 
 require 'mustache'
 require 'escape_escape_escape'
-require 'multi_json'
 
 
 # ===================================================================
@@ -725,7 +724,7 @@ class WWW_Applet < BasicObject
       }
 
     when type == :to_json && vals.is_a?(::Array)
-      ::MultiJson.dump(to_clean_text(:javascript, vals), pretty: true)
+      ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
 
     when type == :styles && vals.is_a?(::Hash)
       h = vals
@@ -915,7 +914,7 @@ class WWW_Applet < BasicObject
   end
 
   def add_class name
-    js("add_class", [Sanitize.css_attr(name)])
+    js("add_class", [name])
   end
 
   class Sanitize

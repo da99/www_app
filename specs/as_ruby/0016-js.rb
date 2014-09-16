@@ -5,14 +5,14 @@ describe :JS do
     target :script, <<-EOF
       WWW_Applet.compile(
         #{
-          MultiJson.dump( ["create_event", [ "#my_box", "click", "add_class", ["hello"] ] ], pretty: true)
+          Escape_Escape_Escape.json_encode( ["create_event", [ "#my_box", "click", "add_class", ["hello"] ] ] )
         }
       );
     EOF
 
     actual {
       div.*(:my_box) {
-        on(:click) { add_class :hello.to_s }
+        on(:click) { add_class :hello }
       }
     }
   end

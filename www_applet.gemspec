@@ -25,7 +25,6 @@ Gem::Specification.new do |spec|
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency "yajl-ruby"            , ">= 1.2"
-  spec.add_runtime_dependency "multi_json"           , ">= 1.10"
   spec.add_runtime_dependency "escape_escape_escape" , ">= 0.2"
   spec.add_runtime_dependency "mustache"             , ">= 0.99"
 

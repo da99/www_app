@@ -1,15 +1,18 @@
 
 describe "Sanitize js" do
 
-  it "raises Unescaped if :js contains an unidentified string" do
-    should.raise(WWW_Applet::Unescaped) {
-      WWW_Applet.new {
-        div {
-          on(:click) { add_class :red }
-          js << [:add_class, 'blue']
-        }
+  it "escapes text as :html" do
+    target :script, <<-EOF
+      WWW_Applet.compile(
+        ["create_event",["div","click","add_class",["red&lt;red"]]]
+      );
+    EOF
+
+    actual do
+      div {
+        on(:click) { add_class "red<red" }
       }
-    }.message.should.match /blue/
+    end
   end
 
 end # === describe Sanitize js ===
