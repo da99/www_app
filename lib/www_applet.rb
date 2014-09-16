@@ -773,7 +773,9 @@ class WWW_Applet < BasicObject
         <<-EOF.strip
           #{k.to_html_attr_name}="#{
             case k
-            when :href, :action
+            when :href
+              Sanitize.href(v)
+            when :action
               Sanitize.href(v.to_s)
             else
               Sanitize.html(v.to_s)
