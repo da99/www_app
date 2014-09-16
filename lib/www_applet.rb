@@ -79,27 +79,6 @@ end # === class Mustache
 
 
 # ===================================================================
-# === String customizations: ========================================
-# ===================================================================
-class String
-
-  def escape_type type = :_return_
-    if type == :_return_
-      @escape_type
-    else
-      @escape_type = type
-    end
-  end
-
-  def escape_escape_escape
-    fail(WWW_Applet::Unescaped, "#{inspect}") unless escape_type
-    WWW_Applet::Sanitize.send(escape_type, self)
-  end
-
-end # === class String
-# ===================================================================
-
-# ===================================================================
 # === Symbol customizations: ========================================
 # ===================================================================
 class Symbol
@@ -118,7 +97,7 @@ class Symbol
                                       return str unless str.empty?
                                       fail "Invalid name for css property name: #{self.inspect}" 
                                     end
-  end
+  end # === def to_css_prop_name
 
 end # === class Symbol
 # ===================================================================
@@ -730,20 +709,23 @@ class WWW_Applet < BasicObject
     case
 
     when type == :javascript && vals.is_a?(::Array)
-      clean_vals = vals.map { |x|
-        case x
-        when ::String
-          x.escape_escape_escape
-        when ::Numeric
-          x
-        when ::Array
-          to_clean_text(:javascript, x)
-        else
-          fail "Unknown type: #{x.inspect}"
-        end
+      clean_vals = vals.map { |raw_x|
+        x = case raw_x
+            when ::Symbol
+              ::Escape_Escape_Escape.html(raw_x.to_s)
+            when ::String
+              ::Escape_Escape_Escape.html(raw_x)
+            when ::Array
+              to_clean_text :javascript, raw_x
+            when ::Numeric
+              x
+            else
+              fail "Unknown type for json: #{raw_x.inspect}"
+            end
       }
 
-      ::MultiJson.dump(clean_vals, pretty: true)
+    when type == :to_json && vals.is_a?(::Array)
+      ::MultiJson.dump(to_clean_text(:javascript, vals), pretty: true)
 
     when type == :styles && vals.is_a?(::Hash)
       h = vals
@@ -781,7 +763,7 @@ class WWW_Applet < BasicObject
         <<-EOF.strip
           #{k.to_html_attr_name}="#{
             case k
-            when :href
+            when :href, :action
               Sanitize.href(v)
             else
               Sanitize.html(v.to_s)
@@ -818,7 +800,7 @@ class WWW_Applet < BasicObject
         return <<-EOF
           <script type="text/css">
             WWW_Applet.compile(
-             #{to_clean_text :javascript, h[:content]}
+             #{to_clean_text :to_json, h[:content]}
             );
           </script>
         EOF
@@ -884,7 +866,7 @@ class WWW_Applet < BasicObject
   def on name, &blok
     fail "Block required." unless blok
 
-    @js << 'create_event'.escape_type('js_func_name')
+    @js << 'create_event'
     @js << [selector_id, name]
 
     orig             = @css_id_override
