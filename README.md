@@ -23,6 +23,13 @@ Security:
 1) All data from user should be run through `:render` to
 ensure sanitization/escaping.
 
+2) `:inner_html/:inner_text` -- only uses content from the server
+after it has been sanitized/escaped.
+
+3) No client-side sanitization/escaping. Too many bugs and security issues
+because of browser incompability/implementations. Content
+to be used in client-size JS can only come from the server using "lockboxed vars".
+
 Ruby:
 --------------
 
@@ -35,28 +42,17 @@ To install:
 To Use:
 
 ```ruby
-  require "www_applet"
+    div {
 
-  json = [
-    "one", "is", [1],
-    "two", "is", [2],
-    "three", "is a computer", [
-      3
-    ],
-    "print", [
-      "get", ["one"],
-      "get", ["two"],
-      "three", []
-    ]
-  ]
+      border '1px solid #fff'
 
-  o = WWW_Applet.new json
-  # --or--
-  o = WWW_Applet.new MultiJson.dump(json)
+      on(:click) {
+        add_class 'clicked'
+      }
 
-  o.run
+     'hello'
 
-  puts o.console.inspect
+    }
 ```
 
 
