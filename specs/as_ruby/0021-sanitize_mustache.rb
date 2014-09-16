@@ -38,6 +38,14 @@ describe "Sanitize mustache" do
     }
   end
 
+  it "does not allow vars to be used in form :action" do
+    target %^<form action="url"><input type="hidden" name="auth_token" value="hello" /></form>^
+
+    actual :auth_token => 'hello' do
+      form.action(:url) {}
+    end
+  end
+
   it "raises ContextMiss if encounters unescaped value" do
     should.raise(Mustache::ContextMiss) {
       actual(blue: 'hello<') {
