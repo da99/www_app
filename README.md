@@ -42,50 +42,28 @@ To install:
 To Use:
 
 ```ruby
-    div {
+  div {
 
-      border '1px solid #fff'
+    border '1px solid #fff'
 
-      on(:click) {
-        add_class 'clicked'
-      }
-
-     'hello'
-
+    on(:click) {
+      add_class 'clicked'
     }
-```
 
+   'hello'
+
+  }
+```
 
 JavaScript/browser:
 -----------------
 
 *Note:* Not done yet.
 
-Rules:
--------
-
-1. Allowed: Strings, numbers, Arrays, and functions.
-2. Function calls: a string, followed by an Array:
-
-```javascript
-  [ "my func", [1,2,3] ]
-```
-
-3. Writing a function: A function gets passed 3 variables:
-
-  1. the runtime as an Object/instance.
-  2. the name of the function as a String.
-  3. the arguments as an Array.
-
-```ruby
-  lambda { |sender, name_of_computer, evaled_args|
-  }
-```
-
 Fun fact:
 -----
 
-[JSON\ Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet.
+[JSON Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet.
 
 
 
