@@ -1,4 +1,19 @@
 
+describe :all do
+
+  it "raises a RuntimeError if tag has an unknown attribute" do
+    should.raise(RuntimeError) {
+      actual {
+        a.href('/href') {
+          tag![:attrs][:hi] = 'hiya'
+          "here"
+        }
+      }
+    }.message.should.match /Unknown attr: :hi/
+  end
+
+end # === describe :all
+
 describe :href do
 
   it "produces 'a' elements with 'href'" do

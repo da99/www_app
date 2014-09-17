@@ -36,6 +36,12 @@ to be used in client-size JS can only come from the server using "lockboxed vars
 
 6) All forms require a CSRF token.
 
+Notes:
+-------
+
+1) Blockquotes no longer allow the :cite attribute. Instead use the `cite` tag.
+More info at:  [http://html5doctor.com/cite-and-blockquote-reloaded/](http://html5doctor.com/cite-and-blockquote-reloaded/)
+
 Ruby:
 --------------
 

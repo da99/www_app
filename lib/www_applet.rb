@@ -135,7 +135,7 @@ class WWW_Applet < BasicObject
       body   div    span
 
       b      em     i  strong  u  a 
-      abbr   blockquote 
+      abbr   blockquote  cite
       br     cite   code 
       ul     ol     li  p  pre  q 
       sup    sub 
@@ -153,14 +153,6 @@ class WWW_Applet < BasicObject
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
       :meta        => [:name, :http_equiv, :property, :content, :charset]
-    },
-
-    :protocols=> {
-      :a          => {:href=>['ftp', 'http', 'https', :relative]},
-      :blockquote => {:cite=>['http', 'https', :relative]},
-      :form       => {:action=>[:relative]},
-      :script     => {:src=>[:relative]},
-      :link       => {:href=>[:relative]}
     },
 
     :css => {
@@ -214,6 +206,14 @@ class WWW_Applet < BasicObject
       ].map(&:to_sym)
     }
 
+  } # === end Methods
+
+  ALLOWED_ATTRS = Methods[:attributes].inject({}) { |memo, (tag, attrs)|
+    attrs.each { |a|
+      memo[a] ||= []
+      memo[a] << tag
+    }
+    memo
   }
 
   class << self # ===================================================
@@ -768,12 +768,17 @@ class WWW_Applet < BasicObject
     when type == :attrs && vals.is_a?(::Hash)
       h = vals
       final = h.map { |k,raw_v|
+
+        fail "Unknown attr: #{k.inspect}" if !ALLOWED_ATTRS.include?(k)
+
         next if raw_v.is_a?(::Array) && raw_v.empty?
+
         v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+
         <<-EOF.strip
           #{k.to_html_attr_name}="#{
             case k
-            when :href
+            when :href, :src
               Sanitize.href(v)
             when :action
               Sanitize.href(v.to_s)
@@ -782,6 +787,7 @@ class WWW_Applet < BasicObject
             end
           }"
         EOF
+
       }.compact.join SPACE
 
       final.empty? ?
