@@ -745,6 +745,16 @@ class WWW_Applet < BasicObject
     when type == :to_json && vals.is_a?(::Array)
       ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
 
+    when type == :style_classes && vals.is_a?(::Hash)
+      h = vals
+      h.map { |k,styles|
+        <<-EOF
+          #{Sanitize.css_selector k.to_s} {
+            #{to_clean_text :styles, styles}
+          }
+        EOF
+      }.join.strip
+
     when type == :styles && vals.is_a?(::Hash)
       h = vals
       h.map { |k,raw_v|
@@ -755,23 +765,13 @@ class WWW_Applet < BasicObject
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{Sanitize.href(raw_v)})"
+                "url(#{Sanitize.href(raw_v.to_s)})"
               end
             else
-              Sanitize.css_value raw_v
+              Sanitize.css_value raw_v.to_s
             end
         %^#{name}: #{v};^
       }.join("\n").strip
-
-    when type == :style_classes && vals.is_a?(::Hash)
-      h = vals
-      h.map { |k,styles|
-        <<-EOF
-          #{Sanitize.css_selector k.to_s} {
-            #{to_clean_text :styles, styles}
-          }
-        EOF
-      }.join.strip
 
     when type == :attrs && vals.is_a?(::Hash)
       h     = vals[:attrs]
