@@ -1,5 +1,64 @@
 
-describe "Sanitize :css" do
+describe :css do
+
+  it "adds a 'style' tag to 'head'" do
+    target :outer, :style, %^
+      <style type="text/css">
+        #the_box {
+          border-width: 10px;
+        }
+      </style>
+    ^
+
+    actual do
+      div.*(:the_box) {
+        border_width '10px'
+      }
+    end
+  end
+
+  it "uses id of element to add style" do
+    target :style, %^
+      #my_box {
+        border-width: 1px;
+      }
+    ^
+
+    actual do
+      div.*(:my_box) {
+        border_width '1px'
+      }
+    end
+  end
+
+  it "uses tag hierarchy if no id found" do
+    target :style, %^
+      div div span {
+        width: 20px;
+      }
+    ^
+
+    actual do
+      div { div { span { width '20px' } } }
+    end
+  end
+
+  it "does not include parents when element has id" do
+    target :style, <<-EOF
+      #my_box div.box {
+        border: 15px;
+      }
+    EOF
+
+    actual do
+      div.^(:top) {
+        div.*(:my_box) {
+          div.^(:box) { border '15px' }
+        }
+      }
+    end
+  end
+
 
   it "does not accept vars for css values" do
     target :style, %^
@@ -26,11 +85,6 @@ describe "Sanitize :css" do
       }
     }
   end
-
-end # === describe Sanitize :css ===
-
-
-describe "Sanitize: css values" do
 
   it "sanitizes urls" do
     target :style, <<-EOF
@@ -75,11 +129,6 @@ describe "Sanitize: css values" do
       end
     }.message.should.match /something \*/
   end
-
-end # === Sanitize css values
-
-
-describe "Sanitize: css selectors" do
 
   it 'raises Invalid if css selector has invalid chars: *' do
     should.raise(Escape_Escape_Escape::Invalid) {
