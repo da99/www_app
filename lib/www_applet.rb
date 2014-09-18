@@ -131,11 +131,14 @@ class WWW_Applet < BasicObject
 
   Document_Template  = ::File.read(__FILE__).split("__END__").last.strip
 
+  NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
+
   Methods    = {
     :elements => %w[
 
       body   div    span
 
+      img
       b      em     i  strong  u  a 
       abbr   blockquote  cite
       br     cite   code 
@@ -150,13 +153,13 @@ class WWW_Applet < BasicObject
     :attributes => {
       :all         => [:id, :class],
       :a           => [:href, :rel],
-      :blockquote  => [:cite],
       :form        => [:action, :method, :accept_charset],
       :input       => [:type, :name, :value],
       :style       => [:type],
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
-      :meta        => [:name, :http_equiv, :property, :content, :charset]
+      :meta        => [:name, :http_equiv, :property, :content, :charset],
+      :img         => [:src, :width, :height]
     },
 
     :css => {
@@ -854,12 +857,12 @@ class WWW_Applet < BasicObject
         close = "{{/ coll.#{key} }}"
       else
         open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}"
-        if h[:is_closed] || ALWAYS_END_TAGS.include?(h[:tag])
-          open += '>'
-          close = "</#{h[:tag]}>"
-        else
+        if NO_END_TAGS.include?(h[:tag])
           open += ' />'
           close = nil
+        else
+          open += '>'
+          close = "</#{h[:tag]}>"
         end
       end
 

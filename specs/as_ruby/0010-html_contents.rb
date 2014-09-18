@@ -16,5 +16,13 @@ describe "HTML contents" do
     }
   end
 
+  it "does not give end-tags to void tags (self-closing tags)" do
+    target %^<br />\n<img />^
+    actual {
+      br./
+      img./
+    }
+  end
+
 end # === describe HTML contents
 
