@@ -82,26 +82,9 @@ end # === class Mustache
 # ===================================================================
 class Symbol
 
-
   def to_mustache meth
     WWW_Applet::Sanitize.mustache meth, self
   end
-
-  def to_html_attr_name
-    WWW_Applet::SYM_CACHE[:attrs][self] ||= begin
-                                      str = to_s.gsub(WWW_Applet::INVALID_ATTR_CHARS, '_')
-                                      return str unless str.empty?
-                                      fail "Invalid name for html attr: #{self.inspect}" 
-                                    end
-  end # === def to_html_attr_name
-
-  def to_css_prop_name
-    WWW_Applet::SYM_CACHE[:css_props][self] ||= begin
-                                      str = WWW_Applet::Sanitize.css_attr(self.to_s.gsub('_','-'))
-                                      return str unless str.empty?
-                                      fail "Invalid name for css property name: #{self.inspect}" 
-                                    end
-  end # === def to_css_prop_name
 
 end # === class Symbol
 # ===================================================================
@@ -764,7 +747,12 @@ class WWW_Applet < BasicObject
     when type == :styles && vals.is_a?(::Hash)
       h = vals
       h.map { |k,raw_v|
-        name  = k.to_css_prop_name
+        name  = begin
+                  clean_k = WWW_Applet::Sanitize.css_attr(k.to_s.gsub('_','-'))
+                  fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
+                  clean_k
+                end
+
         raw_v = raw_v.to_s
 
         v = case
@@ -794,20 +782,21 @@ class WWW_Applet < BasicObject
 
         v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
 
-        <<-EOF.strip
-          #{k.to_html_attr_name}="#{
-            case
-            when k == :href && tag[:tag] == :a
-              Sanitize.mustache :href, v
-            when k == :action || k == :src || k == :href
-              Sanitize.relative_href(v)
-            else ALLOWED_ATTRS[k]
-              Sanitize.html(v)
-            else
-              fail "Invalid attr: #{k.inspect}"
-            end
-          }"
-        EOF
+        attr_name = k.to_s.gsub(WWW_Applet::INVALID_ATTR_CHARS, '_')
+        fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
+
+        attr_val = case
+                   when k == :href && tag[:tag] == :a
+                     Sanitize.mustache :href, v
+                   when k == :action || k == :src || k == :href
+                     Sanitize.relative_href(v)
+                   else ALLOWED_ATTRS[k]
+                     Sanitize.html(v)
+                   else
+                     fail "Invalid attr: #{k.inspect}"
+                   end
+
+        %*#{attr_name}="#{attr_val}"*
 
       }.compact.join SPACE
 
