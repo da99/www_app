@@ -864,11 +864,13 @@ class WWW_Applet < BasicObject
         key   = h[:attrs][:key]
         open  = "{{# coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
+
       when :render_unless
         key   = h[:attrs][:key]
         open  = "{{^ coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
-      else
+
+      when Methods[:elements].include?(h[:tag])
         open  = "<#{h[:tag]}#{to_clean_text(:attrs, h)}"
         if NO_END_TAGS.include?(h[:tag])
           open += ' />'
@@ -877,7 +879,11 @@ class WWW_Applet < BasicObject
           open += '>'
           close = "</#{h[:tag]}>"
         end
-      end
+
+      else
+        fail "Unknown html tag: #{h[:tag].inspect}"
+
+      end # === case h[:tag]
 
       if h[:tag]
         [open, html, close].compact.join
