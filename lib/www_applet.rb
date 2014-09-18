@@ -654,6 +654,7 @@ class WWW_Applet < BasicObject
   end
 
   def /
+    fail "No block allowed here: :/" if block_given?
     close_tag
   end
 
@@ -676,10 +677,8 @@ class WWW_Applet < BasicObject
       }
     end
 
-    in_tag(orig_tag) {
-      tag![:is_closed] = true
-      @current_tag_index = tag![:parent_index]
-    }
+    orig_tag[:is_closed] = true
+    @current_tag_index = orig_tag[:parent_index]
 
     nil
   end
