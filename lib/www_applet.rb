@@ -731,10 +731,8 @@ class WWW_Applet < BasicObject
     when type == :javascript && vals.is_a?(::Array)
       clean_vals = vals.map { |raw_x|
         x = case raw_x
-            when ::Symbol
+            when ::Symbol, ::String
               ::Escape_Escape_Escape.html(raw_x.to_s)
-            when ::String
-              ::Escape_Escape_Escape.html(raw_x)
             when ::Array
               to_clean_text :javascript, raw_x
             when ::Numeric
