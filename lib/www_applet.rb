@@ -732,7 +732,7 @@ class WWW_Applet < BasicObject
       clean_vals = vals.map { |raw_x|
         x = case raw_x
             when ::Symbol, ::String
-              ::Escape_Escape_Escape.html(raw_x.to_s)
+              Sanitize.html(raw_x.to_s)
             when ::Array
               to_clean_text :javascript, raw_x
             when ::Numeric
@@ -791,11 +791,11 @@ class WWW_Applet < BasicObject
           #{k.to_html_attr_name}="#{
             case
             when k == :href && tag[:tag] == :a
-              Sanitize.href(v)
+              Sanitize.mustache :href, v
             when k == :action || k == :src || k == :href
-              Sanitize.href(v.to_s)
+              Sanitize.href(v)
             else
-              Sanitize.html(v.to_s)
+              Sanitize.html(v)
             end
           }"
         EOF
@@ -955,15 +955,27 @@ class WWW_Applet < BasicObject
   end
 
   class Sanitize
+
+    MUSTACHE_Regex = /\A\{+[a-z0-9\_\.]+\}+\z/i
+
     class << self
 
+      def mustache *args
+        meth, val = args
+        m = if val.is_a?(Symbol)
+              "{{{ #{meth}.#{val} }}}"
+            else
+              ::Escape_Escape_Escape.send(meth, val)
+            end
+        fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
+        m
+      end
+
       def method_missing name, *args
-        case
-        when args.size == 1 && args.first.is_a?(Symbol)
-          "{{{#{name}.#{args.first}}}}"
-        else
-          ::Escape_Escape_Escape.send(name, *args)
+        if args.last.is_a?(::Symbol)
+          args.push(args.pop.to_s)
         end
+        ::Escape_Escape_Escape.send(name, *args)
       end
 
     end # === class << self
