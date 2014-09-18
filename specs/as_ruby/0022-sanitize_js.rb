@@ -15,4 +15,22 @@ describe "Sanitize js" do
     end
   end
 
+  it "does not allow vars in :script :src attribute" do
+    target :body, <<-EOF
+      <script src="help"></script>
+    EOF
+
+    actual do
+      script.src(:help)
+    end
+  end
+
+  it "does not allow blocks in :script" do
+    should.raise(RuntimeError) {
+      actual {
+        script.src('/hello.js') {}
+      }
+    }.message.should.match /Block not allowed in :script/
+  end
+
 end # === describe Sanitize js ===

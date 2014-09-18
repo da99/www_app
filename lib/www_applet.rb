@@ -112,6 +112,8 @@ class WWW_Applet < BasicObject
 
   Unescaped = ::Class.new(::RuntimeError)
 
+  ALWAYS_END_TAGS = [:script]
+
   SYM_CACHE = { attrs: {}, css_props: {}}
 
   Classes                     = []
@@ -140,6 +142,8 @@ class WWW_Applet < BasicObject
       ul     ol     li  p  pre  q 
       sup    sub 
       form   input  button
+
+      script
 
     ].map(&:to_sym),
 
@@ -249,9 +253,9 @@ class WWW_Applet < BasicObject
         @style[:css] = {}
       }
 
-      tag(:script) {
-        tag![:content] = @js
-      }
+      tag(:script)
+      tag![:content] = @js
+      close_tag
 
     } # === tag :head
 
@@ -649,10 +653,16 @@ class WWW_Applet < BasicObject
     nil
   end
 
+  def /
+    close_tag
+  end
+
   def close_tag
     orig_tag = tag!
 
     if block_given?
+      fail "Block not allowed in :script." if tag?(:script)
+
       results = yield
 
       # The :yield may have left some opened tags, :input, :br/
@@ -666,8 +676,10 @@ class WWW_Applet < BasicObject
       }
     end
 
-    tag![:is_closed] = true
-    @current_tag_index = tag![:parent_index]
+    in_tag(orig_tag) {
+      tag![:is_closed] = true
+      @current_tag_index = tag![:parent_index]
+    }
 
     nil
   end
@@ -705,14 +717,6 @@ class WWW_Applet < BasicObject
     c = nil
     in_tag(@tag) { c = tag(:meta, *args) }
     c
-  end
-
-  def script *args
-    fail "No block allowed for now." if block_given?
-    fail "Not allowed here." unless parent?(:body)
-    s = nil
-    in_tag(@head) { s = tag(:script, *args) }
-    s
   end
 
   def to_clean_text type, vals
@@ -778,9 +782,9 @@ class WWW_Applet < BasicObject
         <<-EOF.strip
           #{k.to_html_attr_name}="#{
             case k
-            when :href, :src
+            when :href
               Sanitize.href(v)
-            when :action
+            when :action, :src
               Sanitize.href(v.to_s)
             else
               Sanitize.html(v.to_s)
@@ -849,7 +853,7 @@ class WWW_Applet < BasicObject
         close = "{{/ coll.#{key} }}"
       else
         open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}"
-        if h[:is_closed]
+        if h[:is_closed] || ALWAYS_END_TAGS.include?(h[:tag])
           open += '>'
           close = "</#{h[:tag]}>"
         else
