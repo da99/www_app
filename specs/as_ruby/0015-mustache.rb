@@ -45,11 +45,6 @@ describe :mustache do
     }
   end
 
-end # === describe :mustache
-
-
-describe "Sanitize mustache" do
-
   it "escapes html" do
     target <<-EOF
       <div>&amp; &#47; hello</div>
