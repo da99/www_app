@@ -82,6 +82,11 @@ end # === class Mustache
 # ===================================================================
 class Symbol
 
+
+  def to_mustache meth
+    WWW_Applet::Sanitize.mustache meth, self
+  end
+
   def to_html_attr_name
     WWW_Applet::SYM_CACHE[:attrs][self] ||= begin
                                       str = to_s.gsub(WWW_Applet::INVALID_ATTR_CHARS, '_')
@@ -678,7 +683,7 @@ class WWW_Applet < BasicObject
       # when we want to make some final changes.
       in_tag(orig_tag) {
         if tag?(:form)
-          input(:hidden, :auth_token, Sanitize.html(:auth_token))
+          input(:hidden, :auth_token, :auth_token.to_mustache(:html))
         end
         (tag![:text] = results) if results.is_a?(::String) || results.is_a?(::Symbol)
       }
@@ -956,18 +961,18 @@ class WWW_Applet < BasicObject
 
   class Sanitize
 
-    MUSTACHE_Regex = /\A\{+[a-z0-9\_\.]+\}+\z/i
+    MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
 
     class << self
 
       def mustache *args
         meth, val = args
-        m = if val.is_a?(Symbol)
-              "{{{ #{meth}.#{val} }}}"
-            else
-              ::Escape_Escape_Escape.send(meth, val)
-            end
-        fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
+        if val.is_a?(Symbol)
+          m = "{{{ #{meth}.#{val} }}}"
+          fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
+        else
+          m = ::Escape_Escape_Escape.send(meth, val)
+        end
         m
       end
 
