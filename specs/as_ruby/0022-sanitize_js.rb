@@ -25,12 +25,11 @@ describe "Sanitize js" do
     end
   end
 
-  it "does not allow blocks in :script" do
-    should.raise(RuntimeError) {
-      actual {
-        script.src('/hello.js') {}
-      }
-    }.message.should.match /Block not allowed in :script/
+  it "ignores text for :script block" do
+    target %^<script src="&#47;hello.js"></script>^
+    actual {
+      script.src('/hello.js') { 'hello' }
+    }
   end
 
 end # === describe Sanitize js ===

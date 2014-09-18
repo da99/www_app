@@ -253,9 +253,9 @@ class WWW_Applet < BasicObject
         @style[:css] = {}
       }
 
-      tag(:script)
-      tag![:content] = @js
-      close_tag
+      tag(:script) {
+        tag![:content] = @js
+      }
 
     } # === tag :head
 
@@ -660,11 +660,13 @@ class WWW_Applet < BasicObject
 
   def close_tag
     orig_tag = tag!
+    is_script = tag?(:script)
 
     if block_given?
-      fail "Block not allowed in :script." if tag?(:script)
 
       results = yield
+
+      results = nil if is_script
 
       # The :yield may have left some opened tags, :input, :br/
       # So we make sure we are in the original tag/element
