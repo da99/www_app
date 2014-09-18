@@ -46,6 +46,13 @@ describe "Sanitize mustache" do
     end
   end
 
+  it "does not allow vars to be used in :link :href" do
+    target %^<link href="hello" />^
+    actual {
+      link.href(:hello)./
+    }
+  end
+
   it "raises ContextMiss if encounters unescaped value" do
     should.raise(Mustache::ContextMiss) {
       actual(blue: 'hello<') {

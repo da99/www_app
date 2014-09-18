@@ -146,6 +146,8 @@ class WWW_Applet < BasicObject
       sup    sub 
       form   input  button
 
+      link
+
       script
 
     ].map(&:to_sym),
@@ -723,7 +725,7 @@ class WWW_Applet < BasicObject
     c
   end
 
-  def to_clean_text type, vals
+  def to_clean_text type, vals, tag = nil
     case
 
     when type == :javascript && vals.is_a?(::Array)
@@ -774,7 +776,8 @@ class WWW_Applet < BasicObject
       }.join.strip
 
     when type == :attrs && vals.is_a?(::Hash)
-      h = vals
+      h     = vals[:attrs]
+      tag   = vals
       final = h.map { |k,raw_v|
 
         fail "Unknown attr: #{k.inspect}" if !ALLOWED_ATTRS.include?(k)
@@ -785,10 +788,10 @@ class WWW_Applet < BasicObject
 
         <<-EOF.strip
           #{k.to_html_attr_name}="#{
-            case k
-            when :href
+            case
+            when k == :href && tag[:tag] == :a
               Sanitize.href(v)
-            when :action, :src
+            when k == :action || k == :src || k == :href
               Sanitize.href(v.to_s)
             else
               Sanitize.html(v.to_s)
@@ -856,7 +859,7 @@ class WWW_Applet < BasicObject
         open  = "{{^ coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
       else
-        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h[:attrs])}"
+        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h)}"
         if NO_END_TAGS.include?(h[:tag])
           open += ' />'
           close = nil
