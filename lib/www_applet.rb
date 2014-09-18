@@ -747,9 +747,10 @@ class WWW_Applet < BasicObject
 
     when type == :style_classes && vals.is_a?(::Hash)
       h = vals
-      h.map { |k,styles|
+      h.map { |raw_k,styles|
+        k = raw_k.to_s
         <<-EOF
-          #{Sanitize.css_selector k.to_s} {
+          #{Sanitize.css_selector k} {
             #{to_clean_text :styles, styles}
           }
         EOF
@@ -758,17 +759,19 @@ class WWW_Applet < BasicObject
     when type == :styles && vals.is_a?(::Hash)
       h = vals
       h.map { |k,raw_v|
-        name = k.to_css_prop_name
+        name  = k.to_css_prop_name
+        raw_v = raw_v.to_s
+
         v = case
             when name[IMAGE_AT_END]
               case raw_v
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{Sanitize.href(raw_v.to_s)})"
+                "url(#{Sanitize.href(raw_v)})"
               end
             else
-              Sanitize.css_value raw_v.to_s
+              Sanitize.css_value raw_v
             end
         %^#{name}: #{v};^
       }.join("\n").strip
