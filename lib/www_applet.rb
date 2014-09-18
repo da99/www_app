@@ -653,7 +653,7 @@ class WWW_Applet < BasicObject
     nil
   end
 
-  def /
+  public def /
     fail "No block allowed here: :/" if block_given?
     close_tag
   end

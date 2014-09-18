@@ -9,5 +9,12 @@ describe "HTML contents" do
     end
   end
 
+  it "closes tag with :/" do
+    target %^<p></p>^
+    actual {
+      p./
+    }
+  end
+
 end # === describe HTML contents
 
