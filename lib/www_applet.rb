@@ -773,10 +773,12 @@ class WWW_Applet < BasicObject
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{Sanitize.relative_href(raw_v)})"
+                "url(#{Sanitize.href(raw_v)})"
               end
-            else
+            when Methods[:css][:properties][k]
               Sanitize.css_value raw_v
+            else
+              fail "Invalid css attr: #{name.inspect}"
             end
         %^#{name}: #{v};^
       }.join("\n").strip
@@ -799,8 +801,10 @@ class WWW_Applet < BasicObject
               Sanitize.mustache :href, v
             when k == :action || k == :src || k == :href
               Sanitize.relative_href(v)
-            else
+            else ALLOWED_ATTRS[k]
               Sanitize.html(v)
+            else
+              fail "Invalid attr: #{k.inspect}"
             end
           }"
         EOF
