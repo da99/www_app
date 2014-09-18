@@ -17,4 +17,6 @@ describe :JS do
     }
   end
 
+  it "can only have a relative url"
+
 end # === describe :JS ===

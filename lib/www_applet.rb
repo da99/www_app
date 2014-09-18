@@ -773,7 +773,7 @@ class WWW_Applet < BasicObject
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{Sanitize.href(raw_v)})"
+                "url(#{Sanitize.relative_href(raw_v)})"
               end
             else
               Sanitize.css_value raw_v
@@ -798,7 +798,7 @@ class WWW_Applet < BasicObject
             when k == :href && tag[:tag] == :a
               Sanitize.mustache :href, v
             when k == :action || k == :src || k == :href
-              Sanitize.href(v)
+              Sanitize.relative_href(v)
             else
               Sanitize.html(v)
             end

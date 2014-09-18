@@ -10,5 +10,7 @@ describe :forms do
     }.message.should.match /auth_token/
   end
 
+  it "can only have a relative url"
+
 end # === describe :forms ===
 
