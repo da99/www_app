@@ -782,7 +782,7 @@ class WWW_Applet < BasicObject
 
         v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
 
-        attr_name = k.to_s.gsub(WWW_Applet::INVALID_ATTR_CHARS, '_')
+        attr_name = k.to_s.gsub(::WWW_Applet::INVALID_ATTR_CHARS, '_')
         fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
 
         attr_val = case
@@ -848,13 +848,13 @@ class WWW_Applet < BasicObject
 
       (html = nil) if html.empty?
 
-      case h[:tag]
-      when :render_if
+      case
+      when h[:tag] == :render_if
         key   = h[:attrs][:key]
         open  = "{{# coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
 
-      when :render_unless
+      when h[:tag] == :render_unless
         key   = h[:attrs][:key]
         open  = "{{^ coll.#{key} }}"
         close = "{{/ coll.#{key} }}"
