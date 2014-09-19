@@ -758,7 +758,7 @@ class WWW_Applet < BasicObject
       h = vals
       h.map { |k,raw_v|
         name  = begin
-                  clean_k = WWW_Applet::Sanitize.css_attr(k.to_s.gsub('_','-'))
+                  clean_k = ::WWW_Applet::Sanitize.css_attr(k.to_s.gsub('_','-'))
                   fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
                   clean_k
                 end
