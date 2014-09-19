@@ -863,15 +863,13 @@ class WWW_Applet < BasicObject
       end
 
       html = h[:childs].map { |tag_index|
-        "#{to_clean_text :html, @tag_arr[tag_index]}"
+        to_clean_text(:html, @tag_arr[tag_index])
       }.join(NEW_LINE).strip
 
       if html.empty? && h[:text]
-        html = Sanitize.html(
-          h[:text].is_a?(::Symbol) ?
-          h[:text] :
-          h[:text].strip 
-        )
+        html = h[:text].is_a?(::Symbol) ?
+          h[:text].to_mustache(:html) :
+          Sanitize.html(h[:text].strip)
       end # === if html.empty?
 
       (html = nil) if html.empty?
