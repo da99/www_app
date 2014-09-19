@@ -8,7 +8,7 @@ describe :^ do
       actual {
         div.^('hi)o') { 'hello' }
       }
-    }.message.should.match /hi)o/
+    }.message.should.match /hi\)o/
   end
 
 

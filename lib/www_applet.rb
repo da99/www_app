@@ -780,7 +780,7 @@ class WWW_Applet < BasicObject
 
         next if raw_v.is_a?(::Array) && raw_v.empty?
 
-        v = raw_v.is_a?(::Array) ? raw_v.join(SPACE) : raw_v
+        v = raw_v
 
         attr_name = k.to_s.gsub(::WWW_Applet::INVALID_ATTR_CHARS, '_')
         fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
@@ -788,13 +788,22 @@ class WWW_Applet < BasicObject
         attr_val = case
                    when k == :href && tag[:tag] == :a
                      Sanitize.mustache :href, v
+
                    when k == :action || k == :src || k == :href
                      Sanitize.relative_href(v)
+
+                   when k == :class
+                     v.map { |n|
+                       Sanitize.css_class_name(n)
+                     }.join SPACE
+
                    when ALLOWED_ATTRS[k]
                      Sanitize.html(v)
+
                    else
                      fail "Invalid attr: #{k.inspect}"
-                   end
+
+                   end # === case
 
         %*#{attr_name}="#{attr_val}"*
 
