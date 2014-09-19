@@ -790,7 +790,7 @@ class WWW_Applet < BasicObject
                      Sanitize.mustache :href, v
                    when k == :action || k == :src || k == :href
                      Sanitize.relative_href(v)
-                   else ALLOWED_ATTRS[k]
+                   when ALLOWED_ATTRS[k]
                      Sanitize.html(v)
                    else
                      fail "Invalid attr: #{k.inspect}"

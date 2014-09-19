@@ -3,6 +3,20 @@
 
 describe :^ do
 
+  it "raises Invalid if class has invalid chars" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual {
+        div.^('hi)o') { 'hello' }
+      }
+    }.message.should.match /hi)o/
+  end
+
+
+  # ==========================================================================
+  # ===========  end sanitization specs  =====================================
+  # ==========================================================================
+
+
   it "adds 'class' attribute: a.^(:warning, :red) { }" do
     target '<a class="warning red" href="&#47;here">Here</a>'
 
