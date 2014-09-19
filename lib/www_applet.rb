@@ -797,6 +797,9 @@ class WWW_Applet < BasicObject
                        Sanitize.css_class_name(n)
                      }.join SPACE
 
+                   when k == :id
+                     Sanitize.html_id v.to_s
+
                    when ALLOWED_ATTRS[k]
                      Sanitize.html(v)
 
