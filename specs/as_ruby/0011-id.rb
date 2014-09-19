@@ -11,6 +11,14 @@ describe :* do
     end
   end
 
+  it "raises Invalid if id has invalid chars" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div.*('a<&a') { 'hello' }
+      end
+    }.message.should.match /a<&a/
+  end
+
 end # === describe WWW_Applet.new ===
 
 

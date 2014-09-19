@@ -1,6 +1,31 @@
 
 describe :css do
 
+  it "raises Invalid if class name has invalid chars" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual {
+        div.*('hi>o') { 
+          border '1px solid #fff'
+          'hi o'
+        }
+      }
+    }.message.should.match /hi>o/
+  end
+
+  it 'allows css selectors with valid chars: #my_box div.box' do
+    target :style, <<-EOF
+      #my_box div.box {
+        border: 1px;
+      }
+    EOF
+
+    actual {
+      div.*(:my_box) {
+        div.^(:box) { border '1px' }
+      }
+    }
+  end
+
   it "adds a 'style' tag to 'head'" do
     target :outer, :style, %^
       <style type="text/css">
@@ -136,20 +161,6 @@ describe :css do
         div.^(:"s*s") { border '1px'}
       end
     }.message.should.match /invalid chars/
-  end
-
-  it 'allows css selectors with valid chars: #my_box div.box' do
-    target :style, <<-EOF
-      #my_box div.box {
-        border: 1px;
-      }
-    EOF
-
-    actual {
-      div.*(:my_box) {
-        div.^(:box) { border '1px' }
-      }
-    }
   end
 
 end # === sanitize css selectors

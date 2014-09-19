@@ -26,4 +26,12 @@ describe :href do
     }.message.should.match /javascript/
   end
 
+  it "raises Escape_Escape_Escape::Invalid_Relative_HREF if not relative using :link" do
+    should.raise(Escape_Escape_Escape::Invalid_Relative_HREF) {
+      actual {
+        link.href('http://www.google.com/s.css')./
+      }
+    }.message.should.match /google/
+  end
+
 end # === describe :href
