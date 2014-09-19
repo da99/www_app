@@ -12,7 +12,7 @@ describe :css do
     }.message.should.match /hi;o/
   end
 
-  it "raises Invalid if css value has invalid chars:" do
+  it "raises Invalid if css value has invalid chars: something *" do
     should.raise(Escape_Escape_Escape::Invalid) {
       actual do
         div {
@@ -22,12 +22,12 @@ describe :css do
     }.message.should.match /something \*/
   end
 
-  it 'raises Invalid if css selector has invalid chars:' do
+  it 'raises Invalid if css selector has invalid chars: s*s' do
     should.raise(Escape_Escape_Escape::Invalid) {
       actual do
         div.^("s*s") { border '1px'}
       end
-    }.message.should.match /invalid chars/
+    }.message.should.match /s\*s/
   end
 
   it "raises Invalid if contains 'expression:'" do
