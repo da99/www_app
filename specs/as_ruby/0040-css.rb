@@ -64,9 +64,11 @@ describe :css do
     end
   end
 
+
   # ==========================================================================
   # ===========  end sanitization specs  =====================================
   # ==========================================================================
+
 
   it 'allows css selectors with valid chars: #my_box div.box' do
     target :style, <<-EOF
