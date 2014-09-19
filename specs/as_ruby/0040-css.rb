@@ -1,16 +1,72 @@
 
 describe :css do
 
-  it "raises Invalid if class name has invalid chars" do
+  it "raises Invalid if class name has invalid chars: class=\"hi;o\"" do
     should.raise(Escape_Escape_Escape::Invalid) {
       actual {
-        div.*('hi>o') { 
+        div.^('hi;o') { 
           border '1px solid #fff'
           'hi o'
         }
       }
-    }.message.should.match /hi>o/
+    }.message.should.match /hi;o/
   end
+
+  it "raises Invalid if css value has invalid chars:" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'something *'
+        }
+      end
+    }.message.should.match /something \*/
+  end
+
+  it 'raises Invalid if css selector has invalid chars:' do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div.^("s*s") { border '1px'}
+      end
+    }.message.should.match /invalid chars/
+  end
+
+  it "raises Invalid if contains 'expression:'" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'solid expression:'
+        }
+      end
+    }.message.should.match /expression:/
+  end
+
+  it "raises Invalid if contains 'expression&'" do
+    should.raise(Escape_Escape_Escape::Invalid) {
+      actual do
+        div {
+          background 'solid expression&'
+        }
+      end
+    }.message.should.match /expression&/
+  end
+
+  it "sanitizes urls" do
+    target :style, <<-EOF
+      div.box {
+        background-image: url(http:&#47;&#47;www.example.com&#47;back.png);
+      }
+    EOF
+
+    actual do
+      div.^(:box) {
+        background_image 'http://www.example.com/back.png'
+      }
+    end
+  end
+
+  # ==========================================================================
+  # ===========  end sanitization specs  =====================================
+  # ==========================================================================
 
   it 'allows css selectors with valid chars: #my_box div.box' do
     target :style, <<-EOF
@@ -109,58 +165,6 @@ describe :css do
         background_image :something
       }
     }
-  end
-
-  it "sanitizes urls" do
-    target :style, <<-EOF
-      div.box {
-        background-image: url(http:&#47;&#47;www.example.com&#47;back.png);
-      }
-    EOF
-
-    actual do
-      div.^(:box) {
-        background_image 'http://www.example.com/back.png'
-      }
-    end
-  end
-
-  it "raises Invalid if contains 'expression:'" do
-    should.raise(Escape_Escape_Escape::Invalid) {
-      actual do
-        div {
-          background 'solid expression:'
-        }
-      end
-    }.message.should.match /expression:/
-  end
-
-  it "raises Invalid if contains 'expression&'" do
-    should.raise(Escape_Escape_Escape::Invalid) {
-      actual do
-        div {
-          background 'solid expression&'
-        }
-      end
-    }.message.should.match /expression&/
-  end
-
-  it "raises Invalid non-css allowed chars: * ( + ) etc." do
-    should.raise(Escape_Escape_Escape::Invalid) {
-      actual do
-        div {
-          background 'something *'
-        }
-      end
-    }.message.should.match /something \*/
-  end
-
-  it 'raises Invalid if css selector has invalid chars: *' do
-    should.raise(Escape_Escape_Escape::Invalid) {
-      actual do
-        div.^(:"s*s") { border '1px'}
-      end
-    }.message.should.match /invalid chars/
   end
 
 end # === sanitize css selectors
