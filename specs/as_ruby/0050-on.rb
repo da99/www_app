@@ -1,6 +1,36 @@
 
 describe "HTML :on" do
 
+  it "escapes text as :html" do
+    target :script, <<-EOF
+      WWW_Applet.compile(
+        ["create_event",["div","click","add_class",["red&lt;red"]]]
+      );
+    EOF
+
+    actual do
+      div {
+        on(:click) { add_class "red<red" }
+      }
+    end
+  end
+
+  it "renders js" do
+    target :script, <<-EOF
+      WWW_Applet.compile(
+        #{
+          Escape_Escape_Escape.json_encode( ["create_event", [ "#my_box", "click", "add_class", ["hello"] ] ] )
+        }
+      );
+    EOF
+
+    actual {
+      div.*(:my_box) {
+        on(:click) { add_class :hello }
+      }
+    }
+  end
+
   it "adds class to id of element: #id.class" do
     target :style, %^
       #me.highlight {
