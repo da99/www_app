@@ -98,7 +98,9 @@ class WWW_Applet < BasicObject
 
   include ::Kernel
 
-  Unescaped = ::Class.new(::RuntimeError)
+  Unescaped         = ::Class.new(::StandardError)
+  Not_Unique        = ::Class.new(::StandardError)
+  HTML_ID_Duplicate = ::Class.new(Not_Unique)
 
   ALWAYS_END_TAGS = [:script]
 
@@ -237,6 +239,8 @@ class WWW_Applet < BasicObject
     @current_tag_index = nil
     @mustache          = nil
 
+    @html_ids          = {}
+
     tag(:head) {
 
       @head = tag!
@@ -325,9 +329,15 @@ class WWW_Applet < BasicObject
   # Example:
   #   div.*('my_id') { }
   #
-  def * id
+  def * raw_id
+    id = ::Escape_Escape_Escape.html_id(raw_id)
+
     old_id = tag![:attrs][:id]
     fail("Id already set: #{old_id} new: #{id}") if old_id
+
+    fail(HTML_ID_Duplicate, "Id already used: #{id.inspect}, tag index: #{@html_ids[id]}") if @html_ids[id]
+    @html_ids[id] = tag![:tag_index]
+
     tag![:attrs][:id] = id
 
     if block_given?

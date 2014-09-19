@@ -11,6 +11,14 @@ describe :* do
     }.message.should.match /a<&a/
   end
 
+  it "raises HTML_ID_Duplicate if id is used more than once" do
+    should.raise(WWW_Applet::HTML_ID_Duplicate) {
+      actual do
+        div.*(:my_id) { '1' }
+        div.*(:my_id) { '2' }
+      end
+    }.message.should.match /my_id/
+  end
 
   # ==========================================================================
   # ===========  end sanitization specs  =====================================
