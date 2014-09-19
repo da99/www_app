@@ -126,6 +126,7 @@ class WWW_Applet < BasicObject
   Methods    = {
     :elements => %w[
 
+      title
       body   div    span
 
       img
@@ -766,6 +767,7 @@ class WWW_Applet < BasicObject
         raw_v = raw_v.to_s
 
         v = case
+
             when name[IMAGE_AT_END]
               case raw_v
               when 'inherit', 'none'
@@ -773,11 +775,15 @@ class WWW_Applet < BasicObject
               else
                 "url(#{Sanitize.href(raw_v)})"
               end
-            when Methods[:css][:properties][k]
+
+            when Methods[:css][:properties].include?(k)
               Sanitize.css_value raw_v
+
             else
               fail "Invalid css attr: #{name.inspect}"
-            end
+
+            end # === case
+
         %^#{name}: #{v};^
       }.join("\n").strip
 
