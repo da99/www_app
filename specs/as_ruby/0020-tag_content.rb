@@ -24,5 +24,20 @@ describe "HTML contents" do
     }
   end
 
+  it "escapes inner text" do
+    target %^<p>&amp; here lies jack</p>^
+
+    actual do
+      p { "& here lies jack" }
+    end
+  end
+
+  it "strips out W3C unallowed Unicode chars" do
+    target %^<div>hello      hello</div>^
+    actual do
+      div { "hello \u0340\u0341\u17a3\u17d3\u2028\u2029 hello" }
+    end
+  end
+
 end # === describe HTML contents
 
