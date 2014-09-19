@@ -3,44 +3,8 @@
 WWW\_Applet:
 ---------
 
-Using a few simple rules, you can describe a mini-app (ie applet) as JSON.
+Create HTML pages using just Ruby: HTML/CSS/JS
 
-Currently, this has a Ruby and browser (ie JavaScript) version.
-
-It is inspired from the Factor programming language
-and Alan Kay's annnual "pep talk" (ie VMs, sandboxing,
-SNMOP: scalable network/message oriented programming)
-
-One benefit is to let the user
-be the programmer w/o sacrificing security.
-It's an old idea from the pre-1990s:
-
-  > the symmetry of consuming/producing media.
-
-Security:
------------
-
-1) Server-side: All data from user should be run through `:render` to
-ensure sanitization/escaping.
-
-2) Server-side: All JS meant for :script tags should be escaped before encoded into JSON.
-
-3) Client-side: No untrusted data presented to user: `:inner_html/:inner_text`:
-only uses content from the server after it has been sanitized/escaped.
-
-4) Client-side: No client-side sanitization/escaping. Too many bugs and security issues
-because of browser incompability/implementations. Content
-to be used in client-size JS can only come from the server using "lockboxed vars".
-
-5) Client-side: When using `:inner_html`, check for: `/<script/i` in String.
-
-6) All forms require a CSRF token.
-
-Notes:
--------
-
-1) Blockquotes no longer allow the :cite attribute. Instead use the `cite` tag.
-More info at:  [http://html5doctor.com/cite-and-blockquote-reloaded/](http://html5doctor.com/cite-and-blockquote-reloaded/)
 
 Ruby:
 --------------
@@ -67,10 +31,37 @@ To Use:
   }
 ```
 
-JavaScript/browser:
------------------
 
-*Note:* Not done yet.
+Security:
+-----------
+
+1) Server-side: All data from user should be run through `:render` to
+ensure sanitization/escaping.
+
+2) Server-side: All JS meant for :script tags should be escaped before encoded into JSON.
+
+3) Client-side: No untrusted data presented to user: `:inner_html/:inner_text`:
+only uses content from the server after it has been sanitized/escaped.
+
+4) Client-side: No client-side sanitization/escaping. Too many bugs and security issues
+because of browser incompability/implementations. Content
+to be used in client-size JS can only come from the server using "lockboxed vars".
+
+5) Client-side: When using `:inner_html`, check for: `/<script/i` in String.
+
+6) All forms require a CSRF token.
+
+
+Notes:
+-------
+
+1) Blockquotes no longer allow the :cite attribute. Instead use the `cite` tag.
+More info at:  [http://html5doctor.com/cite-and-blockquote-reloaded/](http://html5doctor.com/cite-and-blockquote-reloaded/)
+
+2) Originally, this was going to be programs written in 100% JSON. This has changed
+because it turns out people do not want to create programs, they just want to customize them:
+[https://www.youtube.com/watch?v=9nd9DwCdQR0#t=857](https://www.youtube.com/watch?v=9nd9DwCdQR0#t=857)
+
 
 Fun fact:
 -----
