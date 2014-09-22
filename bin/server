@@ -1,0 +1,49 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+#
+cmd="$1"
+set -u -e -o pipefail
+
+mkdir -p tmp
+
+export PORT=4567
+export PID="tmp/thin.pid"
+export LOG="tmp/log.txt"
+export RACK_ENV="production"
+
+
+# === Stop the current server, if found.
+if [[ "$1" == "start" ]]
+then
+
+  if [[ -f "$PID" && -s "$PID" ]]
+  then
+    bin/server stop
+  fi
+
+  # === Reset tmp files
+  rm -f "$PID"
+  rm -f "$LOG"
+fi
+
+if [[ "$1" == "stop" && ! -f "$PID" ]]
+then
+  echo "No pid found. Exiting."
+  exit 0
+fi
+
+bundle exec thin -d -l $LOG -P $PID -p $PORT -e production -R specs/lib/config.ru $@
+
+if [[ "$@" == *start* ]]
+then
+  sleep 0.5
+  if [[ -f "$PID" ]]; then
+    echo "Started server: PORT: $PORT PID: $(cat $PID)"
+  else
+    cat $LOG 1>&2
+    exit 1
+  fi
+fi
+
+

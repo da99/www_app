@@ -35,4 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency "bacon"         , ">= 1.0"
   spec.add_development_dependency "Bacon_Colored" , ">= 0.1"
   spec.add_development_dependency "differ"        , ">= 0.1.2"
+  spec.add_development_dependency "thin"          , ">= 1.6.2"
+  spec.add_development_dependency "cuba"          , ">= 3.3.0"
+  spec.add_development_dependency "da99_rack_protect", ">= 2.0.0"
 end
