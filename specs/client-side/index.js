@@ -60,7 +60,6 @@ QUnit.test('throws error if first num is not a number', function (assert) {
   }, /Not numeric: "5"/);
 });
 
-
 QUnit.test('throws error if second num is not a number', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([
@@ -68,4 +67,51 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     ])
   }, /Not numeric: "6"/);
 });
+
+
+// ==================================================================
+QUnit.module("bigger or equal");
+// ==================================================================
+
+QUnit.test('it places true if: 6 >= 4', function (assert) {
+  var o = WWW_Applet.run([
+    6, "bigger or equal", [ 4 ]
+  ]);
+  assert.equal( _.last(o.stack), true);
+});
+
+QUnit.test('it places true if: 6 >= 6', function (assert) {
+  var o = WWW_Applet.run([
+    6, "bigger or equal", [ 6 ]
+  ]);
+  assert.equal( _.last(o.stack), true);
+});
+
+QUnit.test('it places false if: 6 >= 7', function (assert) {
+  var o = WWW_Applet.run([
+    6, "bigger or equal", [ 7 ]
+  ]);
+  assert.equal( _.last(o.stack), false);
+});
+
+QUnit.test('throws error if first num is not a number', function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run([
+      '3', 'bigger or equal', [5] 
+    ])
+  }, /Not numeric: "3"/);
+});
+
+QUnit.test('throws error if second num is not a number', function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run([
+      5, 'bigger or equal', ["9"] 
+    ])
+  }, /Not numeric: "9"/);
+});
+
+
+
+
+
 
