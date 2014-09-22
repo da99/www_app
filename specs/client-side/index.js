@@ -57,7 +57,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
     WWW_Applet.run([
       '5', 'less or equal', [5] 
     ])
-  }, /Not numeric: "5"/);
+  }, /Not numeric: String: 5/);
 });
 
 QUnit.test('throws error if second num is not a number', function (assert) {
@@ -65,7 +65,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     WWW_Applet.run([
       5, 'less or equal', ["6"] 
     ])
-  }, /Not numeric: "6"/);
+  }, /Not numeric: String: 6/);
 });
 
 
@@ -99,7 +99,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
     WWW_Applet.run([
       '3', 'bigger or equal', [5] 
     ])
-  }, /Not numeric: "3"/);
+  }, /Not numeric: String: 3/);
 });
 
 QUnit.test('throws error if second num is not a number', function (assert) {
@@ -107,7 +107,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     WWW_Applet.run([
       5, 'bigger or equal', ["9"] 
     ])
-  }, /Not numeric: "9"/);
+  }, /Not numeric: String: 9/);
 });
 
 
