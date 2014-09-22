@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>WWW_Applet client side</title>
+    <link rel="stylesheet" href="/qunit/qunit-1.15.0.css" />
+    <style type="text/css">
+    body {
+      background: #F5F5FF;
+    }
+    </style>
+  </head>
+  <body>
+    <div id="qunit"></div>
+    <div id="qunit-fixture"></div>
+
+    <script src="/qunit/qunit-1.15.0.js"></script>
+    <script src="/jquery-2.1.1.js"></script>
+    <script src="/underscore-1.7.0.js"></script>
+    <script type="text/javascript">
+      QUnit.test( "hello test", function( assert ) {
+        assert.ok( 1 == "1", "Passed!" );
+      });
+    </script>
+  </body>
+</html>
+

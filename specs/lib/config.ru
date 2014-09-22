@@ -17,8 +17,12 @@ Cuba.use(Class.new {
   def call env
     results = @app.call(env)
     if results.first == 404
+      if env['PATH_INFO'] == '/'
+        env['PATH_INFO'] = '/index.html'
+      end
       [
         Rack::Directory.new(File.expand_path('./specs/lib')),
+        Rack::Directory.new(File.expand_path('./specs/client-side')),
         Rack::Directory.new(File.expand_path('./lib/public'))
       ].detect { |r|
         status, headers, body = r.call(env)
@@ -35,23 +39,9 @@ Cuba.define do
 
   on get do
 
-    on(root) {
-      res.write <<-EOF
-    <html>
-      <head>
-        <title>WWW_Applet client side</title>
-        <style type="text/css">
-          body {
-            background: #F5F5FF;
-          }
-        </style>
-      </head>
-      <body>
-      testing
-      </body>
-    </html>
-      EOF
-    }
+    # on(root) {
+      # res.write 
+    # }
 
     on(default) {
       res.status = 404
