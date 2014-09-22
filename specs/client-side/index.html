@@ -4,12 +4,36 @@
     <title>WWW_Applet client side</title>
     <link rel="stylesheet" href="/qunit/qunit-1.15.0.css" />
     <style type="text/css">
+
+    div.small {
+      background-color: #eee;
+      width: 25%;
+      min-height: 30px;
+    }
+
+    div.medium {
+      background-color: #d6d6d6;
+      width: 50%;
+      min-height: 40px;
+    }
+
+    div.large {
+      background-color: #D2E0E6;
+      width: 99%;
+      min-height: 50px;
+    }
+
     body {
       background: #F5F5FF;
     }
     </style>
   </head>
   <body>
+
+    <div id="box_1" class="small"></div>
+    <div id="box_2" class="medium"></div>
+    <div id="box_3" class="large"></div>
+
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
 
