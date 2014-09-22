@@ -5,6 +5,13 @@
     <link rel="stylesheet" href="/qunit/qunit-1.15.0.css" />
     <style type="text/css">
 
+    #sandbox div {
+      font-family: monospace;
+      font-size: large;
+      padding: 5pt;
+      margin: 0 0 4pt 0;
+    }
+
     div.small {
       background-color: #eee;
       width: 25%;
@@ -12,15 +19,19 @@
     }
 
     div.medium {
-      background-color: #d6d6d6;
+      background-color: #C6E746;
       width: 50%;
       min-height: 40px;
     }
 
     div.large {
-      background-color: #D2E0E6;
-      width: 99%;
+      background-color: #E7E546;
       min-height: 50px;
+    }
+
+    div.weird {
+      background: #ECDB49;
+      width: 75%;
     }
 
     body {
@@ -30,9 +41,11 @@
   </head>
   <body>
 
-    <div id="box_1" class="small"></div>
-    <div id="box_2" class="medium"></div>
-    <div id="box_3" class="large"></div>
+    <div id="sandbox">
+      <div id="box_1" class="small">Small</div>
+      <div id="box_2" class="medium">Medium</div>
+      <div id="box_3" class="large">Large</div>
+    </div>
 
     <div id="qunit"></div>
     <div id="qunit-fixture"></div>
