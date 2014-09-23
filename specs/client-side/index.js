@@ -200,7 +200,7 @@ QUnit.test('throws error if last value on stack is not a bool', function (assert
   var o = WWW_Applet.run([
     1, 'and', [true]
   ]);
-  }, /Right hand value is not a bool: Number: 1/);
+  }, /Right hand value is not a Boolean: Number: 1/);
 });
 
 QUnit.test('throws if last value of args is not a bool', function (assert) {
@@ -208,7 +208,7 @@ QUnit.test('throws if last value of args is not a bool', function (assert) {
     var o = WWW_Applet.run([
       true, 'and', [2]
     ]);
-  }, /Left hand value is not a bool: Number: 2/);
+  }, /Left hand value is not a Boolean: Number: 2/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
