@@ -16,6 +16,10 @@ when "help"
 
 when "install_js"
 
+  fail "
+    Must automate downloading of LATEST (security reason)
+    underscore, jquery, etc.
+  "
   require "fileutils"
   args   = ARGV.dup
 
