@@ -247,13 +247,13 @@ QUnit.module('or');
 QUnit.test('it throws an error if first condition is not a bool', function (assert) {
   assert.throws(function () {
     WWW_Applet.run(["something", 'or', [false]]);
-  }, /Right hand value is not a bool: String: something/);
+  }, /Right hand value is not a Boolean: String: something/);
 });
 
 QUnit.test('it throws an error if second condition is not a bool', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([false, 'or', [false, "something"]]);
-  }, /Left hand value is not a bool: String: something/);
+  }, /Left hand value is not a Boolean: String: something/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
@@ -294,7 +294,7 @@ QUnit.test('throws an error if righ hand value is not a bool', function (assert)
     WWW_Applet.run([
       6, "if true", [5]
     ]);
-  }, /Right hand value is not a bool: Number: 6/);
+  }, /Right hand value is not a Boolean: Number: 6/);
 });
 
 QUnit.test('does not place a value on stack', function (assert) {
