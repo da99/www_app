@@ -26,7 +26,6 @@ QUnit.test( "it evals the args as code", function( assert ) {
 });
 
 
-
 // ==================================================================
 QUnit.module("less or equal");
 // ==================================================================
@@ -110,6 +109,86 @@ QUnit.test('throws error if second num is not a number', function (assert) {
   }, /Not numeric: String: 9/);
 });
 
+
+// ==================================================================
+QUnit.module('bigger');
+// ==================================================================
+
+QUnit.test('it places true on stack if: 6 > 1', function (assert) {
+  var o = WWW_Applet.run([
+    6, 'bigger', [1]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+
+QUnit.test('it places false on stack if: 6 > 6', function (assert) {
+  var o = WWW_Applet.run([
+    6, 'bigger', [6]
+  ]);
+  assert.equal(_.last(o.stack), false);
+});
+
+
+// ==================================================================
+QUnit.module('less');
+// ==================================================================
+
+QUnit.test('it places true on stack if: 1 < 6', function (assert) {
+  var o = WWW_Applet.run([
+    1, 'less', [6]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+
+QUnit.test('it places false on stack if: 6 < 6', function (assert) {
+  var o = WWW_Applet.run([
+    6, 'less', [6]
+  ]);
+  assert.equal(_.last(o.stack), false);
+});
+
+QUnit.test('it places false on stack if: 6 < 1', function (assert) {
+  var o = WWW_Applet.run([
+    6, 'less', [1]
+  ]);
+  assert.equal(_.last(o.stack), false);
+});
+
+
+// ==================================================================
+QUnit.module('equal');
+// ==================================================================
+
+QUnit.test('it places true on stack if: 1 === 1', function (assert) {
+  var o = WWW_Applet.run([
+    1, 'equal', [1]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+QUnit.test('it places true on stack if: \'a\' === \'a\'', function (assert) {
+  var o = WWW_Applet.run([
+    "a", 'equal', ["a"]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+QUnit.test('it places false on stack if: \'5\' === 5', function (assert) {
+  var o = WWW_Applet.run([
+    "5", 'equal', [5]
+  ]);
+  assert.equal(_.last(o.stack), false);
+});
+
+
+QUnit.test('it places false on stack if: 6 === \'6\'', function (assert) {
+  var o = WWW_Applet.run([
+    6, 'equal', ["6"]
+  ]);
+  assert.equal(_.last(o.stack), false);
+});
 
 
 
