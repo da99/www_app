@@ -195,14 +195,7 @@ QUnit.test('it places false on stack if: 6 === \'6\'', function (assert) {
 QUnit.module('and');
 // ==================================================================
 
-QUnit.test('it places true on stack', function (assert) {
-  var o = WWW_Applet.run([
-    true, 'and', [6, 'equal', [6]]
-  ]);
-  assert.equal(_.last(o.stack), true);
-});
-
-QUnit.test('throws if last value on stack is not a bool', function (assert) {
+QUnit.test('throws error if last value on stack is not a bool', function (assert) {
   assert.throws(function () {
   var o = WWW_Applet.run([
     1, 'and', [true]
@@ -218,12 +211,80 @@ QUnit.test('throws if last value of args is not a bool', function (assert) {
   }, /Left hand value is not a bool: Number: 2/);
 });
 
+QUnit.test('it places true on stack if both conditions are true', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'and', [6, 'equal', [6]]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+QUnit.test('it places false on stack if first condition is false', function (assert) {
+  var o = WWW_Applet.run([
+    false, 'and', [6, 'equal', [6]]
+  ]);
+  assert.deepEqual(o.stack, [false, false]);
+});
+
+QUnit.test('it places false on stack if second condition is false', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'and', [6, 'equal', [7]]
+  ]);
+  assert.deepEqual(o.stack, [true, false]);
+});
+
 QUnit.test('does not evaluate args if right-hand value is false', function (assert) {
   var o = WWW_Applet.run([
     false, 'and', ['unknown method', []]
   ]);
   assert.deepEqual(o.stack, [false, false]);
 });
+
+
+// ==================================================================
+QUnit.module('or');
+// ==================================================================
+
+QUnit.test('it throws an error if first condition is not a bool', function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run(["something", 'or', [false]]);
+  }, /Right hand value is not a bool: String: something/);
+});
+
+QUnit.test('it throws an error if second condition is not a bool', function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run([false, 'or', [false, "something"]]);
+  }, /Left hand value is not a bool: String: something/);
+});
+
+QUnit.test('it places true on stack if both conditions are true', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'or', [6, 'equal', [6]]
+  ]);
+  assert.deepEqual(o.stack, [true, true]);
+});
+
+QUnit.test('it places true on stack if: true or false', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'or', [9, 'equal', [6]]
+  ]);
+  assert.deepEqual(o.stack, [true, true]);
+});
+
+QUnit.test('it places true on stack if: false or true', function (assert) {
+  var o = WWW_Applet.run([
+    false, 'or', [9, 'equal', [9]]
+  ]);
+  assert.deepEqual(o.stack, [false, true]);
+});
+
+QUnit.test('does not evaluate args if first condition is true', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'or', ['no known method', []]
+  ]);
+  assert.deepEqual(o.stack, [true, true]);
+});
+
+
 
 
 
