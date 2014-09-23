@@ -191,6 +191,39 @@ QUnit.test('it places false on stack if: 6 === \'6\'', function (assert) {
 });
 
 
+// ==================================================================
+QUnit.module('and');
+// ==================================================================
+
+QUnit.test('it places true on stack', function (assert) {
+  var o = WWW_Applet.run([
+    true, 'and', [6, 'equal', [6]]
+  ]);
+  assert.equal(_.last(o.stack), true);
+});
+
+QUnit.test('throws if last value on stack is not a bool', function (assert) {
+  assert.throws(function () {
+  var o = WWW_Applet.run([
+    1, 'and', [true]
+  ]);
+  }, /Right hand value is not a bool: Number: 1/);
+});
+
+QUnit.test('throws if last value of args is not a bool', function (assert) {
+  assert.throws(function () {
+    var o = WWW_Applet.run([
+      true, 'and', [2]
+    ]);
+  }, /Left hand value is not a bool: Number: 2/);
+});
+
+QUnit.test('does not evaluate args if right-hand value is false', function (assert) {
+  var o = WWW_Applet.run([
+    false, 'and', ['unknown method', []]
+  ]);
+  assert.deepEqual(o.stack, [false, false]);
+});
 
 
 
