@@ -318,6 +318,35 @@ QUnit.test('does not run tokens if right hand value is false', function (assert)
 });
 
 
+// ==================================================================
+QUnit.module('if false');
+// ==================================================================
+
+QUnit.test('throws an error if righ hand value is not a bool', function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run([
+      7, "if false", [5]
+    ]);
+  }, /Right hand value is not a Boolean: Number: 7/);
+});
+
+QUnit.test('does not place a value on stack', function (assert) {
+  var o = WWW_Applet.run([
+    false, "if false", [ 100 ]
+  ]);
+
+  assert.deepEqual(o.stack, [false]);
+});
+
+QUnit.test('does not run tokens if right hand value is true', function (assert) {
+  var o = WWW_Applet.run([
+    true, "if false", [ "something unknown", [] ]
+  ]);
+
+  assert.deepEqual(o.stack, [true]);
+});
+
+
 
 
 
