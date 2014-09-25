@@ -64,7 +64,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     WWW_Applet.run([
       5, 'less or equal', ["6"] 
     ])
-  }, /Right hand value is not a Number: String: 6/);
+  }, /Left hand value is not a Number: String: 6/);
 });
 
 
