@@ -30,7 +30,9 @@ if [[ -f "$file" ]]; then
   exit 0
 fi
 
-# === Run all ruby files in proper order.
+# === Run all ruby and js files in proper order.
+jshint lib/public/www_applet.js
+jshint specs/client-side/*.js
 files="$( echo specs/as_ruby/*.rb | tr ' ' "\n" | sort)"
 if [[ -z "$files" ]]; then
   colorize yellow "No tests found." 1>&2

@@ -55,7 +55,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([
       '5', 'less or equal', [5] 
-    ])
+    ]);
   }, /Right hand value is not a Number: String: 5/);
 });
 
@@ -63,7 +63,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([
       5, 'less or equal', ["6"] 
-    ])
+    ]);
   }, /Left hand value is not a Number: String: 6/);
 });
 
@@ -97,7 +97,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([
       '3', 'bigger or equal', [5] 
-    ])
+    ]);
   }, /Right hand value is not a Number: String: 3/);
 });
 
@@ -105,7 +105,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([
       5, 'bigger or equal', ["9"] 
-    ])
+    ]);
   }, /Left hand value is not a Number: String: 9/);
 });
 
