@@ -373,7 +373,7 @@ QUnit.test('throws error if url contains invalid char: :', function (assert) {
       'focus on', ['#form_1'],
       'submit', []
     ]);
-  }, /Invalid chars in #form_1 action/);
+  }, /Invalid chars in #form_1 action: javascript:/);
 });
 
 QUnit.test('throws error if url contains invalid char: &', function (assert) {
@@ -383,17 +383,17 @@ QUnit.test('throws error if url contains invalid char: &', function (assert) {
       'focus on', ['#form_1'],
       'submit', []
     ]);
-  }, /Invalid chars in #form_1 action/);
+  }, /Invalid chars in #form_1 action: javascript&amp/);
 });
 
 QUnit.test('throws error if url contains invalid char: ;', function (assert) {
-  $('#form_1').attr('action', 'javascript;amp//alert');
+  $('#form_1').attr('action', 'http;amp//alert');
   assert.throws(function () {
     WWW_Applet.run([
       'focus on', ['#form_1'],
       'submit', []
     ]);
-  }, /Invalid chars in #form_1 action/);
+  }, /Invalid chars in #form_1 action: http;amp/);
 });
 
 
