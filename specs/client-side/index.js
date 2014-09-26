@@ -361,8 +361,40 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
 });
 
 
+// ==================================================================
+QUnit.module('forms');
+// ==================================================================
 
 
+QUnit.test('throws error if url contains invalid char: :', function (assert) {
+  $('#form_1').attr('action', 'javascript://alert');
+  assert.throws(function () {
+    WWW_Applet.run([
+      'focus on', ['#form_1'],
+      'submit', []
+    ]);
+  }, /Invalid chars in #form_1 action/);
+});
+
+QUnit.test('throws error if url contains invalid char: &', function (assert) {
+  $('#form_1').attr('action', 'javascript&amp//alert');
+  assert.throws(function () {
+    WWW_Applet.run([
+      'focus on', ['#form_1'],
+      'submit', []
+    ]);
+  }, /Invalid chars in #form_1 action/);
+});
+
+QUnit.test('throws error if url contains invalid char: ;', function (assert) {
+  $('#form_1').attr('action', 'javascript;amp//alert');
+  assert.throws(function () {
+    WWW_Applet.run([
+      'focus on', ['#form_1'],
+      'submit', []
+    ]);
+  }, /Invalid chars in #form_1 action/);
+});
 
 
 
