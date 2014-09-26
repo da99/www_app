@@ -26,6 +26,20 @@ QUnit.test( "it evals the args as code", function( assert ) {
 });
 
 
+QUnit.test("throws error if not enough stack values", function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run(['less or equal', [5]]);
+  }, /Not enough in stack values/);
+});
+
+
+QUnit.test("throws error if not enough arg values", function (assert) {
+  assert.throws(function () {
+    WWW_Applet.run(['less or equal', []]);
+  }, /Not enough in args/);
+});
+
+
 // ==================================================================
 QUnit.module("less or equal");
 // ==================================================================
@@ -56,7 +70,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
     WWW_Applet.run([
       '5', 'less or equal', [5] 
     ]);
-  }, /Right hand value is not a Number: String: 5/);
+  }, /Stack value is not a Number: String: 5/);
 });
 
 QUnit.test('throws error if second num is not a number', function (assert) {
@@ -64,7 +78,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     WWW_Applet.run([
       5, 'less or equal', ["6"] 
     ]);
-  }, /Left hand value is not a Number: String: 6/);
+  }, /Arg is not a Number: String: 6/);
 });
 
 
@@ -98,7 +112,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
     WWW_Applet.run([
       '3', 'bigger or equal', [5] 
     ]);
-  }, /Right hand value is not a Number: String: 3/);
+  }, /Stack value is not a Number: String: 3/);
 });
 
 QUnit.test('throws error if second num is not a number', function (assert) {
@@ -106,7 +120,7 @@ QUnit.test('throws error if second num is not a number', function (assert) {
     WWW_Applet.run([
       5, 'bigger or equal', ["9"] 
     ]);
-  }, /Left hand value is not a Number: String: 9/);
+  }, /Arg is not a Number: String: 9/);
 });
 
 
@@ -200,7 +214,7 @@ QUnit.test('throws error if last value on stack is not a bool', function (assert
   var o = WWW_Applet.run([
     1, 'and', [true]
   ]);
-  }, /Right hand value is not a Boolean: Number: 1/);
+  }, /Stack value is not a Boolean: Number: 1/);
 });
 
 QUnit.test('throws if last value of args is not a bool', function (assert) {
@@ -208,7 +222,7 @@ QUnit.test('throws if last value of args is not a bool', function (assert) {
     var o = WWW_Applet.run([
       true, 'and', [2]
     ]);
-  }, /Left hand value is not a Boolean: Number: 2/);
+  }, /Arg is not a Boolean: Number: 2/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
@@ -247,13 +261,13 @@ QUnit.module('or');
 QUnit.test('it throws an error if first condition is not a bool', function (assert) {
   assert.throws(function () {
     WWW_Applet.run(["something", 'or', [false]]);
-  }, /Right hand value is not a Boolean: String: something/);
+  }, /Stack value is not a Boolean: String: something/);
 });
 
 QUnit.test('it throws an error if second condition is not a bool', function (assert) {
   assert.throws(function () {
     WWW_Applet.run([false, 'or', [false, "something"]]);
-  }, /Left hand value is not a Boolean: String: something/);
+  }, /Arg is not a Boolean: String: something/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
@@ -294,7 +308,7 @@ QUnit.test('throws an error if righ hand value is not a bool', function (assert)
     WWW_Applet.run([
       6, "if true", [5]
     ]);
-  }, /Right hand value is not a Boolean: Number: 6/);
+  }, /Stack value is not a Boolean: Number: 6/);
 });
 
 QUnit.test('does not place a value on stack', function (assert) {
@@ -307,7 +321,7 @@ QUnit.test('does not place a value on stack', function (assert) {
   assert.deepEqual(o.stack, [true]);
 });
 
-QUnit.test('does not run tokens if right hand value is false', function (assert) {
+QUnit.test('does not run tokens if stack value is false', function (assert) {
   var o = WWW_Applet.run([
     false, "if true", [
       "something unknown", []
@@ -327,7 +341,7 @@ QUnit.test('throws an error if righ hand value is not a bool', function (assert)
     WWW_Applet.run([
       7, "if false", [5]
     ]);
-  }, /Right hand value is not a Boolean: Number: 7/);
+  }, /Stack value is not a Boolean: Number: 7/);
 });
 
 QUnit.test('does not place a value on stack', function (assert) {
@@ -338,7 +352,7 @@ QUnit.test('does not place a value on stack', function (assert) {
   assert.deepEqual(o.stack, [false]);
 });
 
-QUnit.test('does not run tokens if right hand value is true', function (assert) {
+QUnit.test('does not run tokens if stack value is true', function (assert) {
   var o = WWW_Applet.run([
     true, "if false", [ "something unknown", [] ]
   ]);
