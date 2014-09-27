@@ -4,6 +4,8 @@
 /* global QUnit */
 /* global WWW_Applet */
 /* global _ */
+/* global expect */
+/*jshint multistr:true */
 
 // ==================================================================
 QUnit.module("WWW_Applet");
@@ -362,12 +364,44 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
 
 
 // ==================================================================
+QUnit.module('on click');
+// ==================================================================
+
+QUnit.test('adds event to element', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="sub_event_1">hello</div>    \
+      <div class="sub_event_2">goodbye</div>  \
+      <button class="submit">Submit</button>  \
+      <button class="cancel">Cancel</button>  \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'focus on', ['#event button'],
+    'on click', [
+      'up to', ['#event'],
+      'run event', ['event 1 clicked']
+    ],
+
+    'focus on', ['#event div.sub_event_1'],
+    'on', [ 'event 1 clicked',
+      'add class', ['hi']
+    ]
+
+  ]); // ======================
+
+}); // === adds event to element
+
+
+// ==================================================================
 QUnit.module('forms');
 // ==================================================================
 
-
 QUnit.test('throws error if url contains invalid char: :', function (assert) {
-  $('#form_1').attr('action', 'javascript://alert');
+  $('#form_1').attr('action', 'javascrip://alert');
   assert.throws(function () {
     WWW_Applet.run([
       'focus on', ['#form_1'],
@@ -397,5 +431,27 @@ QUnit.test('throws error if url contains invalid char: ;', function (assert) {
 });
 
 
+QUnit.asyncTest('submits form values', function (assert) {
+  expect(1);
+
+  $('#form_1').attr('action', '/repeat/vals');
+
+  var env = WWW_Applet.run([
+    'focus on', ['#form_1'],
+    'on', ['success', 'log', ['var', ['vals']]],
+    'submit', []
+  ]);
+
+  var when = function () {
+    return $('#form_1').hasClass('submitted');
+  }; // function
+
+  var do_this = function () {
+    assert.deepEqual(_.last(env.log), {val_1: '1', val_2: '2', val_3: '3'});
+    QUnit.start();
+  }; // function
+
+  when_do_this(when, do_this);
+});
 
 
