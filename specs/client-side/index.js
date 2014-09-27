@@ -371,27 +371,32 @@ QUnit.test('adds event to element', function (assert) {
 
   $('#event').html(
     '\
-      <div class="sub_event_1">hello</div>    \
-      <div class="sub_event_2">goodbye</div>  \
-      <button class="submit">Submit</button>  \
-      <button class="cancel">Cancel</button>  \
+      <div class="the_box">                       \
+        <div><div>                                \
+          <button class="submit">Submit</button>  \
+          <button class="cancel">Cancel</button>  \
+        </div></div>                              \
+      </div>                                      \
     '
   );
 
   var event = WWW_Applet.run([
 
-    'focus on', ['#event button'],
+    'focus on', ['#event button.submit'],
     'on click', [
-      'up to', ['#event'],
-      'run event', ['event 1 clicked']
+      'focus on ancestor', ['div.the_box'],
+      'run event', ['add red']
     ],
 
-    'focus on', ['#event div.sub_event_1'],
-    'on', [ 'event 1 clicked',
-      'add class', ['hi']
+    'focus on', ['#event div.the_box'],
+    'on', [ 'add red',
+      'add class', ['red']
     ]
 
   ]); // ======================
+
+  $('#event button.submit').trigger('click');
+  assert.equal($('#event div.the_box').hasClass('red'), true);
 
 }); // === adds event to element
 
