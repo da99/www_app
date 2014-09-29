@@ -385,11 +385,6 @@ QUnit.test('adds event to element', function (assert) {
     'focus on', ['#event button.submit'],
     'on click', [
       'focus on ancestor', ['div.the_box'],
-      'run event', ['add red']
-    ],
-
-    'focus on', ['#event div.the_box'],
-    'on', [ 'add red',
       'add class', ['red']
     ]
 
