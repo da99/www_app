@@ -31,14 +31,14 @@ QUnit.test( "it evals the args as code", function( assert ) {
 QUnit.test("throws error if not enough stack values", function (assert) {
   assert.throws(function () {
     WWW_Applet.run(['less or equal', [5]]);
-  }, /Not enough in stack values/);
+  }, /Not enough values in stack/);
 });
 
 
 QUnit.test("throws error if not enough arg values", function (assert) {
   assert.throws(function () {
     WWW_Applet.run(['less or equal', []]);
-  }, /Not enough in args/);
+  }, /Not enough values in args/);
 });
 
 
