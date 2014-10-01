@@ -24,7 +24,7 @@ QUnit.test( "it evals the args as code", function( assert ) {
   var o = WWW_Applet.run([
     "add to stack", ["array", [1,2,3]]
   ]);
-  assert.deepEqual( o.stack, [[1,2,3]], "Args are eval'd before run." );
+  assert.deepEqual( o.right('all'), [[1,2,3]], "Args are eval'd before run." );
 });
 
 
@@ -50,21 +50,21 @@ QUnit.test('it places true if: 5 <= 6', function (assert) {
   var o = WWW_Applet.run([
     5, "less or equal", [ 6 ]
   ]);
-  assert.equal( _.last(o.stack), true);
+  assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places true if: 6 <= 6', function (assert) {
   var o = WWW_Applet.run([
     6, "less or equal", [ 6 ]
   ]);
-  assert.equal( _.last(o.stack), true);
+  assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places false if: 7 <= 6', function (assert) {
   var o = WWW_Applet.run([
     7, "less or equal", [ 6 ]
   ]);
-  assert.equal( _.last(o.stack), false);
+  assert.equal( o.right('last'), false);
 });
 
 QUnit.test('throws error if first num is not a number', function (assert) {
@@ -92,21 +92,21 @@ QUnit.test('it places true if: 6 >= 4', function (assert) {
   var o = WWW_Applet.run([
     6, "bigger or equal", [ 4 ]
   ]);
-  assert.equal( _.last(o.stack), true);
+  assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places true if: 6 >= 6', function (assert) {
   var o = WWW_Applet.run([
     6, "bigger or equal", [ 6 ]
   ]);
-  assert.equal( _.last(o.stack), true);
+  assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places false if: 6 >= 7', function (assert) {
   var o = WWW_Applet.run([
     6, "bigger or equal", [ 7 ]
   ]);
-  assert.equal( _.last(o.stack), false);
+  assert.equal( o.right('last'), false);
 });
 
 QUnit.test('throws error if first num is not a number', function (assert) {
@@ -134,7 +134,7 @@ QUnit.test('it places true on stack if: 6 > 1', function (assert) {
   var o = WWW_Applet.run([
     6, 'bigger', [1]
   ]);
-  assert.equal(_.last(o.stack), true);
+  assert.equal(o.right('last'), true);
 });
 
 
@@ -142,7 +142,7 @@ QUnit.test('it places false on stack if: 6 > 6', function (assert) {
   var o = WWW_Applet.run([
     6, 'bigger', [6]
   ]);
-  assert.equal(_.last(o.stack), false);
+  assert.equal(o.right('last'), false);
 });
 
 
@@ -154,7 +154,7 @@ QUnit.test('it places true on stack if: 1 < 6', function (assert) {
   var o = WWW_Applet.run([
     1, 'less', [6]
   ]);
-  assert.equal(_.last(o.stack), true);
+  assert.equal(o.right('last'), true);
 });
 
 
@@ -162,14 +162,14 @@ QUnit.test('it places false on stack if: 6 < 6', function (assert) {
   var o = WWW_Applet.run([
     6, 'less', [6]
   ]);
-  assert.equal(_.last(o.stack), false);
+  assert.equal(o.right('last'), false);
 });
 
 QUnit.test('it places false on stack if: 6 < 1', function (assert) {
   var o = WWW_Applet.run([
     6, 'less', [1]
   ]);
-  assert.equal(_.last(o.stack), false);
+  assert.equal(o.right('last'), false);
 });
 
 
@@ -181,21 +181,21 @@ QUnit.test('it places true on stack if: 1 === 1', function (assert) {
   var o = WWW_Applet.run([
     1, 'equal', [1]
   ]);
-  assert.equal(_.last(o.stack), true);
+  assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places true on stack if: \'a\' === \'a\'', function (assert) {
   var o = WWW_Applet.run([
     "a", 'equal', ["a"]
   ]);
-  assert.equal(_.last(o.stack), true);
+  assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places false on stack if: \'5\' === 5', function (assert) {
   var o = WWW_Applet.run([
     "5", 'equal', [5]
   ]);
-  assert.equal(_.last(o.stack), false);
+  assert.equal(o.right('last'), false);
 });
 
 
@@ -203,7 +203,7 @@ QUnit.test('it places false on stack if: 6 === \'6\'', function (assert) {
   var o = WWW_Applet.run([
     6, 'equal', ["6"]
   ]);
-  assert.equal(_.last(o.stack), false);
+  assert.equal(o.right('last'), false);
 });
 
 
@@ -231,28 +231,28 @@ QUnit.test('it places true on stack if both conditions are true', function (asse
   var o = WWW_Applet.run([
     true, 'and', [6, 'equal', [6]]
   ]);
-  assert.equal(_.last(o.stack), true);
+  assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places false on stack if first condition is false', function (assert) {
   var o = WWW_Applet.run([
     false, 'and', [6, 'equal', [6]]
   ]);
-  assert.deepEqual(o.stack, [false, false]);
+  assert.deepEqual(o.right('all'), [false, false]);
 });
 
 QUnit.test('it places false on stack if second condition is false', function (assert) {
   var o = WWW_Applet.run([
     true, 'and', [6, 'equal', [7]]
   ]);
-  assert.deepEqual(o.stack, [true, false]);
+  assert.deepEqual(o.right('all'), [true, false]);
 });
 
 QUnit.test('does not evaluate args if right-hand value is false', function (assert) {
   var o = WWW_Applet.run([
     false, 'and', ['unknown method', []]
   ]);
-  assert.deepEqual(o.stack, [false, false]);
+  assert.deepEqual(o.right('all'), [false, false]);
 });
 
 
@@ -276,28 +276,28 @@ QUnit.test('it places true on stack if both conditions are true', function (asse
   var o = WWW_Applet.run([
     true, 'or', [6, 'equal', [6]]
   ]);
-  assert.deepEqual(o.stack, [true, true]);
+  assert.deepEqual(o.right('all'), [true, true]);
 });
 
 QUnit.test('it places true on stack if: true or false', function (assert) {
   var o = WWW_Applet.run([
     true, 'or', [9, 'equal', [6]]
   ]);
-  assert.deepEqual(o.stack, [true, true]);
+  assert.deepEqual(o.right('all'), [true, true]);
 });
 
 QUnit.test('it places true on stack if: false or true', function (assert) {
   var o = WWW_Applet.run([
     false, 'or', [9, 'equal', [9]]
   ]);
-  assert.deepEqual(o.stack, [false, true]);
+  assert.deepEqual(o.right('all'), [false, true]);
 });
 
 QUnit.test('does not evaluate args if first condition is true', function (assert) {
   var o = WWW_Applet.run([
     true, 'or', ['no known method', []]
   ]);
-  assert.deepEqual(o.stack, [true, true]);
+  assert.deepEqual(o.right('all'), [true, true]);
 });
 
 
@@ -320,7 +320,7 @@ QUnit.test('does not place a value on stack', function (assert) {
     ]
   ]);
 
-  assert.deepEqual(o.stack, [true]);
+  assert.deepEqual(o.right('all'), [true]);
 });
 
 QUnit.test('does not run tokens if stack value is false', function (assert) {
@@ -330,7 +330,7 @@ QUnit.test('does not run tokens if stack value is false', function (assert) {
     ]
   ]);
 
-  assert.deepEqual(o.stack, [false]);
+  assert.deepEqual(o.right('all'), [false]);
 });
 
 
@@ -351,7 +351,7 @@ QUnit.test('does not place a value on stack', function (assert) {
     false, "if false", [ 100 ]
   ]);
 
-  assert.deepEqual(o.stack, [false]);
+  assert.deepEqual(o.right('all'), [false]);
 });
 
 QUnit.test('does not run tokens if stack value is true', function (assert) {
@@ -359,7 +359,7 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
     true, "if false", [ "something unknown", [] ]
   ]);
 
-  assert.deepEqual(o.stack, [true]);
+  assert.deepEqual(o.right('all'), [true]);
 });
 
 
