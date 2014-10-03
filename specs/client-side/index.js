@@ -7,6 +7,28 @@
 /* global expect */
 /*jshint multistr:true */
 
+
+// ==== Helpers: ====================================================
+var when_count = 0;
+var when_do_this = function (when, do_this) {
+  setTimeout(function () {
+    if (when()) {
+      when_count = 0;
+      do_this();
+    } else {
+      when_count = when_count + 1;
+      if (when_count > 20) {
+        when_count = 0;
+        QUnit.start();
+      } else {
+        when_do_this(when, do_this);
+      }
+    }
+  }, 100);
+}; // when_do_this
+// ==================================================================
+
+
 // ==================================================================
 QUnit.module("WWW_Applet");
 // ==================================================================
@@ -381,7 +403,7 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_Applet.run([
-    'red div.the_box', 'does', [ 'add class', ['red'] ]
+    'red -> div.the_box', 'does', [ 'add class', ['red'] ]
   ]); // ======================
 
   $('#event button.red').trigger('click');
@@ -408,7 +430,7 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_Applet.run([
-    'red div.the_box', 'does', [ 'add class', ['white'] ]
+    'red -> div.the_box', 'does', [ 'add class', ['white'] ]
   ]); // ======================
 
   $('#event a.white').trigger('click');
@@ -435,7 +457,7 @@ QUnit.test('adds event to element', function (assert) {
 
   var event = WWW_Applet.run([
     'broadcast', [ 'mousedown', 'div.the_box div.blue' ],
-    'blue div.the_box', 'does', [ 'add class', ['blue'] ]
+    'blue -> div.the_box', 'does', [ 'add class', ['blue'] ]
   ]); // ======================
 
   $('#event div.the_box div.blue').trigger('mousedown');
@@ -457,9 +479,9 @@ QUnit.test('runs multiple defined "does"', function (assert) {
 
   var event = WWW_Applet.run([
     'broadcast', [ 'mousedown', 'div.the_box div.orange' ],
-    'orange div.the_box', 'does', [ 'add class', ['orange'] ],
-    'orange div.the_box', 'does', [ 'add class', ['white']  ],
-    'orange div.the_box', 'does', [ 'add class', ['black']  ]
+    'orange -> div.the_box', 'does', [ 'add class', ['orange'] ],
+    'orange -> div.the_box', 'does', [ 'add class', ['white']  ],
+    'orange -> div.the_box', 'does', [ 'add class', ['black']  ]
   ]); // ======================
 
   $('#event div.the_box div.orange').trigger('mousedown');
@@ -482,8 +504,8 @@ QUnit.test('runs "does" on child elements of event target', function (assert) {
 
   var event = WWW_Applet.run([
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
-    'grey div.child', 'does', [ 'add class', ['one']    ],
-    'grey div.child', 'does', [ 'add class', ['two']    ]
+    'grey -> div.child', 'does', [ 'add class', ['one']    ],
+    'grey -> div.child', 'does', [ 'add class', ['two']    ]
   ]); // ======================
 
   $('#event div.the_box div.grey').trigger('mousedown');
@@ -527,8 +549,8 @@ QUnit.test('allows to specify event name with selector', function (assert) {
 
   var event = WWW_Applet.run([
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
-    'div.grey.one div.the_box', 'does', [ 'add class', ['one']   ],
-    'div.grey.two div.the_box', 'does', [ 'add class', ['two']    ]
+    '.the_box -> div.grey:first  , div.the_box', 'does', [ 'add class', ['one']  ],
+    '.the_box -> div.grey:second , div.the_box', 'does', [ 'add class', ['two']  ]
   ]); // ======================
 
   $('#event div.the_box div.grey.one').trigger('mousedown');
@@ -546,8 +568,7 @@ QUnit.test('throws error if url contains invalid char: :', function (assert) {
   $('#form_1').attr('action', 'javascrip://alert');
   assert.throws(function () {
     WWW_Applet.run([
-      'focus on', ['#form_1'],
-      'submit', []
+      '#form_1', 'submit', []
     ]);
   }, /Invalid chars in #form_1 action: javascrip:/);
 });
@@ -556,8 +577,7 @@ QUnit.test('throws error if url contains invalid char: &', function (assert) {
   $('#form_1').attr('action', 'javascript&amp//alert');
   assert.throws(function () {
     WWW_Applet.run([
-      'focus on', ['#form_1'],
-      'submit', []
+      '#form_1', 'submit', []
     ]);
   }, /Invalid chars in #form_1 action: javascript&amp/);
 });
@@ -566,8 +586,7 @@ QUnit.test('throws error if url contains invalid char: ;', function (assert) {
   $('#form_1').attr('action', 'http;amp//alert');
   assert.throws(function () {
     WWW_Applet.run([
-      'focus on', ['#form_1'],
-      'submit', []
+      '#form_1', 'submit', []
     ]);
   }, /Invalid chars in #form_1 action: http;amp/);
 });
@@ -579,8 +598,9 @@ QUnit.asyncTest('submits form values', function (assert) {
   $('#form_1').attr('action', '/repeat/vals');
 
   var env = WWW_Applet.run([
-    'focus on', ['#form_1'],
-    'on', ['success', 'log', ['var', ['vals']]],
+    'success -> #form_1', [
+      'success', 'log', ['var', ['vals']]
+    ],
     'submit', []
   ]);
 
@@ -595,5 +615,8 @@ QUnit.asyncTest('submits form values', function (assert) {
 
   when_do_this(when, do_this);
 });
+
+
+
 
 
