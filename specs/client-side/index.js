@@ -567,27 +567,21 @@ QUnit.module('forms');
 QUnit.test('throws error if url contains invalid char: :', function (assert) {
   $('#form_1').attr('action', 'javascrip://alert');
   assert.throws(function () {
-    WWW_Applet.run([
-      '#form_1', 'submit', []
-    ]);
+    $('#form_1 button.post').trigger('click');
   }, /Invalid chars in #form_1 action: javascrip:/);
 });
 
 QUnit.test('throws error if url contains invalid char: &', function (assert) {
   $('#form_1').attr('action', 'javascript&amp//alert');
   assert.throws(function () {
-    WWW_Applet.run([
-      '#form_1', 'submit', []
-    ]);
+    $('#form_1 button.post').trigger('click');
   }, /Invalid chars in #form_1 action: javascript&amp/);
 });
 
 QUnit.test('throws error if url contains invalid char: ;', function (assert) {
   $('#form_1').attr('action', 'http;amp//alert');
   assert.throws(function () {
-    WWW_Applet.run([
-      '#form_1', 'submit', []
-    ]);
+    $('#form_1 button.post').trigger('click');
   }, /Invalid chars in #form_1 action: http;amp/);
 });
 
@@ -598,10 +592,9 @@ QUnit.asyncTest('submits form values', function (assert) {
   $('#form_1').attr('action', '/repeat/vals');
 
   var env = WWW_Applet.run([
-    'success -> #form_1', [
-      'success', 'log', ['var', ['vals']]
-    ],
-    'submit', []
+    'success -> #form_1', 'does', [
+      'log', ['get', ['data']]
+    ]
   ]);
 
   var when = function () {
@@ -613,6 +606,7 @@ QUnit.asyncTest('submits form values', function (assert) {
     QUnit.start();
   }; // function
 
+  $('#form_1 button.post').trigger('click');
   when_do_this(when, do_this);
 });
 
