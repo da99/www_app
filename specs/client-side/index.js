@@ -381,11 +381,7 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
-    'red div.the_box', 'does', [
-      'add class', ['red']
-    ]
-
+    'red div.the_box', 'does', [ 'add class', ['red'] ]
   ]); // ======================
 
   $('#event button.red').trigger('click');
@@ -412,11 +408,7 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
-    'red div.the_box', 'does', [
-      'add class', ['white']
-    ]
-
+    'red div.the_box', 'does', [ 'add class', ['white'] ]
   ]); // ======================
 
   $('#event a.white').trigger('click');
@@ -442,12 +434,8 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
     'broadcast', [ 'mousedown', 'div.the_box div.blue' ],
-    'blue div.the_box', 'does', [
-      'add class', ['blue'] 
-    ]
-
+    'blue div.the_box', 'does', [ 'add class', ['blue'] ]
   ]); // ======================
 
   $('#event div.the_box div.blue').trigger('mousedown');
@@ -468,12 +456,10 @@ QUnit.test('runs multiple defined "does"', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
     'broadcast', [ 'mousedown', 'div.the_box div.orange' ],
     'orange div.the_box', 'does', [ 'add class', ['orange'] ],
     'orange div.the_box', 'does', [ 'add class', ['white']  ],
     'orange div.the_box', 'does', [ 'add class', ['black']  ]
-
   ]); // ======================
 
   $('#event div.the_box div.orange').trigger('mousedown');
@@ -495,11 +481,9 @@ QUnit.test('runs "does" on child elements of event target', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     'grey div.child', 'does', [ 'add class', ['one']    ],
     'grey div.child', 'does', [ 'add class', ['two']    ]
-
   ]); // ======================
 
   $('#event div.the_box div.grey').trigger('mousedown');
@@ -521,11 +505,9 @@ QUnit.test('runs "does" on event target itself', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     'grey', 'does', [ 'add class', ['three']   ],
     'grey', 'does', [ 'add class', ['four']    ]
-
   ]); // ======================
 
   $('#event div.the_box div.grey').trigger('mousedown');
@@ -544,11 +526,9 @@ QUnit.test('allows to specify event name with selector', function (assert) {
   );
 
   var event = WWW_Applet.run([
-
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     'div.grey.one div.the_box', 'does', [ 'add class', ['one']   ],
     'div.grey.two div.the_box', 'does', [ 'add class', ['two']    ]
-
   ]); // ======================
 
   $('#event div.the_box div.grey.one').trigger('mousedown');
