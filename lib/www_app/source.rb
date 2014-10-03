@@ -1,6 +1,6 @@
 
 
-class WWW_Applet
+class WWW_App
   class Code_ify < BasicObject
     def initialize &blok
       @code = []

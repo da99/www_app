@@ -2,7 +2,7 @@
 "use strict";
 
 /* global QUnit */
-/* global WWW_Applet */
+/* global WWW_App */
 /* global _ */
 /* global expect */
 /*jshint multistr:true */
@@ -30,11 +30,11 @@ var when_do_this = function (when, do_this) {
 
 
 // ==================================================================
-QUnit.module("WWW_Applet");
+QUnit.module("WWW_App");
 // ==================================================================
 
 QUnit.test( "it runs the code", function ( assert ) {
-  WWW_Applet.run([
+  WWW_App.run([
     "focus on", ['#box_1'],
     "add class", ['weird']
   ]);
@@ -43,7 +43,7 @@ QUnit.test( "it runs the code", function ( assert ) {
 
 
 QUnit.test( "it evals the args as code", function( assert ) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     "add to stack", ["array", [1,2,3]]
   ]);
   assert.deepEqual( o.right('all'), [[1,2,3]], "Args are eval'd before run." );
@@ -52,14 +52,14 @@ QUnit.test( "it evals the args as code", function( assert ) {
 
 QUnit.test("throws error if not enough stack values", function (assert) {
   assert.throws(function () {
-    WWW_Applet.run(['less or equal', [5]]);
+    WWW_App.run(['less or equal', [5]]);
   }, /Not enough values in stack/);
 });
 
 
 QUnit.test("throws error if not enough arg values", function (assert) {
   assert.throws(function () {
-    WWW_Applet.run(['less or equal', []]);
+    WWW_App.run(['less or equal', []]);
   }, /Not enough values in args/);
 });
 
@@ -69,21 +69,21 @@ QUnit.module("less or equal");
 // ==================================================================
 
 QUnit.test('it places true if: 5 <= 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     5, "less or equal", [ 6 ]
   ]);
   assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places true if: 6 <= 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, "less or equal", [ 6 ]
   ]);
   assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places false if: 7 <= 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     7, "less or equal", [ 6 ]
   ]);
   assert.equal( o.right('last'), false);
@@ -91,7 +91,7 @@ QUnit.test('it places false if: 7 <= 6', function (assert) {
 
 QUnit.test('throws error if first num is not a number', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       '5', 'less or equal', [5] 
     ]);
   }, /Value in stack is not a Number: String: 5/);
@@ -99,7 +99,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
 
 QUnit.test('throws error if second num is not a number', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       5, 'less or equal', ["6"] 
     ]);
   }, /Value in args is not a Number: String: 6/);
@@ -111,21 +111,21 @@ QUnit.module("bigger or equal");
 // ==================================================================
 
 QUnit.test('it places true if: 6 >= 4', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, "bigger or equal", [ 4 ]
   ]);
   assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places true if: 6 >= 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, "bigger or equal", [ 6 ]
   ]);
   assert.equal( o.right('last'), true);
 });
 
 QUnit.test('it places false if: 6 >= 7', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, "bigger or equal", [ 7 ]
   ]);
   assert.equal( o.right('last'), false);
@@ -133,7 +133,7 @@ QUnit.test('it places false if: 6 >= 7', function (assert) {
 
 QUnit.test('throws error if first num is not a number', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       '3', 'bigger or equal', [5] 
     ]);
   }, /Value in stack is not a Number: String: 3/);
@@ -141,7 +141,7 @@ QUnit.test('throws error if first num is not a number', function (assert) {
 
 QUnit.test('throws error if second num is not a number', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       5, 'bigger or equal', ["9"] 
     ]);
   }, /Value in args is not a Number: String: 9/);
@@ -153,7 +153,7 @@ QUnit.module('bigger');
 // ==================================================================
 
 QUnit.test('it places true on stack if: 6 > 1', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, 'bigger', [1]
   ]);
   assert.equal(o.right('last'), true);
@@ -161,7 +161,7 @@ QUnit.test('it places true on stack if: 6 > 1', function (assert) {
 
 
 QUnit.test('it places false on stack if: 6 > 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, 'bigger', [6]
   ]);
   assert.equal(o.right('last'), false);
@@ -173,7 +173,7 @@ QUnit.module('less');
 // ==================================================================
 
 QUnit.test('it places true on stack if: 1 < 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     1, 'less', [6]
   ]);
   assert.equal(o.right('last'), true);
@@ -181,14 +181,14 @@ QUnit.test('it places true on stack if: 1 < 6', function (assert) {
 
 
 QUnit.test('it places false on stack if: 6 < 6', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, 'less', [6]
   ]);
   assert.equal(o.right('last'), false);
 });
 
 QUnit.test('it places false on stack if: 6 < 1', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, 'less', [1]
   ]);
   assert.equal(o.right('last'), false);
@@ -200,21 +200,21 @@ QUnit.module('equal');
 // ==================================================================
 
 QUnit.test('it places true on stack if: 1 === 1', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     1, 'equal', [1]
   ]);
   assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places true on stack if: \'a\' === \'a\'', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     "a", 'equal', ["a"]
   ]);
   assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places false on stack if: \'5\' === 5', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     "5", 'equal', [5]
   ]);
   assert.equal(o.right('last'), false);
@@ -222,7 +222,7 @@ QUnit.test('it places false on stack if: \'5\' === 5', function (assert) {
 
 
 QUnit.test('it places false on stack if: 6 === \'6\'', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     6, 'equal', ["6"]
   ]);
   assert.equal(o.right('last'), false);
@@ -235,7 +235,7 @@ QUnit.module('and');
 
 QUnit.test('throws error if last value on stack is not a bool', function (assert) {
   assert.throws(function () {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     1, 'and', [true]
   ]);
   }, /Value in stack is not a Boolean: Number: 1/);
@@ -243,35 +243,35 @@ QUnit.test('throws error if last value on stack is not a bool', function (assert
 
 QUnit.test('throws if last value of args is not a bool', function (assert) {
   assert.throws(function () {
-    var o = WWW_Applet.run([
+    var o = WWW_App.run([
       true, 'and', [2]
     ]);
   }, /Value in args is not a Boolean: Number: 2/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, 'and', [6, 'equal', [6]]
   ]);
   assert.equal(o.right('last'), true);
 });
 
 QUnit.test('it places false on stack if first condition is false', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     false, 'and', [6, 'equal', [6]]
   ]);
   assert.deepEqual(o.right('all'), [false, false]);
 });
 
 QUnit.test('it places false on stack if second condition is false', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, 'and', [6, 'equal', [7]]
   ]);
   assert.deepEqual(o.right('all'), [true, false]);
 });
 
 QUnit.test('does not evaluate args if right-hand value is false', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     false, 'and', ['unknown method', []]
   ]);
   assert.deepEqual(o.right('all'), [false, false]);
@@ -284,39 +284,39 @@ QUnit.module('or');
 
 QUnit.test('it throws an error if first condition is not a bool', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run(["something", 'or', [false]]);
+    WWW_App.run(["something", 'or', [false]]);
   }, /Value in stack is not a Boolean: String: something/);
 });
 
 QUnit.test('it throws an error if second condition is not a bool', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([false, 'or', [false, "something"]]);
+    WWW_App.run([false, 'or', [false, "something"]]);
   }, /Value in args is not a Boolean: String: something/);
 });
 
 QUnit.test('it places true on stack if both conditions are true', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, 'or', [6, 'equal', [6]]
   ]);
   assert.deepEqual(o.right('all'), [true, true]);
 });
 
 QUnit.test('it places true on stack if: true or false', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, 'or', [9, 'equal', [6]]
   ]);
   assert.deepEqual(o.right('all'), [true, true]);
 });
 
 QUnit.test('it places true on stack if: false or true', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     false, 'or', [9, 'equal', [9]]
   ]);
   assert.deepEqual(o.right('all'), [false, true]);
 });
 
 QUnit.test('does not evaluate args if first condition is true', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, 'or', ['no known method', []]
   ]);
   assert.deepEqual(o.right('all'), [true, true]);
@@ -329,14 +329,14 @@ QUnit.module('if true');
 
 QUnit.test('throws an error if righ hand value is not a bool', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       6, "if true", [5]
     ]);
   }, /Value in stack is not a Boolean: Number: 6/);
 });
 
 QUnit.test('does not place a value on stack', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, "if true", [
       100
     ]
@@ -346,7 +346,7 @@ QUnit.test('does not place a value on stack', function (assert) {
 });
 
 QUnit.test('does not run tokens if stack value is false', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     false, "if true", [
       "something unknown", []
     ]
@@ -362,14 +362,14 @@ QUnit.module('if false');
 
 QUnit.test('throws an error if righ hand value is not a bool', function (assert) {
   assert.throws(function () {
-    WWW_Applet.run([
+    WWW_App.run([
       7, "if false", [5]
     ]);
   }, /Value in stack is not a Boolean: Number: 7/);
 });
 
 QUnit.test('does not place a value on stack', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     false, "if false", [ 100 ]
   ]);
 
@@ -377,7 +377,7 @@ QUnit.test('does not place a value on stack', function (assert) {
 });
 
 QUnit.test('does not run tokens if stack value is true', function (assert) {
-  var o = WWW_Applet.run([
+  var o = WWW_App.run([
     true, "if false", [ "something unknown", [] ]
   ]);
 
@@ -402,7 +402,7 @@ QUnit.test('adds event to element', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'red -> div.the_box', 'does', [ 'add class', ['red'] ]
   ]); // ======================
 
@@ -429,7 +429,7 @@ QUnit.test('adds event to element', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'red -> div.the_box', 'does', [ 'add class', ['white'] ]
   ]); // ======================
 
@@ -455,7 +455,7 @@ QUnit.test('adds event to element', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'broadcast', [ 'mousedown', 'div.the_box div.blue' ],
     'blue -> div.the_box', 'does', [ 'add class', ['blue'] ]
   ]); // ======================
@@ -477,7 +477,7 @@ QUnit.test('runs multiple defined "does"', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'broadcast', [ 'mousedown', 'div.the_box div.orange' ],
     'orange -> div.the_box', 'does', [ 'add class', ['orange'] ],
     'orange -> div.the_box', 'does', [ 'add class', ['white']  ],
@@ -502,7 +502,7 @@ QUnit.test('runs "does" on child elements of event target', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     'grey -> div.child', 'does', [ 'add class', ['one']    ],
     'grey -> div.child', 'does', [ 'add class', ['two']    ]
@@ -526,7 +526,7 @@ QUnit.test('runs "does" on event target itself', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     'grey', 'does', [ 'add class', ['three']   ],
     'grey', 'does', [ 'add class', ['four']    ]
@@ -547,7 +547,7 @@ QUnit.test('allows to specify event name with selector', function (assert) {
     '
   );
 
-  var event = WWW_Applet.run([
+  var event = WWW_App.run([
     'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
     '.the_box -> div.grey:first  , div.the_box', 'does', [ 'add class', ['one']  ],
     '.the_box -> div.grey:second , div.the_box', 'does', [ 'add class', ['two']  ]
@@ -591,7 +591,7 @@ QUnit.asyncTest('submits form values', function (assert) {
 
   $('#form_1').attr('action', '/repeat/vals');
 
-  var env = WWW_Applet.run([
+  var env = WWW_App.run([
     'success -> #form_1', 'does', [
       'log', ['get', ['data']]
     ]

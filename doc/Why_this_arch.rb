@@ -10,7 +10,7 @@ Ideas to remember, in this order:
   rather than creating an app. Science and Nintendo-style
   video games require more "power", (ie a programming language).
 
-  2. most of the action in WWW\_Applets is:
+  2. most of the action in WWW\_Apps is:
   describing things you are doing to the
   stacks... and things you are doing to the 
   values on the stack.
@@ -53,11 +53,11 @@ Ideas to remember, in this order:
   their own preferred language ...above all else... to generate
   HTMl/CSS/JS. That leaves app-to-app messaging (ie JSON over AJAX).
 
-  9. Most apps/applets are:
+  9. Most apps/apps are:
 
     > input -> JSON/AJAX -> Server -> markup
 
-    App/applet makers do not neet programming capilities
+    App/app makers do not neet programming capilities
     outside of Nintendo-like gaming... because they will do
     that in their favorite language on the server, then
     send the final output to the user in the browser.
@@ -75,21 +75,21 @@ Ideas to remember, in this order:
     my own, of a better Smalltalk/Factor/Xananud system...
     outside of Nintendo-like gaming.
 
-  10. If WWW\_Applet is going to be a programming language,
+  10. If WWW\_App is going to be a programming language,
   might as well go all the way: make it an abstraction over
   everything (ie HTML/CSS/JS and all server-side langs,
   including Ruby and Lua). A runtime will be created for
   each language.
 
 I originally wanted this to be an abstraction layer over
-HTML, JS, CSS. However, during the development of "www\_applet",
+HTML, JS, CSS. However, during the development of "www\_app",
 I realized I could do that w/ just Ruby. In other words,
 I would not need a sophisticated runtime in the browser.
 Most of the work would be on the server (to generate the HTML, CSS)
 and the JS would mainly consist of calling functions in the browser
 from my own api/libs.
 
-The need for www\_applet was pushed forward, also, because
+The need for www\_app was pushed forward, also, because
 most people do not need a common way to exchange code in programming
 languages. Instead, their needs are configuration,
 rather than a programming language or DSL/POL.
@@ -97,7 +97,7 @@ This is more higher level than HyperCard:
 
   > Configure rather than create.
 
-Also, I realized www\_applet can become it's own programming
+Also, I realized www\_app can become it's own programming
 language with the power to replace PHP. It sounds crazy, but
 no more crazy than the popularity of garbage like PHP and Wordpress.
 It would only require an extra 2 weeks, but this is still too much

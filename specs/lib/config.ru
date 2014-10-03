@@ -4,7 +4,7 @@ require 'cuba'
 require 'da99_rack_protect'
 
 Cuba.use Da99_Rack_Protect.config { |c|
-  c.config :host, [:localhost, 'www_applet.com']
+  c.config :host, [:localhost, 'www_app.com']
 }
 
 Cuba.use Rack::ShowExceptions

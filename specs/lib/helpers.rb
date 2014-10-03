@@ -1,6 +1,6 @@
 
 require 'Bacon_Colored'
-require 'www_applet'
+require 'www_app'
 require 'pry'
 require "differ"
 require "sanitize"
@@ -64,7 +64,7 @@ def to_html h
 end
 
 def should_equal target, &blok
-  a = norm(WWW_Applet.new(&blok).to_html)
+  a = norm(WWW_App.new(&blok).to_html)
   t = norm( target )
   return(a.should == t) if a == t
 
@@ -87,7 +87,7 @@ module Bacon
 
     def actual vals = {}, &blok
       if !@target_args
-        return WWW_Applet.new(&blok).render(vals)
+        return WWW_App.new(&blok).render(vals)
       end
 
       include_tag = if @target_args.first == :outer
@@ -98,7 +98,7 @@ module Bacon
       norm_target   = norm @target_args.last
 
       tag           = @target_args.first
-      html          = WWW_Applet.new(&blok).render(vals)
+      html          = WWW_App.new(&blok).render(vals)
       section       = case
                       when include_tag
                         html[/(<#{tag}[^\>]*>.+<\/#{tag}>)/m] && $1
@@ -123,22 +123,22 @@ module Bacon
   end # === class Context ===
 end # === module Bacon ===
 
-class WWW_Applet_Test
+class WWW_App_Test
 
   def initialize applet, output
-    @applet = applet
+    @app    = applet
     @err    = nil
-    @test   = WWW_Applet.new("__main_test___", output)
+    @test   = WWW_App.new("__main_test___", output)
     @test.extend Computers
-    @test.send :test_applet, @applet
+    @test.send :test_app, @app
   end
 
   def run
     begin
-      @applet.run
+      @app.run
     rescue Object => e
       fail_expected = @test.tokens.detect { |v|
-        v.is_a?(String) && WWW_Applet.standard_key(v) == "SHOULD RAISE"
+        v.is_a?(String) && WWW_App.standard_key(v) == "SHOULD RAISE"
       }
       raise e unless fail_expected
       @test.send :test_err, e
@@ -155,11 +155,11 @@ class WWW_Applet_Test
     end # === class self
 
     private
-    def test_applet app = :none
+    def test_app app = :none
       if app != :none
-        @test_applet = app
+        @test_app = app
       end
-      @test_applet
+      @test_app
     end
 
     def test_err e = :none
@@ -175,7 +175,7 @@ class WWW_Applet_Test
     def value_should_equals_equals sender, to, args
       name = sender.stack.last
       target = args.last
-      @test_applet.get(name).should == target
+      @test_app.get(name).should == target
     end
 
     def should_raise sender, to, args
@@ -192,7 +192,7 @@ class WWW_Applet_Test
 
     aliases[:stack_should_equal_equal] = "stack should =="
     def stack_should_equal_equal sender, to, args
-      @test_applet.stack.should == args
+      @test_app.stack.should == args
     end
 
     def should_not_raise sender, to, args
@@ -201,12 +201,12 @@ class WWW_Applet_Test
 
     aliases[:last_console_message_should_equal_equal] = "last console message should =="
     def last_console_message_should_equal_equal sender, to, args
-      @test_applet.console.last.should == args.last
+      @test_app.console.last.should == args.last
     end
 
     aliases[:console_should_equal_equal] = "console should =="
     def console_should_equal_equal sender, to, args
-      @test_applet.console.should == args
+      @test_app.console.should == args
     end
   end # === module Computers
 

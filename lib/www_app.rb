@@ -83,7 +83,7 @@ end # === class Mustache
 class Symbol
 
   def to_mustache meth
-    WWW_Applet::Sanitize.mustache meth, self
+    WWW_App::Sanitize.mustache meth, self
   end
 
 end # === class Symbol
@@ -91,9 +91,9 @@ end # === class Symbol
 
 
 # ===================================================================
-# === WWW_Applet ====================================================
+# === WWW_App ====================================================
 # ===================================================================
-class WWW_Applet < BasicObject
+class WWW_App < BasicObject
 # ===================================================================
 
   include ::Kernel
@@ -759,7 +759,7 @@ class WWW_Applet < BasicObject
       h = vals
       h.map { |k,raw_v|
         name  = begin
-                  clean_k = ::WWW_Applet::Sanitize.css_attr(k.to_s.gsub('_','-'))
+                  clean_k = ::WWW_App::Sanitize.css_attr(k.to_s.gsub('_','-'))
                   fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
                   clean_k
                 end
@@ -798,7 +798,7 @@ class WWW_Applet < BasicObject
 
         v = raw_v
 
-        attr_name = k.to_s.gsub(::WWW_Applet::INVALID_ATTR_CHARS, '_')
+        attr_name = k.to_s.gsub(::WWW_App::INVALID_ATTR_CHARS, '_')
         fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
 
         attr_val = case
@@ -855,7 +855,7 @@ class WWW_Applet < BasicObject
       if h[:tag] == :script && h[:content] && !h[:content].empty?
         return <<-EOF
           <script type="text/css">
-            WWW_Applet.compile(
+            WWW_App.compile(
              #{to_clean_text :to_json, h[:content]}
             );
           </script>
@@ -1011,7 +1011,7 @@ class WWW_Applet < BasicObject
     end # === class << self
   end # === class Sanitize
 
-end # === class WWW_Applet ==========================================
+end # === class WWW_App ==========================================
 
 __END__
 <!DOCTYPE html>

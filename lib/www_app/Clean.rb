@@ -1,5 +1,5 @@
 
-class WWW_Applet
+class WWW_App
   class Clean
 
     attr_reader :name, :origin, :actual
@@ -166,4 +166,4 @@ class WWW_Applet
     # =====================================================================================
 
   end # === class Clean
-end # === class WWW_Applet
+end # === class WWW_App

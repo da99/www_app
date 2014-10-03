@@ -6,12 +6,12 @@ set -u -e -o pipefail -x
 
 
 # =========================================
-ruby -c lib/www_applet.rb
+ruby -c lib/www_app.rb
 
 # =========================================
-jshint lib/www_applet.js
+jshint lib/www_app.js
 
 # =========================================
-jshint specs/as_javascript/www_applet.js
+jshint specs/as_javascript/www_app.js
 
 

@@ -12,7 +12,7 @@ describe :* do
   end
 
   it "raises HTML_ID_Duplicate if id is used more than once" do
-    should.raise(WWW_Applet::HTML_ID_Duplicate) {
+    should.raise(WWW_App::HTML_ID_Duplicate) {
       actual do
         div.*(:my_id) { '1' }
         div.*(:my_id) { '2' }
@@ -33,7 +33,7 @@ describe :* do
     end
   end
 
-end # === describe WWW_Applet.new ===
+end # === describe WWW_App.new ===
 
 
 

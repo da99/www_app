@@ -3,7 +3,7 @@ describe "HTML :on" do
 
   it "escapes text as :html" do
     target :script, <<-EOF
-      WWW_Applet.compile(
+      WWW_App.compile(
         ["create_event",["div","click","add_class",["red&lt;red"]]]
       );
     EOF
@@ -17,7 +17,7 @@ describe "HTML :on" do
 
   it "renders js" do
     target :script, <<-EOF
-      WWW_Applet.compile(
+      WWW_App.compile(
         #{
           Escape_Escape_Escape.json_encode( ["create_event", [ "#my_box", "click", "add_class", ["hello"] ] ] )
         }

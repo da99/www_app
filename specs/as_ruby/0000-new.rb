@@ -13,7 +13,7 @@ describe "IS_DEV" do
   it "raises RuntimeError if passed a block and non-IS_DEV" do
     should.raise(RuntimeError) {
       ENV['IS_DEV'] = nil
-      WWW_Applet.new {
+      WWW_App.new {
         div {}
       }
     }.message.should.match /non-DEV/i
