@@ -66,7 +66,7 @@ because it turns out people do not want to create programs, they just want to cu
 Fun fact:
 -----
 
-[JSON Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet. WWW\_Applet was then changed to WWW_App.
+[JSON Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet. WWW\_Applet was then changed to WWW\_App.
 
 
 
