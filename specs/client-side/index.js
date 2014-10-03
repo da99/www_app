@@ -450,7 +450,7 @@ QUnit.test('adds event to element', function (assert) {
 
   ]); // ======================
 
-  $('#event div.the_box div.blue').trigger('click');
+  $('#event div.the_box div.blue').trigger('mousedown');
   assert.equal($('#event div.the_box').hasClass('blue'), true);
 
 }); // === adds event to element
@@ -476,8 +476,86 @@ QUnit.test('runs multiple defined "does"', function (assert) {
 
   ]); // ======================
 
-  $('#event div.the_box div.orange').trigger('click');
+  $('#event div.the_box div.orange').trigger('mousedown');
   assert.equal($('#event div.the_box').attr('class'), 'the_box orange white black');
+});
+
+QUnit.test('runs "does" on child elements of event target', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                \
+        <div><div>                         \
+          <div class="grey">               \
+            <div><div class="child"></div></div> \
+          </div>                           \
+        </div></div>                       \
+      </div>                               \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
+    'grey div.child', 'does', [ 'add class', ['one']    ],
+    'grey div.child', 'does', [ 'add class', ['two']    ]
+
+  ]); // ======================
+
+  $('#event div.the_box div.grey').trigger('mousedown');
+  assert.equal($('#event div.the_box div.grey div.child').attr('class'), 'child one two');
+});
+
+QUnit.test('runs "does" on event target itself', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                \
+        <div><div>                         \
+          <div class="grey">               \
+            <div><div class="child"></div></div> \
+          </div>                           \
+        </div></div>                       \
+      </div>                               \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
+    'grey', 'does', [ 'add class', ['three']   ],
+    'grey', 'does', [ 'add class', ['four']    ]
+
+  ]); // ======================
+
+  $('#event div.the_box div.grey').trigger('mousedown');
+  assert.equal($('#event div.the_box div.grey').attr('class'), 'grey three four');
+});
+
+QUnit.test('allows to specify event name with selector', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">              \
+        <div class="grey one"></div>     \
+        <div class="grey two"></div>     \
+      </div>                             \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'broadcast', [ 'mousedown', 'div.the_box div.grey' ],
+    'div.grey.one div.the_box', 'does', [ 'add class', ['one']   ],
+    'div.grey.two div.the_box', 'does', [ 'add class', ['two']    ]
+
+  ]); // ======================
+
+  $('#event div.the_box div.grey.one').trigger('mousedown');
+  assert.equal($('#event div.the_box').attr('class'), 'the_box one');
+
+  $('#event div.the_box div.grey.two').trigger('mousedown');
+  assert.equal($('#event div.the_box').attr('class'), 'the_box one two');
 });
 
 // ==================================================================
