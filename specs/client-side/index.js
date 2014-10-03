@@ -364,7 +364,7 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
 
 
 // ==================================================================
-QUnit.module('on click');
+QUnit.module('on click button');
 // ==================================================================
 
 QUnit.test('adds event to element', function (assert) {
@@ -373,8 +373,8 @@ QUnit.test('adds event to element', function (assert) {
     '\
       <div class="the_box">                       \
         <div><div>                                \
-          <button class="submit">Submit</button>  \
-          <button class="cancel">Cancel</button>  \
+          <button class="red">Red</button>  \
+          <button class="blue">Blue</button>  \
         </div></div>                              \
       </div>                                      \
     '
@@ -382,19 +382,103 @@ QUnit.test('adds event to element', function (assert) {
 
   var event = WWW_Applet.run([
 
-    'focus on', ['#event button.submit'],
-    'on click', [
-      'focus on ancestor', ['div.the_box'],
+    'red div.the_box', 'does', [
       'add class', ['red']
     ]
 
   ]); // ======================
 
-  $('#event button.submit').trigger('click');
+  $('#event button.red').trigger('click');
   assert.equal($('#event div.the_box').hasClass('red'), true);
 
 }); // === adds event to element
 
+
+// ==================================================================
+QUnit.module('on click "a" link');
+// ==================================================================
+
+QUnit.test('adds event to element', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                \
+        <div><div>                         \
+          <a href="#white">White</button>  \
+          <a href="#blue">Blue</button>    \
+        </div></div>                       \
+      </div>                               \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'red div.the_box', 'does', [
+      'add class', ['white']
+    ]
+
+  ]); // ======================
+
+  $('#event a.white').trigger('click');
+  assert.equal($('#event div.the_box').hasClass('white'), true);
+
+}); // === adds event to element
+
+
+// ==================================================================
+QUnit.module('broadcast');
+// ==================================================================
+
+QUnit.test('adds event to element', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                \
+        <div><div>                         \
+          <div class="blue"></div>         \
+        </div></div>                       \
+      </div>                               \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'broadcast', [ 'mousedown', 'div.the_box div.blue' ],
+    'blue div.the_box', 'does', [
+      'add class', ['blue'] 
+    ]
+
+  ]); // ======================
+
+  $('#event div.the_box div.blue').trigger('click');
+  assert.equal($('#event div.the_box').hasClass('blue'), true);
+
+}); // === adds event to element
+
+QUnit.test('runs multiple defined "does"', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                \
+        <div><div>                         \
+          <div class="orange"></div>       \
+        </div></div>                       \
+      </div>                               \
+    '
+  );
+
+  var event = WWW_Applet.run([
+
+    'broadcast', [ 'mousedown', 'div.the_box div.orange' ],
+    'orange div.the_box', 'does', [ 'add class', ['orange'] ],
+    'orange div.the_box', 'does', [ 'add class', ['white']  ],
+    'orange div.the_box', 'does', [ 'add class', ['black']  ]
+
+  ]); // ======================
+
+  $('#event div.the_box div.orange').trigger('click');
+  assert.equal($('#event div.the_box').attr('class'), 'the_box orange white black');
+});
 
 // ==================================================================
 QUnit.module('forms');
