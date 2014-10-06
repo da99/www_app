@@ -456,7 +456,7 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_App.run([
-    'div.the_box div.blue', 'allows' [ 'mousedown' ],
+    'div.the_box div.blue', 'allows', [ 'mousedown' ],
     '/blue/div.the_box', 'does', [ 'add class', ['blue'] ]
   ]); // ======================
 
@@ -551,15 +551,15 @@ QUnit.test('runs "does" on event target itself', function (assert) {
 
   var event = WWW_App.run([
     'div.the_box div.grey', 'allows', [ 'mousedown' ],
-    'grey', 'does', [ 'add class', ['three']   ],
-    'grey', 'does', [ 'add class', ['four']    ]
+    '/grey', 'does', [ 'add class', ['three']   ],
+    '/grey', 'does', [ 'add class', ['four']    ]
   ]); // ======================
 
   $('#event div.the_box div.grey').trigger('mousedown');
   assert.equal($('#event div.the_box div.grey').attr('class'), 'grey three four');
 });
 
-QUnit.test('allows to specify event name with selector', function (assert) {
+QUnit.test('accepts path with /event_name/target/selector', function (assert) {
 
   $('#event').html(
     '\
@@ -572,8 +572,8 @@ QUnit.test('allows to specify event name with selector', function (assert) {
 
   var event = WWW_App.run([
     'div.the_box div.grey', 'allows', [ 'mousedown' ],
-    '/.the_box/div.grey:first  , div.the_box', 'does', [ 'add class', ['one']  ],
-    '/.the_box/div.grey:second , div.the_box', 'does', [ 'add class', ['two']  ]
+    '/mousedown/div.grey:first/div.the_box', 'does', [ 'add class', ['one']  ],
+    '/mousedown/div.grey:last/div.the_box', 'does', [ 'add class', ['two']  ]
   ]); // ======================
 
   $('#event div.the_box div.grey.one').trigger('mousedown');
