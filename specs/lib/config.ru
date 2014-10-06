@@ -2,6 +2,7 @@
 
 require 'cuba'
 require 'da99_rack_protect'
+require 'multi_json'
 
 Cuba.use Da99_Rack_Protect.config { |c|
   c.config :host, [:localhost, 'www_app.com']
@@ -42,11 +43,24 @@ Cuba.use(Class.new {
 
 Cuba.define do
 
-  on get do
+  on post do
+    on "repeat/vals" do
+      data = (req.env["rack.request.form_hash"]).dup
+      data.delete('authenticity_token')
 
-    # on(root) {
-      # res.write 
-    # }
+      res['Content-Type'] = 'application/json';
+      res.write MultiJson.dump({
+        'data' => data
+      })
+    end
+
+    on(default) {
+      res.status = 404
+      res.write 'Missing'
+    }
+  end
+
+  on get do
 
     on(default) {
       res.status = 404
