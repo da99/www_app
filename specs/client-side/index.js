@@ -10,22 +10,27 @@
 
 // ==== Helpers: ====================================================
 var when_count = 0;
-var when_do_this = function (when, do_this) {
-  setTimeout(function () {
-    if (when()) {
-      when_count = 0;
-      do_this();
-    } else {
-      when_count = when_count + 1;
-      if (when_count > 20) {
-        when_count = 0;
-        QUnit.start();
-      } else {
-        when_do_this(when, do_this);
-      }
+var do_this = function (do_f) {
+  return {
+    when: function (when_f) {
+      return setTimeout(function () {
+        if (when_f()) {
+          when_count = 0;
+          do_f();
+        } else {
+          when_count = when_count + 1;
+          if (when_count > 15) {
+            when_count = 0;
+            QUnit.start();
+          } else {
+            do_this(do_f).when(when_f);
+          }
+        }
+      }, 100);
     }
-  }, 100);
-}; // when_do_this
+  };
+}; // do_this
+
 // ==================================================================
 
 
@@ -620,17 +625,17 @@ QUnit.asyncTest('submits form values', function (assert) {
     ]
   ]);
 
-  var when = function () {
+  var has_class = function () {
     return $('#form_1').hasClass('submitted');
   }; // function
 
-  var do_this = function () {
+  var run_tests = function () {
     assert.deepEqual(_.last(env.log), {val_1: '1', val_2: '2', val_3: '3'});
     QUnit.start();
   }; // function
 
   $('#form_1 button.post').trigger('click');
-  when_do_this(when, do_this);
+  do_this(run_tests).when(has_class);
 });
 
 

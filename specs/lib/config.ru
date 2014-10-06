@@ -18,8 +18,13 @@ Cuba.use(Class.new {
     results = @app.call(env)
     if results.first == 404
       if env['PATH_INFO'] == '/'
-        env['PATH_INFO'] = '/index.html'
+        return [
+          200,
+          {"Content-Type" => "text/html"},
+          [File.read("./specs/client-side/index.html").gsub("{token}", env['rack.session']['csrf'])]
+        ]
       end
+
       [
         Rack::Directory.new(File.expand_path('./specs/lib')),
         Rack::Directory.new(File.expand_path('./specs/client-side')),
