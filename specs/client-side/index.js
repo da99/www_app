@@ -502,6 +502,8 @@ QUnit.test('is ignored if called before on the same element', function (assert) 
   var event = WWW_App.run([
     'div.the_box', 'allows', ['click'],
     'div.the_box', 'allows', ['click'],
+    'div.the_box', 'allows', ['click'],
+    'div.the_box', 'allows', ['click'],
     '/click/div.the_box', 'does', ['remove', ['div:first']]
   ]);
 
