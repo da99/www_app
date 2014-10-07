@@ -566,7 +566,7 @@ QUnit.test('runs "does" on child elements of event target', function (assert) {
   assert.equal($('#event div.the_box div.grey div.child').attr('class'), 'child one two');
 });
 
-QUnit.test('runs "does" on event target itself', function (assert) {
+QUnit.test('runs "does" on event target itself: /grey', function (assert) {
 
   $('#event').html(
     '\
