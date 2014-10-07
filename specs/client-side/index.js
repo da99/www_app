@@ -394,6 +394,29 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
 QUnit.module('on click button');
 // ==================================================================
 
+QUnit.test('only runs one callback', function (assert) {
+
+  $('#event').html(
+    '\
+      <div class="the_box">                       \
+        <div><div>                                \
+          <button class="red">Red</button>  \
+          <button class="blue">Blue</button>  \
+        </div></div>                              \
+      </div>                                      \
+    '
+  );
+
+  var event = WWW_App.run([
+    '/red/div.the_box', 'does', [ 'add class', ['red'] ],
+    '/blue/div.the_box', 'does', [ 'unknown func', ['blue'] ],
+  ]); // ======================
+
+  $('#event button.red').trigger('click');
+  assert.equal($('#event div.the_box').hasClass('red'), true);
+
+}); // === adds event to element
+
 QUnit.test('adds event to element', function (assert) {
 
   $('#event').html(
