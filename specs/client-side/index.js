@@ -408,7 +408,8 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_App.run([
-    '/red/div.the_box', 'does', [ 'add class', ['red'] ]
+    '/red/div.the_box', 'does', [ 'add class', ['red'] ],
+    '/blue/div.the_box', 'does', [ 'remove class', ['red'], 'add class', ['blue'] ],
   ]); // ======================
 
   $('#event button.red').trigger('click');
