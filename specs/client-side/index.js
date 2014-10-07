@@ -40,7 +40,7 @@ QUnit.module("WWW_App");
 
 QUnit.test( "it runs the code", function ( assert ) {
   WWW_App.run([
-    "focus on", ['#box_1'],
+    '#box_1',
     "add class", ['weird']
   ]);
   assert.ok( $('#box_1').hasClass('weird') === true, "Passed!" );
