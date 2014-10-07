@@ -595,21 +595,21 @@ QUnit.module('forms');
 QUnit.test('throws error if url contains invalid char: :', function (assert) {
   $('#form_1').attr('action', 'javascrip://alert');
   assert.throws(function () {
-    $('#form_1 button.post').trigger('click');
+    $('#form_1 button.submit').trigger('click');
   }, /Invalid chars in form action url: :/);
 });
 
 QUnit.test('throws error if url contains invalid char: &', function (assert) {
   $('#form_1').attr('action', 'javascript&amp//alert');
   assert.throws(function () {
-    $('#form_1 button.post').trigger('click');
+    $('#form_1 button.submit').trigger('click');
   }, /Invalid chars in form action url: &/);
 });
 
 QUnit.test('throws error if url contains invalid char: ;', function (assert) {
   $('#form_1').attr('action', 'http;amp//alert');
   assert.throws(function () {
-    $('#form_1 button.post').trigger('click');
+    $('#form_1 button.submit').trigger('click');
   }, /Invalid chars in form action url: ;/);
 });
 
