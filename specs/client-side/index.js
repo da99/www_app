@@ -394,7 +394,7 @@ QUnit.test('does not run tokens if stack value is true', function (assert) {
 QUnit.module('on click button');
 // ==================================================================
 
-QUnit.test('only runs one callback', function (assert) {
+QUnit.test('only runs specified callback', function (assert) {
 
   $('#event').html(
     '\
@@ -409,13 +409,15 @@ QUnit.test('only runs one callback', function (assert) {
 
   var event = WWW_App.run([
     '/red/div.the_box', 'does', [ 'add class', ['red'] ],
+    '/red/div.the_box', 'does', [ 'add class', ['red_two'] ],
     '/blue/div.the_box', 'does', [ 'unknown func', ['blue'] ],
   ]); // ======================
 
   $('#event button.red').trigger('click');
   assert.equal($('#event div.the_box').hasClass('red'), true);
+  assert.equal($('#event div.the_box').hasClass('red_two'), true);
 
-}); // === adds event to element
+}); // === only runs one callback
 
 QUnit.test('adds event to element', function (assert) {
 
@@ -432,7 +434,7 @@ QUnit.test('adds event to element', function (assert) {
 
   var event = WWW_App.run([
     '/red/div.the_box', 'does', [ 'add class', ['red'] ],
-    '/blue/div.the_box', 'does', [ 'remove class', ['red'], 'add class', ['blue'] ],
+    '/blue/div.the_box', 'does', [ 'reove class', ['red'], 'ad clss', ['blue'] ],
   ]); // ======================
 
   $('#event button.red').trigger('click');
