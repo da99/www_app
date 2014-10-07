@@ -620,13 +620,13 @@ QUnit.asyncTest('submits form values', function (assert) {
   $('#form_1').attr('action', '/repeat/vals');
 
   var env = WWW_App.run([
-    'success -> #form_1', 'does', [
+    '/success/#form_1', 'does', [
       'log', ['get', ['data']]
     ]
   ]);
 
   var has_class = function () {
-    return $('#form_1').hasClass('submitted');
+    return $('#form_1').hasClass('complete');
   }; // function
 
   var run_tests = function () {
@@ -634,7 +634,7 @@ QUnit.asyncTest('submits form values', function (assert) {
     QUnit.start();
   }; // function
 
-  $('#form_1 button.post').trigger('click');
+  $('#form_1 button.submit').trigger('click');
   do_this(run_tests).when(has_class);
 });
 
