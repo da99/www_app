@@ -435,10 +435,10 @@ QUnit.test('adds event to element', function (assert) {
   );
 
   var event = WWW_App.run([
-    '/red/div.the_box', 'does', [ 'add class', ['white'] ]
+    '/white/div.the_box', 'does', [ 'add class', ['white'] ]
   ]); // ======================
 
-  $('#event a.white').trigger('click');
+  $('#event a[href="#white"]').trigger('click');
   assert.equal($('#event div.the_box').hasClass('white'), true);
 
 }); // === adds event to element
