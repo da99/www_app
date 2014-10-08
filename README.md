@@ -3,7 +3,8 @@
 WWW\_App:
 ---------
 
-Create HTML pages using just Ruby: HTML/CSS/JS
+Create HTML pages using just Ruby: HTML/CSS/JS.
+It's not done yet.
 
 
 Ruby:
@@ -18,19 +19,29 @@ To install:
 To Use:
 
 ```ruby
-  div {
+div {
 
-    border '1px solid #fff'
+  border           '1px solid #000'
+  background_color 'grey'
 
-    on(:click) {
-      add_class 'clicked'
-    }
-
-   'hello'
-
+  on('scary') {
+    border           '2px dotted red'
+    background_color 'white'
   }
+
+  p { 'Click the button to make me scared.' }
+
+  button {
+    parent 'div'
+    add_class 'scary'
+
+    'Scary-ify'
+  }
+
+}
 ```
 
+It generates the CSS, JS, and HTML.
 
 Security:
 -----------
