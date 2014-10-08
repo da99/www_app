@@ -665,6 +665,48 @@ QUnit.asyncTest('submits form values', function (assert) {
 });
 
 
+QUnit.asyncTest('displays success msg', function (assert) {
+  expect(1);
+  $('#form_1').attr('action', '/repeat/success_msg');
+  var env = WWW_App.run([]);
+
+
+  var has_class = function () {
+    return $('#form_1').hasClass('complete');
+  }; // function
+
+  var run_tests = function () {
+    assert.equal($('#form_1 div.status_msg.success_msg').text() , 'The success msg.');
+    QUnit.start();
+  }; // function
+
+  $('#form_1 button.submit').trigger('click');
+  do_this(run_tests).when(has_class);
+});
+
+
+QUnit.asyncTest('displays error msg', function (assert) {
+  expect(1);
+  $('#form_1').attr('action', '/repeat/error_msg');
+  var env = WWW_App.run([]);
+
+
+  var has_class = function () {
+    return $('#form_1').hasClass('complete');
+  }; // function
+
+  var run_tests = function () {
+    assert.equal($('#form_1 div.status_msg.error_msg').text() , 'The error msg.');
+    QUnit.start();
+  }; // function
+
+  $('#form_1 button.submit').trigger('click');
+  do_this(run_tests).when(has_class);
+});
+
+
+
+
 
 
 

@@ -44,13 +44,35 @@ Cuba.use(Class.new {
 Cuba.define do
 
   on post do
-    on "repeat/vals" do
-      data = (req.env["rack.request.form_hash"]).dup
-      data.delete('authenticity_token')
+    data = (req.env["rack.request.form_hash"]).dup
+    data.delete('authenticity_token')
 
-      res['Content-Type'] = 'application/json';
+    res['Content-Type'] = 'application/json';
+
+    on "repeat/error_msg" do
       res.write MultiJson.dump({
-        'data' => data
+        'data' => data,
+        'clean_html' => {
+          'error_msg' => "<span>#{data['error_msg'] || 'Unknown error.'}</span>"
+        }
+      })
+    end
+
+    on "repeat/success_msg" do
+      res.write MultiJson.dump({
+        'data' => data,
+        'clean_html' => {
+          'success_msg' => "<span>#{ data['success_msg'] || 'Unknown success'}</span>"
+        }
+      })
+    end
+
+    on "repeat/vals" do
+      res.write MultiJson.dump({
+        'data' => data.select { |k,v| k['val'] },
+        'clean_html' => {
+          'success_msg' => 'Success in repeating vals.'
+        }
       })
     end
 
