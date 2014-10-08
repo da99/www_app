@@ -705,6 +705,71 @@ QUnit.asyncTest('displays error msg', function (assert) {
 });
 
 
+// ==================================================================
+QUnit.module("looping getting/inserting of partials");
+// ==================================================================
+
+QUnit.asyncTest('inserts status on top of parent', function (assert) {
+  expect(1);
+
+  $('#event').html(
+    '\
+      <div class="the_box">                                                    \
+        <div data-refresh="items top fastest /repeat/item"></div>              \
+      </div>                                                                   \
+    '
+  );
+
+  var loop = WWW_App.run([]);
+
+  var items_status = function () {
+    return $('div.the_box div.items_status');
+  };
+
+  var has_dom = function () {
+    return items_status()().length > 0;
+  };
+
+  var the_test = function () {
+    assert.equal(items_status().html(), 'More items available. <a href="#show">Show them.</a>');
+    QUnit.start();
+  };
+
+  do_this(the_test).when(has_dom);
+
+}); // === asyncTest
+
+QUnit.asyncTest('removes status element after showing them', function (assert) {
+  expect(1);
+
+  $('#event').html(
+    '\
+      <div class="the_box">                                                    \
+        <div data-refresh="items top fastest /repeat/item"></div>              \
+      </div>                                                                   \
+    '
+  );
+
+  var loop = WWW_App.run([]);
+
+  var items_status = function () {
+    return $('div.the_box div.items_status');
+  };
+
+  var has_dom = function () {
+    return items_status()().length > 0;
+  };
+
+  var the_test = function () {
+    items_status().find('a').trigger('click');
+    assert.equal(items_status().length, 0);
+    QUnit.start();
+  };
+
+  do_this(the_test).when(has_dom);
+
+}); // === asyncTest
+
 
 
 
