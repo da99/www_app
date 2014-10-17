@@ -22,13 +22,14 @@ div.^(:col, :create) {
 div.^(:col, :creations) {
 
   div.^(:list) {
-    update :top
-    every 5
-    with '/success/#stuff'
+    update  :top
+    every   5
+    from    '/success/#stuff'
 
-    template(:stuff, data[:stuff]) {
-      div.^(:stuff) {
-        var(:content)
+    template(:activity, records) { |r|
+      div.^(:activity) {
+        if r.timer?
+        end
       }
     } # template :stuff
 
