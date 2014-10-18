@@ -27,10 +27,21 @@ div.^(:col, :creations) {
     from    '/success/#stuff'
 
     template(:activity, records) { |r|
-      div.^(:activity) {
+
+      #
+      # 1) due date/time
+      # 2) Limit/# of respones
+      # 3) mark as done
+      # 4) Collect info.
+      # 5) No limit of response
+      # 6) Text/story.
+      # 7) Match response
+      #
+      div.^(:activity).data(:sort, r.created_at.to_i) {
         if r.timer?
         end
       }
+
     } # template :stuff
 
   }
