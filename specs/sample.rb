@@ -19,33 +19,26 @@ div.^(:col, :create) {
 
 } # div.create
 
-div.^(:col, :creations) {
+div.^(:col).^(:creations) {
 
   div.^(:list) {
+
     update  :top
     every   5
     from    '/success/#stuff'
 
-    template(:activity, records) { |r|
+    #
+    # 1) due date/time
+    # 2) Limit/# of respones
+    # 3) mark as done
+    # 4) Collect info.
+    # 5) No limit of response
+    # 6) Text/story.
+    # 7) Match response
+    #
 
-      #
-      # 1) due date/time
-      # 2) Limit/# of respones
-      # 3) mark as done
-      # 4) Collect info.
-      # 5) No limit of response
-      # 6) Text/story.
-      # 7) Match response
-      #
-      div.^(:activity).data(:sort, r.created_at.to_i) {
-        if r.timer?
-        end
-      }
+  } # div.list
 
-    } # template :stuff
-
-  }
-
-} # div.creations
+} # div.col.creations
 
 
