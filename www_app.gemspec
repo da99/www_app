@@ -7,12 +7,9 @@ Gem::Specification.new do |spec|
   spec.version       = `cat VERSION`
   spec.authors       = ["da99"]
   spec.email         = ["i-hate-spam-1234567@mailinator.com"]
-  spec.summary       = %q{Use JSON as a format for apps.}
+  spec.summary       = %q{Ruby -> HTML/CSS/JS}
   spec.description   = %q{
-    The ruby implementation of WWW_App: a simple
-    set of rules to run JSON as mini-apps (ie applets).
-    I wonder if Douglas Crockford thinks this is an
-    abomination.  He would have every right to think so.
+    A DSL to create HTML/CSS/JS apps using Ruby.
   }
   spec.homepage      = "https://github.com/da99/www_app"
   spec.license       = "MIT"
