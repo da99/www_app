@@ -20,6 +20,14 @@ if [[ "$first_opt" == "all" ]]; then
   exit 0
 fi
 
+if [[ "$first_opt" == "js" ]]; then
+  # === Run all .js files.
+  echo -n "Running jshint... "
+  jshint lib/public/www_app.js specs/client-side/*.js
+  echo "js files are linted."
+  exit 0
+fi
+
 cmd="bundle exec bacon specs/lib/helpers.rb"
 
 # === Find file by partial file name.
@@ -29,11 +37,6 @@ if [[ -f "$file" ]]; then
   $cmd $file "$@"
   exit 0
 fi
-
-# === Run all .js files.
-echo -n "Running jshint... "
-jshint lib/public/www_app.js specs/client-side/*.js
-echo "js files are linted."
 
 # === Run all ruby files in proper order.
 files="$( echo specs/as_ruby/*.rb | tr ' ' "\n" | sort)"
