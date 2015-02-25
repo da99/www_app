@@ -1,4 +1,17 @@
 
+NAME:             user
+
+/define
+  name:           username
+  is:             one_line_text
+  length between: 3, 10
+  only chars:     a-z A-Z 0-9 _ - *
+  unique:         enforce
+
+/after_create
+
+-----------------------------
+
 background {
   url "/imgs/squares.png"
 }
@@ -40,5 +53,32 @@ div.^(:col).^(:creations) {
   } # div.list
 
 } # div.col.creations
+
+----------------------------
+
+
+title "Hello, World!"
+
+form {
+  button "send"
+}
+
+
+col.c_1! {
+  box {
+    p.first!.hello { "Hiya" }
+  }
+}
+
+col.c_2! {
+  box {
+    p.second!.hello.again { 
+      border "1px solid #fff"
+      "Hiya, again."
+    }
+  }
+}
+
+
 
 
