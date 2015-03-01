@@ -19,26 +19,28 @@ To install:
 To Use:
 
 ```ruby
-div {
+WWW_App.new {
+  div {
 
-  border           '1px solid #000'
-  background_color 'grey'
+    border           '1px solid #000'
+    background_color 'grey'
 
-  on('scary') {
-    border           '2px dotted red'
-    background_color 'white'
+    on('scary') {
+      border           '2px dotted red'
+      background_color 'white'
+    }
+
+    p { 'Click the button to make me scared.' }
+
+    button {
+      parent 'div'
+      add_class 'scary'
+
+      'Scary-ify'
+    }
+
   }
-
-  p { 'Click the button to make me scared.' }
-
-  button {
-    parent 'div'
-    add_class 'scary'
-
-    'Scary-ify'
-  }
-
-}
+}.to_html
 ```
 
 It generates the CSS, JS, and HTML.

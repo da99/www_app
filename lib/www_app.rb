@@ -231,6 +231,7 @@ class WWW_App < BasicObject
     @compiled    = nil
     @cache       = {}
     @is_doc      = false
+    @page_title  = nil
     @default_ids = {}
 
     @state = [:create]
@@ -711,7 +712,7 @@ class WWW_App < BasicObject
   def page_title
     @is_doc = true
     in_tag(@head) {
-      tag(:title) { yield }
+      tag(:title) { @page_title = yield }
     }
     self
   end
