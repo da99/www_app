@@ -24,7 +24,7 @@ Gem::Specification.new do |spec|
   spec.required_ruby_version = '>= 2.2.0'
 
   spec.add_runtime_dependency "yajl-ruby"            , ">= 1.2"
-  spec.add_runtime_dependency "escape_escape_escape" , ">= 0.2"
+  spec.add_runtime_dependency "escape_escape_escape" , ">= 1.4.2"
   spec.add_runtime_dependency "mustache"             , ">= 0.99"
 
   spec.add_development_dependency "multi_json"    , ">= 1.10.1"
