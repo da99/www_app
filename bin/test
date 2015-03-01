@@ -31,7 +31,7 @@ fi
 cmd="bundle exec bacon specs/lib/helpers.rb"
 
 # === Find file by partial file name.
-file="$(echo specs/as_ruby/*-${first_opt}.rb)"
+file="$(echo specs/server-side/*-${first_opt}.rb)"
 if [[ -f "$file" ]]; then
   shift
   $cmd $file "$@"
@@ -39,7 +39,7 @@ if [[ -f "$file" ]]; then
 fi
 
 # === Run all ruby files in proper order.
-files="$( echo specs/as_ruby/*.rb | tr ' ' "\n" | sort)"
+files="$( echo specs/server-side/*.rb | tr ' ' "\n" | sort)"
 if [[ -z "$files" ]]; then
   colorize yellow "No tests found." 1>&2
   exit 0
