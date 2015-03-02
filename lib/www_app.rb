@@ -100,6 +100,7 @@ class WWW_App < BasicObject
 
   Unescaped         = ::Class.new(::StandardError)
   Not_Unique        = ::Class.new(::StandardError)
+  Wrong_Parent      = ::Class.new(::StandardError)
   HTML_ID_Duplicate = ::Class.new(Not_Unique)
 
   ALWAYS_END_TAGS = [:script]
@@ -365,6 +366,10 @@ class WWW_App < BasicObject
 
   private # =========================================================
 
+  # =================================================================
+  #                    Parent-related methods
+  # =================================================================
+
   #
   # NOTE: Properties are defined first,
   # so :elements methods can over-write them,
@@ -392,7 +397,10 @@ class WWW_App < BasicObject
     EOF
   }
 
-  # -----------------------------------------------
+  # =================================================================
+  #                 Future features...
+  # =================================================================
+
   def section
     fail
   end
@@ -408,7 +416,11 @@ class WWW_App < BasicObject
   def at_bottom_of
     fail
   end
-  # -----------------------------------------------
+
+
+  # =================================================================
+  #                 Miscellaneaous Helpers
+  # =================================================================
 
   def is_doc?
     @is_doc || !@style[:css].empty? || !@js.empty?
@@ -706,6 +718,13 @@ class WWW_App < BasicObject
     @css_arr.pop
   end
 
+  def _link
+    orig = @css_id_override
+    @css_id_override = ':link'.freeze
+    result = yield
+    @css_id_override = orig
+    result
+  end
 
   # =================================================================
 
@@ -749,6 +768,7 @@ class WWW_App < BasicObject
       h = vals
       h.map { |raw_k,styles|
         k = raw_k.to_s
+
         <<-EOF
           #{Sanitize.css_selector k} {
             #{to_clean_text :styles, styles}
