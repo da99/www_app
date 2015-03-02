@@ -160,6 +160,21 @@ class WWW_App < BasicObject
       :at_rules       => [ 'font-face', 'media' ],
       :protocols      => [ :relative ],
 
+      :pseudo => %w[
+         active checked default dir() disabled
+         empty enabled
+         first first-child first-of-type fullscreen focus
+         hover
+         indeterminate in-range invalid
+         lang() last-child last-of-type left link
+         not() nth-child() nth-last-child() nth-last-of-type() nth-of-type()
+         only-child only-of-type optional out-of-range
+         read-only read-write required right root
+         scope
+         target
+         valid visited
+      ].select { |name| name[/\A[a-z0-9\-]+\Z/] }.map { |name| name.gsub('-', '_').to_sym },
+
       # From: Sanitize::Config::RELAXED[:css][:properties]
       :properties     => %w[
         background                 bottom                     font_variant_numeric       position
@@ -718,13 +733,17 @@ class WWW_App < BasicObject
     @css_arr.pop
   end
 
-  def _link
-    orig = @css_id_override
-    @css_id_override = ':link'.freeze
-    result = yield
-    @css_id_override = orig
-    result
-  end
+  Methods[:css][:pseudo].each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def _#{name}
+        orig = @css_id_override
+        @css_id_override = ':#{name}'.freeze
+        result = yield
+        @css_id_override = orig
+        result
+      end
+    EOF
+  }
 
   # =================================================================
 

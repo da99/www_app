@@ -1,18 +1,20 @@
 
-describe :_link do
+describe "css pseudo" do
 
-  it "adds :link pseudo-class" do
-    target :style, <<-EOF
-      a:link {
-        color: #fff;
-      }
-    EOF
+  %w[link visited hover].each { |name|
+    it "adds :#{name} pseudo-class" do
+      target :style, <<-EOF
+        a:#{name} {
+          color: #fff;
+        }
+      EOF
 
-    actual do
-      a {
-        _link { color '#fff' }
-      }
-    end
-  end # === it
+      actual do
+        a {
+          send("_#{name}".to_sym) { color '#fff' }
+        }
+      end
+    end # === it
+  }
 
-end # === describe :style
+end # === describe "css pseudo"
