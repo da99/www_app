@@ -709,7 +709,10 @@ class WWW_App < BasicObject
         if tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
         end
-        (tag![:text] = results) if results.is_a?(::String) || results.is_a?(::Symbol)
+
+        if (results.is_a?(::Hash) && results[:type] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
+          tag![:text] = results
+        end
       }
     end
 
@@ -919,9 +922,19 @@ class WWW_App < BasicObject
       return unless  h[:render?]
 
       if html.empty? && h[:text]
-        html = h[:text].is_a?(::Symbol) ?
-          h[:text].to_mustache(:html) :
-          Sanitize.html(h[:text].strip)
+        html = if h[:text].is_a?(::Symbol)
+                 h[:text].to_mustache(:html)
+               else
+                 if h[:text].is_a?(::Hash)
+                   if h[:text][:escape] == false
+                     h[:text][:value]
+                   else
+                     Sanitize.html(h[:text][:value].strip)
+                   end
+                 else
+                   Sanitize.html(h[:text].strip)
+                 end
+               end
       end # === if html.empty?
 
       (html = nil) if html.empty?
