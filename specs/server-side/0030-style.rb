@@ -10,11 +10,27 @@ describe "css pseudo" do
       EOF
 
       actual do
-        a {
-          send("_#{name}".to_sym) { color '#fff' }
+        style {
+          a {
+            send("_#{name}".to_sym) { color '#fff' }
+          }
         }
       end
     end # === it
   }
 
+  it "does not add anything to :body" do
+    target :body, <<-EOF
+      <p>empty</p>
+    EOF
+
+    actual do
+      style {
+        a { _link { color '#fff' } }
+      }
+      p {
+        'empty'
+      }
+    end
+  end # === it does not add anything 
 end # === describe "css pseudo"

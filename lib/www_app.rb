@@ -236,10 +236,11 @@ class WWW_App < BasicObject
   end # === class self ==============================================
 
   def initialize *files
-    @js      = []
-    @style   = {}
-    @css_arr = []
+    @js              = []
+    @style           = {}
+    @css_arr         = []
     @css_id_override = nil
+    @render_it       = true
 
     @title       = nil
     @scripts     = []
@@ -656,7 +657,8 @@ class WWW_App < BasicObject
       :childs       =>  [],
       :parent_index =>  @current_tag_index,
       :is_closed    =>  false,
-      :tag_index    =>  @tag_arr.size
+      :tag_index    =>  @tag_arr.size,
+      :render?      =>  @render_it
     }
 
     @tag_arr << e
@@ -720,6 +722,14 @@ class WWW_App < BasicObject
   # =================================================================
   #                    CSS-related methods
   # =================================================================
+
+  def style
+    orig = @render_it
+    @render_it = false
+    results = yield
+    @render_it = orig
+    results
+  end
 
   def css_property name, val = nil
     prop = {:name=>name, :value=>val, :parent=>parent? ? parent : nil}
@@ -905,6 +915,8 @@ class WWW_App < BasicObject
       html = h[:childs].map { |tag_index|
         to_clean_text(:html, @tag_arr[tag_index])
       }.join(NEW_LINE).strip
+
+      return unless  h[:render?]
 
       if html.empty? && h[:text]
         html = h[:text].is_a?(::Symbol) ?

@@ -20,6 +20,13 @@ To Use:
 
 ```ruby
 WWW_App.new {
+
+  a {
+    _link    { color '#fff' }
+    _visited { color '#f88' }
+    _hover   { color '#ccc' }
+  }
+
   div {
 
     border           '1px solid #000'
