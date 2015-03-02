@@ -1,22 +1,13 @@
 
 
-describe "IS_DEV" do
+describe "it runs" do
 
-  before {
-    @orig = ENV['IS_DEV']
-  }
-
-  after {
-    ENV['IS_DEV'] = @orig
-  }
-
-  it "raises RuntimeError if passed a block and non-IS_DEV" do
-    should.raise(RuntimeError) {
-      ENV['IS_DEV'] = nil
-      WWW_App.new {
-        div {}
+  it "runs" do
+    WWW_App.new {
+      div {
+        "test"
       }
-    }.message.should.match /non-DEV/i
+    }.render.should == "<div>test</div>"
   end
 
 end # === describe IS_DEV ===

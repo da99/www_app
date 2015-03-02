@@ -284,14 +284,7 @@ class WWW_App < BasicObject
         eval ::File.read(file_name), nil, file_name
       }
 
-      if block_given?
-        case
-        when !::ENV['IS_DEV']
-          fail "Blocks not allowed during non-dev."
-        when ::ENV['IS_DEV']
-          instance_eval(&(::Proc.new))
-        end # === case
-      end
+      instance_eval(&(::Proc.new))
     }
 
     @mustache = ::Mustache.new
