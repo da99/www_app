@@ -101,6 +101,7 @@ class WWW_App < BasicObject
   Unescaped         = ::Class.new(::StandardError)
   Not_Unique        = ::Class.new(::StandardError)
   Wrong_Parent      = ::Class.new(::StandardError)
+  Invalid_Type      = ::Class.new(::StandardError)
   HTML_ID_Duplicate = ::Class.new(Not_Unique)
 
   ALWAYS_END_TAGS = [:script]
@@ -708,6 +709,10 @@ class WWW_App < BasicObject
       in_tag(orig_tag) {
         if tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
+        end
+
+        if (results.is_a?(::Hash) && results[:type] && !results[:tag] && results[:type] != :string)
+          fail Invalid_Type, results[:type].inspect
         end
 
         if (results.is_a?(::Hash) && results[:type] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
