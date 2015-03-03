@@ -22,6 +22,10 @@ To Use:
 WWW_App.new {
 
   style {
+    a._link * a._visited * a._hover { 
+      color '#f88'
+    }
+
     a {
       _link    { color '#fff' }
       _visited { color '#f88' }
@@ -29,12 +33,12 @@ WWW_App.new {
     }
   }
 
-  div {
+  div.*(:main).^(:css_class_name) {
 
     border           '1px solid #000'
     background_color 'grey'
 
-    on('scary') {
+    style(:scary) {
       border           '2px dotted red'
       background_color 'white'
     }
@@ -42,8 +46,8 @@ WWW_App.new {
     p { 'Click the button to make me scared.' }
 
     button {
-      parent 'div'
-      add_class 'scary'
+      parent    'div'
+      add_class :scary
 
       'Scary-ify'
     }

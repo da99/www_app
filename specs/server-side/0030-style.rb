@@ -1,5 +1,5 @@
 
-describe "css pseudo" do
+describe ":style block" do
 
   %w[link visited hover].each { |name|
     it "adds :#{name} pseudo-class" do
@@ -28,36 +28,26 @@ describe "css pseudo" do
       style {
         a { _link { color '#fff' } }
       }
-      p {
-        'empty'
-      }
+      p { 'empty' }
     end
   end # === it does not add anything 
 
-  it "adds tag to :body when used outside of :style" do
-    target :body, <<-EOF
-      <a id="main" href="&#47;test">test</a>
-    EOF
+  it "allows multiple use of the same :id" do
+    target :style, %^
+      #main {
+        color: #fff;
+      }
+      #main {
+        background: #fff;
+      }
+    ^
     actual do
-      a.*(:main).href("/test") { 
-        _link { color '#fff' }
-        "test"
+      style {
+        div.*(:main) { color '#fff' }
+        div.*(:main) { background '#fff' }
       }
+      div.*(:main) { 'main' }
     end
-  end # === it adds tag to :body when used outside of :style
-
-  it "uses :id in :style tag if specified" do
-    target :style, <<-EOF
-      #main:link {
-        color: #ffc;
-      }
-    EOF
-    actual do
-      a.*(:main).href("/test") { 
-        _link { color '#ffc' }
-        "test"
-      }
-    end
-  end # === it uses :id in :style tag if specified
+  end
 
 end # === describe "css pseudo"

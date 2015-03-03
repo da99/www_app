@@ -748,7 +748,7 @@ class WWW_App < BasicObject
 
   Methods[:css][:pseudo].each { |name|
     eval <<-EOF, nil, __FILE__, __LINE__ + 1
-      def _#{name}
+      public def _#{name}
         orig = @css_id_override
         @css_id_override = ':#{name}'.freeze
         result = yield
