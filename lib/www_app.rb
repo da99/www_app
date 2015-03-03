@@ -161,6 +161,8 @@ class WWW_App < BasicObject
       :at_rules       => [ 'font-face', 'media' ],
       :protocols      => [ :relative ],
 
+      # === From:
+      # https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes
       :pseudo => %w[
          active checked default dir() disabled
          empty enabled
