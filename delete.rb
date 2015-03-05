@@ -1,6 +1,4 @@
 
-require 'ap'
-
 class WWW_App
 
   attr_reader :tag, :tags
@@ -11,45 +9,66 @@ class WWW_App
     instance_eval &(Proc.new)
   end
 
-  private def style *args
-    case args.size
-
-    when 0 # style { ... }
-      create :styles
-      create :group
-
-    when 1 # style(:drowsy) { ... }
-      create :style
-      tag[:class] = args.first
-
-    else
-      fail ArgumentError, "Too many: #{args.inspect}"
-    end
-
-    yield self
-    go_up
-    close
-    nil
+  private def style
+  create :styles, :groups=>true
+  close { yield }
+  nil
   end
 
 def debug *args
-  return
   puts args.join(' -- ')
 end
 
+def find_nearest name
+  return @tag if @tag[:type] == name
+  find_ancestor name
+end
+
+def find_ancestor name
+  ancestor = @tag && @tag[:parent]
+  while ancestor && ancestor[:type] != name
+    ancestor = ancestor[:parent]
+  end
+  ancestor
+end
+
+def go_up_to_if_exists name
+  target = find_ancestor name
+  (@tag = target) if target
+  self
+end
+
+def go_up_to name
+  go_up_to_if_exists name
+  fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+  self
+end
+
+def stay_or_go_up_to_if_exists name
+  return self if @tag[:type] == name
+  target = find_ancestor(name)
+  (@tag = target) if target
+
+  self
+end
+
+def stay_or_go_up_to name
+  stay_or_go_up_to_if_exists name
+  fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+  self
+end
+
 def go_up
-  debug "--- going up #{@tag[:type]} -> #{@tag[:parent][:type]} #{caller(1, 1)}"
   @tag = @tag[:parent]
 end
 
-  %w{ a div }.each { |name|
+  %w{ a div p button }.each { |name|
     eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name}
-        go_up if in_a_group?
         if block_given?
-          create(:#{name}) { yield }
+          create_tag(:#{name}) { yield }
         else
-          create :#{name}
+          create_tag(:#{name})
         end
       end
     EOF
@@ -67,18 +86,47 @@ end
     ^
   }
 
-  %w[ border color background_color p button ].each { |name|
-    eval %^
+  %w[ border color background_color ].each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
-        self
+        css :#{name}, *args
       end
-    ^
+    EOF
   }
 
+  def css name, *args
+    @tag[:css] ||= {}
+    @tag[:css][name] = args.join(', ')
+    self
+  end
+
+  def parent name
+    js :parent, [name]
+  end
+
+  def add_class *classes
+    js :add_class, classes.flatten
+  end
+
+  def js func, args
+    @tag[:js] ||= []
+    @tag[:js] << [func, args]
+    self
+  end
+
   def pseudo name
-    debug "--" + name.inspect
+    case
+    when tag[:closed]
+      create :group
+      create :__
+
+    when tag[:pseudo] && !tag[:closed]
+      go_up_to :group
+      create :__
+
+    end # === case
+
     tag[:pseudo] = name
-    @tag[:closed] = true
     if block_given?
       close { yield }
     end
@@ -86,14 +134,31 @@ end
   end
 
   def in_a_group?
-    tag && tag[:parent] && tag[:parent][:type] == :group
+    !!( (@tag && @tag[:type] == :group) || find_ancestor(:group) )
+  end
+
+  def parent_tag
+    tag && tag[:parent]
+  end
+
+  def create_tag name
+    if tag && tag[:groups]
+      create :group
+    else
+      stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
+    end
+
+    if block_given?
+      create(name) { yield }
+    else
+      create(name)
+    end
+    self
   end
 
   def create name, opts = nil
     old = @tag
     new = {:type=>name}
-
-    debug "CREATING: #{opts.inspect} #{name.inspect} in #{(@tag || {})[:type].inspect}"
 
     if old
       old[:children] ||= []
@@ -106,9 +171,6 @@ end
     @tag = new
 
     @tag.merge!(opts) if opts
-    debug "created #{@tag[:type].inspect} in #{(@tag[:parent] || {} )[:type].inspect}"
-    debug "FOCUS: #{@tag[:type]}"
-    debug ""
     if block_given?
       close { yield }
     end
@@ -117,13 +179,12 @@ end
 
   def * arg
     tag[:id] = arg
+    close { yield } if block_given?
     self
   end
 
   def / app
-    debug "|| - closing #{@tag.inspect}"
     fail "No block allowed here." if block_given?
-    @tag[:closed] = true
     self
   end
 
@@ -131,41 +192,45 @@ end
     tag[:class] ||= []
     tag[:class].concat names
 
-    if block_given?
-      close { yield }
-    end
+    close { yield } if block_given?
     self
   end
 
   def _
-    fail "No block allowed here." if block_given?
-    @tag[:closed] = true
-    go_up
+    case
+    when tag[:type] == :group
+      create :_
+    when tag[:groups]
+      create :group
+      create :_
+    else
+      tag[:_] = true
+    end
+
     self
   end
 
   def close
-    if in_a_group?
-      debug "closing #{@tag[:type]} in #{@tag[:parent][:type]}"
+    group = find_nearest(:group)
+    if group
+      stay_or_go_up_to :group
+      final_parent = parent_tag
+
+      # We set :groups=>true because
+      # we want tags created in the block to create their own
+      # group as a child element.
+      @tag[:groups] = true
+
       @tag[:closed] = true
-      go_up
-      @tag[:proc] = Proc.new if block_given?
-      @tag[:closed] = true
-      go_up
-      return create(:group)
+      yield
+      @tag = final_parent
+      return self
     end
 
-    if tag
-      @tag[:closed] = true
-      go_up
-    end
-
-    if @tag && @tag[:children]
-      last = @tag[:children].last
-      if last[:type] == :group && last[:children] && last[:children].empty?
-        last[:children].pop
-      end
-    end
+    @tag[:closed] = true
+    final_parent = parent_tag
+    yield if block_given?
+    @tag = final_parent
 
     self
   end
@@ -176,18 +241,20 @@ tags = WWW_App.new {
 
   style {
 
-    div.*(:main)._.div.^(:drowsy) {
+    div.*(:main)._.div.^(:drowsy) / a.^(:excited)._link {
       border '1px dashed grey'
+      div.^(:mon) / div.^(:tues) {
+        border '1px dashed weekday'
+      }
     }
 
-    a._link / a._visited / a._hover { 
+    a._link / a._visited / a._hover {
       color '#f88'
     }
 
     a {
-      _link    { color '#fff' }
-      _visited { color '#f88' }
-      _hover   { color '#ccc' }
+      _link / _visited  { color '#fff' }
+      _hover            { color '#ccc' }
     }
 
   } # === style
@@ -197,9 +264,15 @@ tags = WWW_App.new {
     border           '1px solid #000'
     background_color 'grey'
 
-    style(:scary) {
-      border           '2px dotted red'
-      background_color 'white'
+    style {
+      a._link / a._visited {
+        color '#fig'
+      }
+
+      _.^(:scary) {
+        border           '2px dotted red'
+        background_color 'white'
+      }
     }
 
     p { 'Click the button to make me scared.' }
@@ -228,6 +301,13 @@ print %^
       a :pseudo
       a :pseudo
       a :pseudo
+    :group
+      a
+        :group
+          __.link
+          __.visited
+        :group
+          __.hover
   :div#main.css_class_name
   -----------------------------
 ^
