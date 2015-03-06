@@ -7,7 +7,7 @@ describe "it runs" do
       div {
         "test"
       }
-    }.render.should == "<div>test</div>"
+    }.to_html.should == "<div>test</div>"
   end
 
 end # === describe IS_DEV ===

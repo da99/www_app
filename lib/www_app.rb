@@ -305,7 +305,7 @@ class WWW_App < BasicObject
     nil
   end
 
-  def render raw_data = {}
+  def to_html raw_data = {}
     @mustache.render raw_data
   end
 
