@@ -83,7 +83,7 @@ end # === class Mustache
 class Symbol
 
   def to_mustache meth
-    WWW_App::Sanitize.mustache meth, self
+    WWW_App::Clean.mustache meth, self
   end
 
 end # === class Symbol
@@ -783,7 +783,7 @@ class WWW_App < BasicObject
       clean_vals = vals.map { |raw_x|
         x = case raw_x
             when ::Symbol, ::String
-              Sanitize.html(raw_x.to_s)
+              Clean.html(raw_x.to_s)
             when ::Array
               to_clean_text :javascript, raw_x
             when ::Numeric
@@ -802,7 +802,7 @@ class WWW_App < BasicObject
         k = raw_k.to_s
 
         <<-EOF
-          #{Sanitize.css_selector k} {
+          #{Clean.css_selector k} {
             #{to_clean_text :styles, styles}
           }
         EOF
@@ -812,7 +812,7 @@ class WWW_App < BasicObject
       h = vals
       h.map { |k,raw_v|
         name  = begin
-                  clean_k = ::WWW_App::Sanitize.css_attr(k.to_s.gsub('_','-'))
+                  clean_k = ::WWW_App::Clean.css_attr(k.to_s.gsub('_','-'))
                   fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
                   clean_k
                 end
@@ -826,11 +826,11 @@ class WWW_App < BasicObject
               when 'inherit', 'none'
                 raw_v
               else
-                "url(#{Sanitize.href(raw_v)})"
+                "url(#{Clean.href(raw_v)})"
               end
 
             when Methods[:css][:properties].include?(k)
-              Sanitize.css_value raw_v
+              Clean.css_value raw_v
 
             else
               fail "Invalid css attr: #{name.inspect}"
@@ -856,21 +856,21 @@ class WWW_App < BasicObject
 
         attr_val = case
                    when k == :href && tag[:tag] == :a
-                     Sanitize.mustache :href, v
+                     Clean.mustache :href, v
 
                    when k == :action || k == :src || k == :href
-                     Sanitize.relative_href(v)
+                     Clean.relative_href(v)
 
                    when k == :class
                      v.map { |n|
-                       Sanitize.css_class_name(n)
+                       Clean.css_class_name(n)
                      }.join SPACE
 
                    when k == :id
-                     Sanitize.html_id v.to_s
+                     Clean.html_id v.to_s
 
                    when ALLOWED_ATTRS[k]
-                     Sanitize.html(v)
+                     Clean.html(v)
 
                    else
                      fail "Invalid attr: #{k.inspect}"
@@ -929,10 +929,10 @@ class WWW_App < BasicObject
                    if h[:text][:escape] == false
                      h[:text][:value]
                    else
-                     Sanitize.html(h[:text][:value].strip)
+                     Clean.html(h[:text][:value].strip)
                    end
                  else
-                   Sanitize.html(h[:text].strip)
+                   Clean.html(h[:text].strip)
                  end
                end
       end # === if html.empty?
@@ -1030,7 +1030,7 @@ class WWW_App < BasicObject
               to_clean_text(:html, @body[:childs])
             end
 
-    utf_8 = Sanitize.clean_utf8(final)
+    utf_8 = Clean.clean_utf8(final)
 
     @compiled  = utf_8
   end # === def to_mustache
@@ -1049,7 +1049,7 @@ class WWW_App < BasicObject
     js("add_class", [name])
   end
 
-  class Sanitize
+  class Clean
 
     MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
 
@@ -1074,7 +1074,7 @@ class WWW_App < BasicObject
       end
 
     end # === class << self
-  end # === class Sanitize
+  end # === class Clean
 
 end # === class WWW_App ==========================================
 
