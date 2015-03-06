@@ -5,6 +5,19 @@ require 'escape_escape_escape'
 
 
 # ===================================================================
+# === Symbol customizations: ========================================
+# ===================================================================
+class Symbol
+
+  def to_mustache meth
+    WWW_App::Clean.mustache meth, self
+  end
+
+end # === class Symbol
+# ===================================================================
+
+
+# ===================================================================
 # === Mustache customizations: ======================================
 # ===================================================================
 Mustache.raise_on_context_miss = true
@@ -78,19 +91,6 @@ end # === class Mustache
 
 
 # ===================================================================
-# === Symbol customizations: ========================================
-# ===================================================================
-class Symbol
-
-  def to_mustache meth
-    WWW_App::Clean.mustache meth, self
-  end
-
-end # === class Symbol
-# ===================================================================
-
-
-# ===================================================================
 # === WWW_App ====================================================
 # ===================================================================
 class WWW_App < BasicObject
@@ -112,122 +112,114 @@ class WWW_App < BasicObject
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   IMAGE_AT_END                = /image\z/i
 
-  HASH       = '#'
-  DOT        = '.'
-  BANG       = '!'
-  NEW_LINE   = "\n"
-  SPACE      = ' '
-  BLANK      = ''
-  BODY       = 'body'
-  UNDERSCORE = '_'
+  NEW_LINE   = "\n".freeze
+  HASH       = '#'.freeze
+  DOT        = '.'.freeze
+  BANG       = '!'.freeze
+  NEW_LINE   = "\n".freeze
+  SPACE      = ' '.freeze
+  BLANK      = ''.freeze
+  BODY       = 'body'.freeze
+  UNDERSCORE = '_'.freeze
 
   Document_Template  = ::File.read(__FILE__).split("__END__").last.strip
 
+  AT_RULES    = [ 'font-face', 'media' ]
   NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
 
-  Methods    = {
-    :elements => %w[
+  HTML_TAGS   = %w[
+    title
+    body   div    span
 
-      title
-      body   div    span
+    img
+    b      em     i  strong  u  a 
+    abbr   blockquote  cite
+    br     cite   code 
+    ul     ol     li  p  pre  q 
+    sup    sub 
+    form   input  button
 
-      img
-      b      em     i  strong  u  a 
-      abbr   blockquote  cite
-      br     cite   code 
-      ul     ol     li  p  pre  q 
-      sup    sub 
-      form   input  button
+    link
 
-      link
+    script
+  ].map(&:to_sym)
 
-      script
+  # === From:
+  # https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes
+  PSEUDO = %w[
+     active checked default dir() disabled
+     empty enabled
+     first first-child first-of-type fullscreen focus
+     hover
+     indeterminate in-range invalid
+     lang() last-child last-of-type left link
+     not() nth-child() nth-last-child() nth-last-of-type() nth-of-type()
+     only-child only-of-type optional out-of-range
+     read-only read-write required right root
+     scope
+     target
+     valid visited
+  ].select { |name| name[/\A[a-z0-9\-]+\Z/] }.map { |name| name.gsub('-', '_').to_sym },
 
-    ].map(&:to_sym),
+  # From: Sanitize::Config::RELAXED[:css][:properties]
+  CSS_PROPERTIES = %w[
+    background                 bottom                     font_variant_numeric       position
+    background_attachment      box_decoration_break       font_variant_position      quotes
+    background_clip            box_shadow                 font_weight                resize
+    background_color           box_sizing                 height                     right
+    background_image           clear                      hyphens                    tab_size
+    background_origin          clip                       icon                       table_layout
+    background_position        clip_path                  image_orientation          text_align
+    background_repeat          color                      image_rendering            text_align_last
+    background_size            column_count               image_resolution           text_combine_horizontal
+    border                     column_fill                ime_mode                   text_decoration
+    border_bottom              column_gap                 justify_content            text_decoration_color
+    border_bottom_color        column_rule                left                       text_decoration_line
+    border_bottom_left_radius  column_rule_color          letter_spacing             text_decoration_style
+    border_bottom_right_radius column_rule_style          line_height                text_indent
+    border_bottom_style        column_rule_width          list_style                 text_orientation
+    border_bottom_width        column_span                list_style_image           text_overflow
+    border_collapse            column_width               list_style_position        text_rendering
+    border_color               columns                    list_style_type            text_shadow
+    border_image               content                    margin                     text_transform
+    border_image_outset        counter_increment          margin_bottom              text_underline_position
+    border_image_repeat        counter_reset              margin_left                top
+    border_image_slice         cursor                     margin_right               touch_action
+    border_image_source        direction                  margin_top                 transform
+    border_image_width         display                    marks                      transform_origin
+    border_left                empty_cells                mask                       transform_style
+    border_left_color          filter                     mask_type                  transition
+    border_left_style          float                      max_height                 transition_delay
+    border_left_width          font                       max_width                  transition_duration
+    border_radius              font_family                min_height                 transition_property
+    border_right               font_feature_settings      min_width                  transition_timing_function
+    border_right_color         font_kerning               opacity                    unicode_bidi
+    border_right_style         font_language_override     order                      unicode_range
+    border_right_width         font_size                  orphans                    vertical_align
+    border_spacing             font_size_adjust           overflow                   visibility
+    border_style               font_stretch               overflow_wrap              white_space
+    border_top                 font_style                 overflow_x                 widows
+    border_top_color           font_synthesis             overflow_y                 width
+    border_top_left_radius     font_variant               padding                    word_break
+    border_top_right_radius    font_variant_alternates    padding_bottom             word_spacing
+    border_top_style           font_variant_caps          padding_left               word_wrap
+    border_top_width           font_variant_east_asian    padding_right              z_index
+    border_width               font_variant_ligatures     padding_top
+  ].map(&:to_sym)
 
-    :attributes => {
-      :all         => [:id, :class],
-      :a           => [:href, :rel],
-      :form        => [:action, :method, :accept_charset],
-      :input       => [:type, :name, :value],
-      :style       => [:type],
-      :script      => [:type, :src, :language],
-      :link        => [:rel, :type, :sizes, :href, :title],
-      :meta        => [:name, :http_equiv, :property, :content, :charset],
-      :img         => [:src, :width, :height]
-    },
+  ATTRIBUTES = {
+    :all         => [:id, :class],
+    :a           => [:href, :rel],
+    :form        => [:action, :method, :accept_charset],
+    :input       => [:type, :name, :value],
+    :style       => [:type],
+    :script      => [:type, :src, :language],
+    :link        => [:rel, :type, :sizes, :href, :title],
+    :meta        => [:name, :http_equiv, :property, :content, :charset],
+    :img         => [:src, :width, :height]
+  }
 
-    :css => {
-      :at_rules       => [ 'font-face', 'media' ],
-      :protocols      => [ :relative ],
-
-      # === From:
-      # https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes
-      :pseudo => %w[
-         active checked default dir() disabled
-         empty enabled
-         first first-child first-of-type fullscreen focus
-         hover
-         indeterminate in-range invalid
-         lang() last-child last-of-type left link
-         not() nth-child() nth-last-child() nth-last-of-type() nth-of-type()
-         only-child only-of-type optional out-of-range
-         read-only read-write required right root
-         scope
-         target
-         valid visited
-      ].select { |name| name[/\A[a-z0-9\-]+\Z/] }.map { |name| name.gsub('-', '_').to_sym },
-
-      # From: Sanitize::Config::RELAXED[:css][:properties]
-      :properties     => %w[
-        background                 bottom                     font_variant_numeric       position
-        background_attachment      box_decoration_break       font_variant_position      quotes
-        background_clip            box_shadow                 font_weight                resize
-        background_color           box_sizing                 height                     right
-        background_image           clear                      hyphens                    tab_size
-        background_origin          clip                       icon                       table_layout
-        background_position        clip_path                  image_orientation          text_align
-        background_repeat          color                      image_rendering            text_align_last
-        background_size            column_count               image_resolution           text_combine_horizontal
-        border                     column_fill                ime_mode                   text_decoration
-        border_bottom              column_gap                 justify_content            text_decoration_color
-        border_bottom_color        column_rule                left                       text_decoration_line
-        border_bottom_left_radius  column_rule_color          letter_spacing             text_decoration_style
-        border_bottom_right_radius column_rule_style          line_height                text_indent
-        border_bottom_style        column_rule_width          list_style                 text_orientation
-        border_bottom_width        column_span                list_style_image           text_overflow
-        border_collapse            column_width               list_style_position        text_rendering
-        border_color               columns                    list_style_type            text_shadow
-        border_image               content                    margin                     text_transform
-        border_image_outset        counter_increment          margin_bottom              text_underline_position
-        border_image_repeat        counter_reset              margin_left                top
-        border_image_slice         cursor                     margin_right               touch_action
-        border_image_source        direction                  margin_top                 transform
-        border_image_width         display                    marks                      transform_origin
-        border_left                empty_cells                mask                       transform_style
-        border_left_color          filter                     mask_type                  transition
-        border_left_style          float                      max_height                 transition_delay
-        border_left_width          font                       max_width                  transition_duration
-        border_radius              font_family                min_height                 transition_property
-        border_right               font_feature_settings      min_width                  transition_timing_function
-        border_right_color         font_kerning               opacity                    unicode_bidi
-        border_right_style         font_language_override     order                      unicode_range
-        border_right_width         font_size                  orphans                    vertical_align
-        border_spacing             font_size_adjust           overflow                   visibility
-        border_style               font_stretch               overflow_wrap              white_space
-        border_top                 font_style                 overflow_x                 widows
-        border_top_color           font_synthesis             overflow_y                 width
-        border_top_left_radius     font_variant               padding                    word_break
-        border_top_right_radius    font_variant_alternates    padding_bottom             word_spacing
-        border_top_style           font_variant_caps          padding_left               word_wrap
-        border_top_width           font_variant_east_asian    padding_right              z_index
-        border_width               font_variant_ligatures     padding_top
-      ].map(&:to_sym)
-    }
-
-  } # === end Methods
-
-  ALLOWED_ATTRS = Methods[:attributes].inject({}) { |memo, (tag, attrs)|
+  ALLOWED_ATTRS = ATTRIBUTES.inject({}) { |memo, (tag, attrs)|
     attrs.each { |a|
       memo[a] ||= []
       memo[a] << tag
@@ -238,7 +230,9 @@ class WWW_App < BasicObject
   class << self # ===================================================
   end # === class self ==============================================
 
-  def initialize *files
+  attr_reader :tag, :tags
+  def initialize
+    # ==== old
     @js              = []
     @style           = {}
     @css_arr         = []
@@ -262,38 +256,327 @@ class WWW_App < BasicObject
     @mustache          = nil
 
     @html_ids          = {}
+    # ==== END old vars
 
-    tag(:head) {
+    @tags = []
+    @tag  = nil
 
-      @head = tag!
-
-      tag(:style) {
-        @style = tag!
-        @style[:css] = {}
-      }
-
-      tag(:script) {
-        tag![:content] = @js
-      }
-
-    } # === tag :head
-
-    tag(:body) {
-
-      @body = tag!
-
-      files.each { |file_name|
-        eval ::File.read(file_name), nil, file_name
-      }
-
-      instance_eval(&(::Proc.new))
-    }
+    create_tag(:body) do
+      yield
+    end
 
     @mustache = ::Mustache.new
     @mustache.template = to_mustache
 
     freeze
-  end # === def new_class
+  end
+
+  private # ===============================================
+
+  def SPACE indent
+    ' '.freeze * indent
+  end
+
+  def style
+    create :styles, :groups=>true
+    close { yield }
+    nil
+  end
+
+  def find_nearest name
+    return @tag if @tag[:type] == name
+    find_ancestor name
+  end
+
+  def find_ancestor name
+    ancestor = @tag && @tag[:parent]
+    while ancestor && ancestor[:type] != name
+      ancestor = ancestor[:parent]
+    end
+    ancestor
+  end
+
+  def go_up_to_if_exists name
+    target = find_ancestor name
+    (@tag = target) if target
+    self
+  end
+
+  def go_up_to name
+    go_up_to_if_exists name
+    fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+    self
+  end
+
+  def stay_or_go_up_to_if_exists name
+    return self if @tag[:type] == name
+    target = find_ancestor(name)
+    (@tag = target) if target
+
+    self
+  end
+
+  def stay_or_go_up_to name
+    stay_or_go_up_to_if_exists name
+    fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+    self
+  end
+
+  def go_up
+    @tag = @tag[:parent]
+  end
+
+  HTML_TAGS.each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name}
+        if block_given?
+          create_tag(:#{name}) { yield }
+        else
+          create_tag(:#{name})
+        end
+      end
+      EOF
+  }
+
+  PSEUDO.each { |name|
+    eval %^
+      def _#{name} *args
+        if block_given?
+          pseudo(:#{name}, *args) { yield }
+        else
+          pseudo :#{name}, *args
+        end
+      end
+    ^
+  }
+
+  CSS_PROPERTIES.each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name} *args
+        css :#{name}, *args
+      end
+    EOF
+  }
+
+  def css name, *args
+    @tag[:css] ||= {}
+    @tag[:css][name] = args.join(', ')
+    self
+  end
+
+  def parent name
+    js :parent, [name]
+  end
+
+  def add_class *classes
+    js :add_class, classes.flatten
+  end
+
+  def js func, args
+    @tag[:js] ||= []
+    @tag[:js] << [func, args]
+    self
+  end
+
+  def pseudo name
+    case
+    when tag[:closed]
+      create :group
+      create :__
+
+    when tag[:pseudo] && !tag[:closed]
+      go_up_to :group
+      create :__
+
+    end # === case
+
+    tag[:pseudo] = name
+    if block_given?
+      close { yield }
+    end
+    self
+  end
+
+  def in_a_group?
+    !!( (@tag && @tag[:type] == :group) || find_ancestor(:group) )
+  end
+
+  def parent_tag
+    tag && tag[:parent]
+  end
+
+  def create_tag name
+    if tag && tag[:groups]
+      create :group
+    else
+      stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
+    end
+
+    if block_given?
+      create(name) { yield }
+    else
+      create(name)
+    end
+    self
+  end
+
+  def create name, opts = nil
+    old = @tag
+    new = {:type=>name}
+
+    if old
+      old[:children] ||= []
+      old[:children] << new
+      new[:parent] = old
+    else
+      @tags << new
+    end
+
+    @tag = new
+
+    @tag.merge!(opts) if opts
+    if block_given?
+      close { yield }
+    end
+    self
+  end
+
+  def * arg
+    tag[:id] = arg
+    close { yield } if block_given?
+    self
+  end
+
+  def / app
+    fail "No block allowed here." if block_given?
+    self
+  end
+
+  def ^ *names
+    tag[:class] ||= []
+    tag[:class].concat names
+
+    close { yield } if block_given?
+    self
+  end
+
+  def _
+    case
+    when tag[:type] == :group
+      create :_
+    when tag[:groups]
+      create :group
+      create :_
+    else
+      tag[:_] = true
+    end
+
+    self
+  end
+
+  def close
+    group = find_nearest(:group)
+    if group
+      stay_or_go_up_to :group
+      final_parent = parent_tag
+
+      # We set :groups=>true because
+      # we want tags created in the block to create their own
+      # group as a child element.
+      @tag[:groups] = true
+
+      @tag[:closed] = true
+      yield
+      @tag = final_parent
+      return self
+    end
+
+    @tag[:closed] = true
+    final_parent = parent_tag
+    yield if block_given?
+    @tag = final_parent
+
+    self
+  end # === close
+
+  HTML_TAGS = %w{ body div p a button }.map(&:to_sym)
+
+  def to_raw_text
+    str    = ""
+    indent = 0
+    print_tag = lambda { |t|
+      info      = t.reject { |n| [:type, :parent, :children].include?( n ) }
+
+      str += "#{" " * indent}#{t[:type].inspect} -- #{info.inspect}\n"
+      indent += 1
+      if t[:children]
+        t[:children].each { |c|
+          str << print_tag.call(c)
+        }
+      end
+      indent -= 1
+    }
+
+    tags.each { |t| print_tag.call(t) }
+    str
+  end
+
+  def to_html
+    final  = ""
+    indent = 0
+    todo   = @tags.dup
+    last   = nil
+
+    while !todo.empty?
+      tag = todo.shift
+      case
+
+      when tag == :new_line
+        final << NEW_LINE
+
+      when tag == :open
+        unless indent.zero?
+          final << NEW_LINE << SPACE(indent)
+        end
+        final << "<#{todo.shift}>"
+        last = indent
+        indent += 2
+
+      when tag == :close
+        indent -= 2
+        if last != indent
+          final << SPACE(indent)
+        end
+        last = indent
+        final << "</#{todo.shift}>"
+
+      when HTML_TAGS.include?(tag[:type])
+
+        new_todo = [:open, tag[:type]]
+
+        if tag[:children]
+          new_todo.concat tag[:children]
+          new_todo << :new_line
+        end
+        new_todo.concat [:close, tag[:type]]
+        todo = new_todo.concat(todo)
+
+      when tag[:type] == :style || tag[:type] == :styles
+        todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
+
+      else
+        fail "Unknown: #{tag.inspect}"
+      end # === case
+    end # === while
+
+    final
+  end # === to_html
+
+
+  # =====================================================
+  # ==== FROM: v.1.x ====================================
+  # =====================================================
+
 
   def render_if name
     tag(:render_if) { tag![:attrs][:key] = name; yield }

@@ -22,25 +22,38 @@ To Use:
 WWW_App.new {
 
   style {
-    a._link * a._visited * a._hover { 
+    a._link / a._visited / a._hover { 
       color '#f88'
     }
 
     a {
-      _link    { color '#fff' }
-      _visited { color '#f88' }
-      _hover   { color '#ccc' }
+      _link / _visited   { color '#fff' }
+      _hover { color '#ccc' }
     }
-  }
+
+    div.*(:main)._.div.^(:drowsy) / a.^(:excited)._link {
+      border '1px dashed grey'
+      div.^(:mon) / div.^(:tues) {
+        border '1px dashed weekday'
+      }
+    }
+
+  } # === style
 
   div.*(:main).^(:css_class_name) {
 
     border           '1px solid #000'
     background_color 'grey'
 
-    style(:scary) {
-      border           '2px dotted red'
-      background_color 'white'
+    style {
+      a._link / a._visited {
+        color '#fig'
+      }
+
+      _.^(:scary) {
+        border           '2px dotted red'
+        background_color 'white'
+      }
     }
 
     p { 'Click the button to make me scared.' }
@@ -53,6 +66,7 @@ WWW_App.new {
     }
 
   }
+
 }.to_html
 ```
 
