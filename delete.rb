@@ -1,12 +1,18 @@
 
 class WWW_App
 
+  NEW_LINE = "\n".freeze
+
   attr_reader :tag, :tags
   def initialize
     @tags = []
     @tag  = nil
     create :body
     instance_eval &(Proc.new)
+  end
+
+  def SPACE indent
+    ' '.freeze * indent
   end
 
   private def style
@@ -233,11 +239,84 @@ end
     @tag = final_parent
 
     self
+  end # === close
+
+  HTML_TAGS = %w{ body div p a button }.map(&:to_sym)
+
+  def to_raw_text
+    str    = ""
+    indent = 0
+    print_tag = lambda { |t|
+      info      = t.reject { |n| [:type, :parent, :children].include?( n ) }
+
+      str += "#{" " * indent}#{t[:type].inspect} -- #{info.inspect}\n"
+      indent += 1
+      if t[:children]
+        t[:children].each { |c|
+          str << print_tag.call(c)
+        }
+      end
+      indent -= 1
+    }
+
+    tags.each { |t| print_tag.call(t) }
+    str
   end
+
+  def to_html
+    final  = ""
+    indent = 0
+    todo   = @tags.dup
+    last   = nil
+
+    while !todo.empty?
+      tag = todo.shift
+      case
+
+      when tag == :new_line
+        final << NEW_LINE
+
+      when tag == :open
+        unless indent.zero?
+          final << NEW_LINE << SPACE(indent)
+        end
+        final << "<#{todo.shift}>"
+        last = indent
+        indent += 2
+
+      when tag == :close
+        indent -= 2
+        if last != indent
+          final << SPACE(indent)
+        end
+        last = indent
+        final << "</#{todo.shift}>"
+
+      when HTML_TAGS.include?(tag[:type])
+
+        new_todo = [:open, tag[:type]]
+
+        if tag[:children]
+          new_todo.concat tag[:children]
+          new_todo << :new_line
+        end
+        new_todo.concat [:close, tag[:type]]
+        todo = new_todo.concat(todo)
+
+      when tag[:type] == :style || tag[:type] == :styles
+        todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
+
+      else
+        fail "Unknown: #{tag.inspect}"
+      end # === case
+    end # === while
+
+    final
+  end # === to_html
 
 end # === class WWW_App
 
-tags = WWW_App.new {
+app = WWW_App.new {
 
   style {
 
@@ -285,7 +364,9 @@ tags = WWW_App.new {
     }
 
   }
-}.tags
+}
+
+tags = app.tags
 
 print %^
 :body
@@ -312,18 +393,6 @@ print %^
   -----------------------------
 ^
 
-def print t, indent = 0
-  info = t.reject { |n|
-    [:type, :parent, :children].include?( n )
-  }
-  puts "#{" ".freeze * indent}#{t[:type].inspect} -- #{info.inspect}"
-  indent += 1
-  if t[:children]
-    t[:children].each { |c| print c, indent }
-  end
-end
-
-indent = 0
-tags.each { |t|
-  print t
-}
+puts app.to_raw_text
+puts "====="
+puts app.to_html
