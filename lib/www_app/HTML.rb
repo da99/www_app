@@ -96,7 +96,7 @@ class WWW_App
         fail(HTML_ID_Duplicate, "Id already used: #{new_id.inspect}, tag index: #{@html_ids[new_id]}")
       end
 
-      @html_ids << new_id
+      @html_ids[ new_id ] = new_id
       tag[:id] = new_id
 
       if block_given?
@@ -115,7 +115,7 @@ class WWW_App
       tag[:class].concat(names)
 
       if block_given?
-        close_tag { yield }
+        close { yield }
       else
         self
       end
