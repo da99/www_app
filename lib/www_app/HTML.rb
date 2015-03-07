@@ -21,7 +21,7 @@ class WWW_App
     script
     ].map(&:to_sym)
 
-    ATTRIBUTES = {
+    TAGS_TO_ATTRIBUTES = {
       :all         => [:id, :class],
       :a           => [:href, :rel],
       :form        => [:action, :method, :accept_charset],
@@ -33,18 +33,18 @@ class WWW_App
       :img         => [:src, :width, :height]
     }
 
-    ALLOWED_ATTRS = ATTRIBUTES.inject({}) { |memo, (tag, attrs)|
+    ATTRIBUTES_TO_TAGS = TAGS_TO_ATTRIBUTES.inject({}) { |memo, (tag, attrs)|
       attrs.each { |a|
-      memo[a] ||= []
-      memo[a] << tag
-    }
+        memo[a] ||= []
+        memo[a] << tag
+      }
       memo
     }
 
-    ALLOWED_ATTRS.each { |name, tags|
+    ATTRIBUTES_TO_TAGS.each { |name, tags|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} val
-          allowed = ALLOWED_ATTRS[:#{name}]
+          allowed = ATTRIBUTES_TO_TAGS[:#{name}]
           allowed = allowed && allowed[tag[:type]]
           return super unless allowed
 
@@ -68,7 +68,7 @@ class WWW_App
             create(:#{name})
           end
         end
-        EOF
+      EOF
     }
 
     def meta *args
@@ -158,7 +158,6 @@ class WWW_App
         super
       end
     end
-
 
   end # === module HTML
 end # === class WWW_App

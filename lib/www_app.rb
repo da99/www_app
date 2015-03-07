@@ -84,7 +84,6 @@ class WWW_App
   end
 
   def tag_or_ancestor? name
-
     !!find_nearest(name)
   end
 
