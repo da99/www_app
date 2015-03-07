@@ -35,7 +35,6 @@ class Mustache
   class Generator
 
     alias_method :w_syms_on_fetch, :on_fetch
-    alias_method :[], :fetch
 
     def on_fetch(names)
       if names.length == 2
@@ -53,6 +52,7 @@ class Mustache
       fail "No longer needed."
     end
 
+    alias_method :[], :fetch
     def fetch *args
       raise ContextMiss.new("Can't find: #{args.inspect}") if args.size != 2
 

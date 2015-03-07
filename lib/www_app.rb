@@ -31,7 +31,6 @@ class WWW_App
   HASH       = '#'.freeze
   DOT        = '.'.freeze
   BANG       = '!'.freeze
-  NEW_LINE   = "\n".freeze
   SPACE      = ' '.freeze
   BLANK      = ''.freeze
   BODY       = 'body'.freeze
@@ -39,14 +38,14 @@ class WWW_App
 
 
   #
-  # NOTE: Properties are defined first,
-  # so :elements methods can over-write them,
+  # NOTE: CSS Properties are defined first,
+  # so HTML elements methods can over-write them,
   # just in case there are duplicates.
   #
-  include WWW_App::CSS
-  include WWW_App::HTML
-  include WWW_App::TO
-  include WWW_App::JavaScript
+  include CSS
+  include HTML
+  include JavaScript
+  include TO
 
   attr_reader :tag, :tags
   def initialize
@@ -380,16 +379,9 @@ class WWW_App
     end
   end
 
-  def parent
-    fail "Not in a tag." unless tag!
-    fail "No parent: #{tag![:tag].inspect}, #{tag![:tag_index]}" if !tag![:parent_index]
-    @tag_arr[tag![:parent_index]]
-  end
-
   # =================================================================
   #                    Tag (aka element)-related methods
   # =================================================================
-
 
   def in_tag t
     orig = @current_tag_index
