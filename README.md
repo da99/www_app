@@ -31,7 +31,7 @@ WWW_App.new {
       _hover { color '#ccc' }
     }
 
-    div.*(:main)._.div.^(:drowsy) / a.^(:excited)._link {
+    div.id(:main)._.div.^(:drowsy) / a.^(:excited)._link {
       border '1px dashed grey'
       div.^(:mon) / div.^(:tues) {
         border '1px dashed weekday'
@@ -40,7 +40,7 @@ WWW_App.new {
 
   } # === style
 
-  div.*(:main).^(:css_class_name) {
+  div.id(:main).^(:css_class_name) {
 
     border           '1px solid #000'
     background_color 'grey'

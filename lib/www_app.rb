@@ -36,6 +36,21 @@ class Mustache
     end
   end # === def render
 
+  class Generator
+
+    alias_method :w_syms_on_fetch, :on_fetch
+    alias_method :[], :fetch
+
+    def on_fetch(names)
+      if names.length == 2
+        "ctx[#{names.first.to_sym.inspect}, #{names.last.to_sym.inspect}]"
+      else
+        w_syms_on_fetch(names)
+      end
+    end
+
+  end # === class Generator
+
   class Context
 
     def find *args
@@ -68,23 +83,7 @@ class Mustache
       raise ContextMiss.new("Can't find .#{meth}(#{key.inspect})")
     end
 
-    alias_method :[], :fetch
-
   end # === class Context
-
-  class Generator
-
-    alias_method :w_syms_on_fetch, :on_fetch
-
-    def on_fetch(names)
-      if names.length == 2
-        "ctx[#{names.first.to_sym.inspect}, #{names.last.to_sym.inspect}]"
-      else
-        w_syms_on_fetch(names)
-      end
-    end
-
-  end # === class Generator
 
 end # === class Mustache
 # ===================================================================
@@ -95,6 +94,33 @@ end # === class Mustache
 # ===================================================================
 class WWW_App < BasicObject
 # ===================================================================
+
+  class Clean
+
+    MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
+
+    class << self
+
+      def mustache *args
+        meth, val = args
+        if val.is_a?(Symbol)
+          m = "{{{ #{meth}.#{val} }}}"
+          fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
+        else
+          m = ::Escape_Escape_Escape.send(meth, val)
+        end
+        m
+      end
+
+      def method_missing name, *args
+        if args.last.is_a?(::Symbol)
+          args.push(args.pop.to_s)
+        end
+        ::Escape_Escape_Escape.send(name, *args)
+      end
+
+    end # === class << self
+  end # === class Clean
 
   include ::Kernel
 
@@ -261,15 +287,113 @@ class WWW_App < BasicObject
     @tags = []
     @tag  = nil
 
-    create_tag(:body) do
+    @mustache = nil
+
+    create(:body) do
       yield
     end
 
-    @mustache = ::Mustache.new
-    @mustache.template = to_mustache
 
     freeze
   end
+
+  ALLOWED_ATTRS.each { |name, tags|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name} val
+        allowed = ALLOWED_ATTRS[:#{name}]
+        allowed = allowed && allowed[tag[:type]]
+        return super unless allowed
+
+        tag[:attrs][:#{name}] = val
+
+        if block_given?
+          close_tag { yield }
+        else
+          self
+        end
+      end
+    EOF
+  }
+
+  HTML_TAGS.each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name}
+        if block_given?
+          create(:#{name}) { yield }
+        else
+          create(:#{name})
+        end
+      end
+      EOF
+  }
+
+  def meta *args
+    fail "No block allowed." if block_given?
+    fail "Not allowed here." unless tag?(:body)
+    c = nil
+    in_tag(@tag) { c = tag(:meta, *args) }
+    c
+  end
+
+  def title
+    create :title do
+      yield
+    end
+  end
+
+  def id new_id
+    old_id = tag[:id]
+
+    if old_id && old_id != new_id
+      fail("Id already set: #{old_id} new: #{new_id}")
+    end
+
+    if @html_ids[new_id] && !ancestor?(:group)
+      fail(HTML_ID_Duplicate, "Id already used: #{new_id.inspect}, tag index: #{@html_ids[new_id]}")
+    end
+
+    @html_ids << new_id
+    tag[:id] = new_id
+
+    if block_given?
+      close { yield }
+    else
+      self
+    end
+  end
+
+  PSEUDO.each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      public def _#{name}
+        orig = @css_id_override
+        @css_id_override = ':#{name}'.freeze
+        result = yield
+        @css_id_override = orig
+        result
+      end
+    EOF
+  }
+
+  PSEUDO.each { |name|
+    eval %^
+      def _#{name} *args
+        if block_given?
+          pseudo(:#{name}, *args) { yield }
+        else
+          pseudo :#{name}, *args
+        end
+      end
+    ^
+  }
+
+  CSS_PROPERTIES.each { |name|
+    eval <<-EOF, nil, __FILE__, __LINE__ + 1
+      def #{name} *args
+        alter_css_property :#{name}, *args
+      end
+    EOF
+  }
+
 
   private # ===============================================
 
@@ -283,8 +407,16 @@ class WWW_App < BasicObject
     nil
   end
 
+  def tag? name
+    tag && tag[:type] == name
+  end
+
+  def tag_or_ancestor? name
+    !!find_nearest(name)
+  end
+
   def find_nearest name
-    return @tag if @tag[:type] == name
+    return @tag if tag?(name)
     find_ancestor name
   end
 
@@ -309,7 +441,7 @@ class WWW_App < BasicObject
   end
 
   def stay_or_go_up_to_if_exists name
-    return self if @tag[:type] == name
+    return self if tag?(name)
     target = find_ancestor(name)
     (@tag = target) if target
 
@@ -324,44 +456,6 @@ class WWW_App < BasicObject
 
   def go_up
     @tag = @tag[:parent]
-  end
-
-  HTML_TAGS.each { |name|
-    eval <<-EOF, nil, __FILE__, __LINE__ + 1
-      def #{name}
-        if block_given?
-          create_tag(:#{name}) { yield }
-        else
-          create_tag(:#{name})
-        end
-      end
-      EOF
-  }
-
-  PSEUDO.each { |name|
-    eval %^
-      def _#{name} *args
-        if block_given?
-          pseudo(:#{name}, *args) { yield }
-        else
-          pseudo :#{name}, *args
-        end
-      end
-    ^
-  }
-
-  CSS_PROPERTIES.each { |name|
-    eval <<-EOF, nil, __FILE__, __LINE__ + 1
-      def #{name} *args
-        css :#{name}, *args
-      end
-    EOF
-  }
-
-  def css name, *args
-    @tag[:css] ||= {}
-    @tag[:css][name] = args.join(', ')
-    self
   end
 
   def parent name
@@ -397,67 +491,77 @@ class WWW_App < BasicObject
     self
   end
 
-  def in_a_group?
-    !!( (@tag && @tag[:type] == :group) || find_ancestor(:group) )
+  def parent?
+    !!parent
   end
 
-  def parent_tag
+  def parent
     tag && tag[:parent]
-  end
-
-  def create_tag name
-    if tag && tag[:groups]
-      create :group
-    else
-      stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
-    end
-
-    if block_given?
-      create(name) { yield }
-    else
-      create(name)
-    end
-    self
   end
 
   def create name, opts = nil
     old = @tag
     new = {:type=>name}
 
+    # === If:
+    #   we are creating an HTML element
+    #   within a group, then we either start
+    #   a new group or stay here.
+    if HTML_TAGS.include?(name) && tag_or_ancestor?(:groups)
+      if tag?(:groups)
+        create :group
+      else
+        # Example: div.id(:main)._.div.^(:my_class)
+        stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
+      end
+    end
+
+    # === Add to parent's children array:
     if old
       old[:children] ||= []
       old[:children] << new
       new[:parent] = old
-    else
+    else # === Example: :head, :body, etc.
       @tags << new
     end
 
     @tag = new
 
     @tag.merge!(opts) if opts
+
     if block_given?
       close { yield }
     end
-    self
-  end
 
-  def * arg
-    tag[:id] = arg
-    close { yield } if block_given?
     self
-  end
+  end # === def create
 
+  #
+  # Example:
+  #   style {
+  #     a._link / a._hover {
+  #       ...
+  #     }
+  #   }
+  #
   def / app
     fail "No block allowed here." if block_given?
     self
   end
 
+  #
+  # Example:
+  #   div.^(:alert, :red_hot) { 'my content' }
+  #
   def ^ *names
     tag[:class] ||= []
-    tag[:class].concat names
+    tag[:class].concat(names)
 
-    close { yield } if block_given?
-    self
+    if block_given?
+      close_tag { yield }
+    else
+      self
+    end
   end
 
   def _
@@ -478,7 +582,7 @@ class WWW_App < BasicObject
     group = find_nearest(:group)
     if group
       stay_or_go_up_to :group
-      final_parent = parent_tag
+      final_parent = parent
 
       # We set :groups=>true because
       # we want tags created in the block to create their own
@@ -492,14 +596,12 @@ class WWW_App < BasicObject
     end
 
     @tag[:closed] = true
-    final_parent = parent_tag
+    final_parent = parent
     yield if block_given?
     @tag = final_parent
 
     self
   end # === close
-
-  HTML_TAGS = %w{ body div p a button }.map(&:to_sym)
 
   def to_raw_text
     str    = ""
@@ -521,7 +623,9 @@ class WWW_App < BasicObject
     str
   end
 
-  def to_html
+  def to_html *args
+    return @mustache.render(*args) if @mustache
+
     final  = ""
     indent = 0
     todo   = @tags.dup
@@ -564,100 +668,246 @@ class WWW_App < BasicObject
       when tag[:type] == :style || tag[:type] == :styles
         todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
 
+      # ===  v1.3 ===========================
+      when type == :javascript && vals.is_a?(::Array)
+        clean_vals = vals.map { |raw_x|
+          x = case raw_x
+              when ::Symbol, ::String
+                Clean.html(raw_x.to_s)
+              when ::Array
+                to_clean_text :javascript, raw_x
+              when ::Numeric
+                x
+              else
+                fail "Unknown type for json: #{raw_x.inspect}"
+              end
+        }
+
+      when type == :to_json && vals.is_a?(::Array)
+        ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
+
+      when type == :style_classes && vals.is_a?(::Hash)
+        h = vals
+        h.map { |raw_k,styles|
+          k = raw_k.to_s
+
+          <<-EOF
+          #{Clean.css_selector k} {
+          #{to_clean_text :styles, styles}
+          }
+          EOF
+        }.join.strip
+
+      when type == :styles && vals.is_a?(::Hash)
+        h = vals
+        h.map { |k,raw_v|
+          name  = begin
+                    clean_k = ::WWW_App::Clean.css_attr(k.to_s.gsub('_','-'))
+                    fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
+                    clean_k
+                  end
+
+          raw_v = raw_v.to_s
+
+          v = case
+
+              when name[IMAGE_AT_END]
+                case raw_v
+                when 'inherit', 'none'
+                  raw_v
+                else
+                  "url(#{Clean.href(raw_v)})"
+                end
+
+              when Methods[:css][:properties].include?(k)
+                Clean.css_value raw_v
+
+              else
+                fail "Invalid css attr: #{name.inspect}"
+
+              end # === case
+
+          %^#{name}: #{v};^
+        }.join("\n").strip
+
+      when type == :attrs && vals.is_a?(::Hash)
+        h     = vals[:attrs]
+        tag   = vals
+        final = h.map { |k,raw_v|
+
+          fail "Unknown attr: #{k.inspect}" if !ALLOWED_ATTRS.include?(k)
+
+          next if raw_v.is_a?(::Array) && raw_v.empty?
+
+          v = raw_v
+
+          attr_name = k.to_s.gsub(::WWW_App::INVALID_ATTR_CHARS, '_')
+          fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
+
+          attr_val = case
+                     when k == :href && tag[:tag] == :a
+                       Clean.mustache :href, v
+
+                     when k == :action || k == :src || k == :href
+                       Clean.relative_href(v)
+
+                     when k == :class
+                       v.map { |n|
+                         Clean.css_class_name(n)
+                       }.join SPACE
+
+                     when k == :id
+                       Clean.html_id v.to_s
+
+                     when ALLOWED_ATTRS[k]
+                       Clean.html(v)
+
+                     else
+                       fail "Invalid attr: #{k.inspect}"
+
+                     end # === case
+
+          %*#{attr_name}="#{attr_val}"*
+
+        }.compact.join SPACE
+
+        final.empty? ?
+          '' :
+          (" " << final)
+
+      when type == :html && vals.is_a?(::Array)
+        a = vals
+        a.map { |tag_index|
+          to_clean_text(:html, @tag_arr[tag_index])
+        }.join NEW_LINE
+
+      when type == :html && vals.is_a?(::Hash)
+
+        h = vals
+
+        fail("Unknown type: #{h.inspect}") if h[:type] != :html
+
+        if h[:tag] == :style
+          return <<-EOF
+          <style type="text/css">
+          #{to_clean_text :style_classes, h[:css]}
+          </style>
+          EOF
+        end
+
+        if h[:tag] == :script && h[:content] && !h[:content].empty?
+          return <<-EOF
+          <script type="text/css">
+            WWW_App.compile(
+          #{to_clean_text :to_json, h[:content]}
+            );
+          </script>
+          EOF
+        end
+
+        html = h[:childs].map { |tag_index|
+          to_clean_text(:html, @tag_arr[tag_index])
+        }.join(NEW_LINE).strip
+
+        return unless  h[:render?]
+
+        if html.empty? && h[:text]
+          html = if h[:text].is_a?(::Symbol)
+                   h[:text].to_mustache(:html)
+                 else
+                   if h[:text].is_a?(::Hash)
+                     if h[:text][:escape] == false
+                       h[:text][:value]
+                     else
+                       Clean.html(h[:text][:value].strip)
+                     end
+                   else
+                     Clean.html(h[:text].strip)
+                   end
+                 end
+        end # === if html.empty?
+
+        (html = nil) if html.empty?
+
+        case
+        when h[:tag] == :render_if
+          key   = h[:attrs][:key]
+          open  = "{{# coll.#{key} }}"
+          close = "{{/ coll.#{key} }}"
+
+        when h[:tag] == :render_unless
+          key   = h[:attrs][:key]
+          open  = "{{^ coll.#{key} }}"
+          close = "{{/ coll.#{key} }}"
+
+        when Methods[:elements].include?(h[:tag])
+          open  = "<#{h[:tag]}#{to_clean_text(:attrs, h)}"
+          if NO_END_TAGS.include?(h[:tag])
+            open += ' />'
+            close = nil
+          else
+            open += '>'
+            close = "</#{h[:tag]}>"
+          end
+
+        else
+          fail "Unknown html tag: #{h[:tag].inspect}"
+
+        end # === case h[:tag]
+
+        if h[:tag]
+          [open, html, close].compact.join
+        else
+          html
+        end
+
       else
         fail "Unknown: #{tag.inspect}"
       end # === case
     end # === while
 
     final
+
+    @mustache ||= begin
+                    final = if is_doc?
+                              # Remember: to use !BODY first, because
+                              # :head content might include a '!HEAD'
+                              # value.
+                              (page_title { 'Unknown Page Title' }) unless @page_title
+
+                              Document_Template.
+                                sub('!BODY', to_clean_text(:html, @body)).
+                                sub('!HEAD', to_clean_text(:html, @head[:childs]))
+                            else
+                              to_clean_text(:html, @body[:childs])
+                            end
+
+                    mustache = ::Mustache.new
+                    mustache.template = Clean.clean_utf8(final)
+                    mustache
+                  end
+
+    to_html(*args)
   end # === to_html
 
 
-  # =====================================================
-  # ==== FROM: v.1.x ====================================
-  # =====================================================
-
-
   def render_if name
-    tag(:render_if) { tag![:attrs][:key] = name; yield }
+    create(:render_if, :key=>name) {
+      yield
+    }
     nil
   end
 
   def render_unless name
-    tag(:render_unless) { tag![:attrs][:key] = name; yield }
+    create(:render_unless, :key=>name) {
+      yield
+    }
     nil
   end
 
-  def to_html raw_data = {}
-    @mustache.render raw_data
-  end
-
-  Allowed = {
-    :attr => {}
-  }
-
-  Methods[:attributes].each { |tag, attrs|
-    next if tag == :all
-    attrs.each { |raw_attr|
-      attr_name = raw_attr.to_s.gsub('-', '_').to_sym
-      Allowed[:attr][attr_name] ||= {}
-      Allowed[:attr][attr_name][tag.to_sym] = true
-    }
-  }
-
-  Allowed[:attr].each { |name, tags|
-    eval <<-EOF, nil, __FILE__, __LINE__ + 1
-      def #{name} val
-        allowed = Allowed[:attr][:#{name}]
-        allowed = allowed && allowed[tag![:tag]]
-        return super unless allowed
-
-        tag![:attrs][:#{name}] = val
-
-        if block_given?
-          close_tag { yield }
-        else
-          self
-        end
-      end
-    EOF
-  }
-
-  #
-  # Example:
-  #   div.*('my_id') { }
-  #
-  def * raw_id
-    id = ::Escape_Escape_Escape.html_id(raw_id)
-
-    old_id = tag![:attrs][:id]
-    fail("Id already set: #{old_id} new: #{id}") if old_id
-
-    fail(HTML_ID_Duplicate, "Id already used: #{id.inspect}, tag index: #{@html_ids[id]}") if @html_ids[id]
-    @html_ids[id] = tag![:tag_index]
-
-    tag![:attrs][:id] = id
-
-    if block_given?
-      close_tag { yield }
-    else
-      self
-    end
-  end
-
-  #
-  # Example:
-  #   div.^(:alert, :red_hot) { 'my content' }
-  #
-  def ^ *names
-    tag![:attrs][:class].concat(names).uniq!
-
-    if block_given?
-      close_tag { yield }
-    else
-      self
-    end
-  end
+  # =====================================================
+  # ==== FROM: v.1.x ====================================
+  # =====================================================
 
   private # =========================================================
 
@@ -669,7 +919,7 @@ class WWW_App < BasicObject
   # NOTE: Properties are defined first,
   # so :elements methods can over-write them,
   # just in case there are duplicates.
-  Methods[:css][:properties].each { |name|
+  CSS_PROPERTIES.each { |name|
     str_name = name.to_s.gsub('_', '-')
     eval <<-EOF, nil, __FILE__, __LINE__ + 1
       def #{name} *args
@@ -692,34 +942,10 @@ class WWW_App < BasicObject
     EOF
   }
 
-  # =================================================================
-  #                 Future features...
-  # =================================================================
-
-  def section
-    fail
-  end
-
-  def on_top_of
-    fail
-  end
-
-  def in_middle_of
-    fail
-  end
-
-  def at_bottom_of
-    fail
-  end
-
 
   # =================================================================
   #                 Miscellaneaous Helpers
   # =================================================================
-
-  def is_doc?
-    @is_doc || !@style[:css].empty? || !@js.empty?
-  end
 
   def first_class
     tag![:attrs][:class].first
@@ -1005,276 +1231,10 @@ class WWW_App < BasicObject
     nil
   end
 
-  # =================================================================
-  #                    CSS-related methods
-  # =================================================================
-
-  def style
-    orig = @render_it
-    @render_it = false
-    results = yield
-    @render_it = orig
-    results
-  end
-
-  def css_property name, val = nil
-    prop = {:name=>name, :value=>val, :parent=>parent? ? parent : nil}
-
-    id = css_id
-    @style[:css][id] ||= {}
-
-    @css_arr << prop
-    @style[:css][id][@css_arr.map { |c| c[:name] }.join('_').to_sym] = val
-    yield if block_given?
-    @css_arr.pop
-  end
-
-  Methods[:css][:pseudo].each { |name|
-    eval <<-EOF, nil, __FILE__, __LINE__ + 1
-      public def _#{name}
-        orig = @css_id_override
-        @css_id_override = ':#{name}'.freeze
-        result = yield
-        @css_id_override = orig
-        result
-      end
-    EOF
-  }
-
-  # =================================================================
-
-  def page_title
-    @is_doc = true
-    in_tag(@head) {
-      tag(:title) { @page_title = yield }
-    }
+  def alter_css_property name, *args
+    @tag[:css] ||= {}
+    @tag[:css][name] = args
     self
-  end
-
-  def meta *args
-    fail "No block allowed." if block_given?
-    fail "Not allowed here." unless tag?(:body)
-    c = nil
-    in_tag(@tag) { c = tag(:meta, *args) }
-    c
-  end
-
-  def to_clean_text type, vals, tag = nil
-    case
-
-    when type == :javascript && vals.is_a?(::Array)
-      clean_vals = vals.map { |raw_x|
-        x = case raw_x
-            when ::Symbol, ::String
-              Clean.html(raw_x.to_s)
-            when ::Array
-              to_clean_text :javascript, raw_x
-            when ::Numeric
-              x
-            else
-              fail "Unknown type for json: #{raw_x.inspect}"
-            end
-      }
-
-    when type == :to_json && vals.is_a?(::Array)
-      ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
-
-    when type == :style_classes && vals.is_a?(::Hash)
-      h = vals
-      h.map { |raw_k,styles|
-        k = raw_k.to_s
-
-        <<-EOF
-          #{Clean.css_selector k} {
-            #{to_clean_text :styles, styles}
-          }
-        EOF
-      }.join.strip
-
-    when type == :styles && vals.is_a?(::Hash)
-      h = vals
-      h.map { |k,raw_v|
-        name  = begin
-                  clean_k = ::WWW_App::Clean.css_attr(k.to_s.gsub('_','-'))
-                  fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
-                  clean_k
-                end
-
-        raw_v = raw_v.to_s
-
-        v = case
-
-            when name[IMAGE_AT_END]
-              case raw_v
-              when 'inherit', 'none'
-                raw_v
-              else
-                "url(#{Clean.href(raw_v)})"
-              end
-
-            when Methods[:css][:properties].include?(k)
-              Clean.css_value raw_v
-
-            else
-              fail "Invalid css attr: #{name.inspect}"
-
-            end # === case
-
-        %^#{name}: #{v};^
-      }.join("\n").strip
-
-    when type == :attrs && vals.is_a?(::Hash)
-      h     = vals[:attrs]
-      tag   = vals
-      final = h.map { |k,raw_v|
-
-        fail "Unknown attr: #{k.inspect}" if !ALLOWED_ATTRS.include?(k)
-
-        next if raw_v.is_a?(::Array) && raw_v.empty?
-
-        v = raw_v
-
-        attr_name = k.to_s.gsub(::WWW_App::INVALID_ATTR_CHARS, '_')
-        fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
-
-        attr_val = case
-                   when k == :href && tag[:tag] == :a
-                     Clean.mustache :href, v
-
-                   when k == :action || k == :src || k == :href
-                     Clean.relative_href(v)
-
-                   when k == :class
-                     v.map { |n|
-                       Clean.css_class_name(n)
-                     }.join SPACE
-
-                   when k == :id
-                     Clean.html_id v.to_s
-
-                   when ALLOWED_ATTRS[k]
-                     Clean.html(v)
-
-                   else
-                     fail "Invalid attr: #{k.inspect}"
-
-                   end # === case
-
-        %*#{attr_name}="#{attr_val}"*
-
-      }.compact.join SPACE
-
-      final.empty? ?
-        '' :
-        (" " << final)
-
-    when type == :html && vals.is_a?(::Array)
-      a = vals
-      a.map { |tag_index|
-        to_clean_text(:html, @tag_arr[tag_index])
-      }.join NEW_LINE
-
-    when type == :html && vals.is_a?(::Hash)
-
-      h = vals
-
-      fail("Unknown type: #{h.inspect}") if h[:type] != :html
-
-      if h[:tag] == :style
-        return <<-EOF
-          <style type="text/css">
-            #{to_clean_text :style_classes, h[:css]}
-          </style>
-        EOF
-      end
-
-      if h[:tag] == :script && h[:content] && !h[:content].empty?
-        return <<-EOF
-          <script type="text/css">
-            WWW_App.compile(
-             #{to_clean_text :to_json, h[:content]}
-            );
-          </script>
-        EOF
-      end
-
-      html = h[:childs].map { |tag_index|
-        to_clean_text(:html, @tag_arr[tag_index])
-      }.join(NEW_LINE).strip
-
-      return unless  h[:render?]
-
-      if html.empty? && h[:text]
-        html = if h[:text].is_a?(::Symbol)
-                 h[:text].to_mustache(:html)
-               else
-                 if h[:text].is_a?(::Hash)
-                   if h[:text][:escape] == false
-                     h[:text][:value]
-                   else
-                     Clean.html(h[:text][:value].strip)
-                   end
-                 else
-                   Clean.html(h[:text].strip)
-                 end
-               end
-      end # === if html.empty?
-
-      (html = nil) if html.empty?
-
-      case
-      when h[:tag] == :render_if
-        key   = h[:attrs][:key]
-        open  = "{{# coll.#{key} }}"
-        close = "{{/ coll.#{key} }}"
-
-      when h[:tag] == :render_unless
-        key   = h[:attrs][:key]
-        open  = "{{^ coll.#{key} }}"
-        close = "{{/ coll.#{key} }}"
-
-      when Methods[:elements].include?(h[:tag])
-        open  = "<#{h[:tag]}#{to_clean_text(:attrs, h)}"
-        if NO_END_TAGS.include?(h[:tag])
-          open += ' />'
-          close = nil
-        else
-          open += '>'
-          close = "</#{h[:tag]}>"
-        end
-
-      else
-        fail "Unknown html tag: #{h[:tag].inspect}"
-
-      end # === case h[:tag]
-
-      if h[:tag]
-        [open, html, close].compact.join
-      else
-        html
-      end
-
-    else
-      fail "Unknown vals: #{type.inspect}, #{vals.inspect}"
-
-    end # case
-  end # def to_clean_text
-
-  def in_html?
-    @state.last == :html
-  end
-
-  def creating_html?
-    @state.last == :create_html
-  end
-
-  def js *args
-    fail("No js event defined.") if @js.empty?
-    if args.empty?
-      @js.last
-    else
-      @js.last.concat args
-    end
   end
 
   def on name, &blok
@@ -1296,29 +1256,6 @@ class WWW_App < BasicObject
     results
   end
 
-  def to_mustache
-
-    return @compiled  if @compiled
-
-    final = if is_doc?
-              # Remember: to use !BODY first, because
-              # :head content might include a '!HEAD'
-              # value.
-              (page_title { 'Unknown Page Title' }) unless @page_title
-
-              Document_Template.
-                sub('!BODY', to_clean_text(:html, @body)).
-                sub('!HEAD', to_clean_text(:html, @head[:childs]))
-            else
-              to_clean_text(:html, @body[:childs])
-            end
-
-    utf_8 = Clean.clean_utf8(final)
-
-    @compiled  = utf_8
-  end # === def to_mustache
-
-
   def input *args
     case
     when args.size === 3
@@ -1327,37 +1264,6 @@ class WWW_App < BasicObject
       super
     end
   end
-
-  def add_class name
-    js("add_class", [name])
-  end
-
-  class Clean
-
-    MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
-
-    class << self
-
-      def mustache *args
-        meth, val = args
-        if val.is_a?(Symbol)
-          m = "{{{ #{meth}.#{val} }}}"
-          fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
-        else
-          m = ::Escape_Escape_Escape.send(meth, val)
-        end
-        m
-      end
-
-      def method_missing name, *args
-        if args.last.is_a?(::Symbol)
-          args.push(args.pop.to_s)
-        end
-        ::Escape_Escape_Escape.send(name, *args)
-      end
-
-    end # === class << self
-  end # === class Clean
 
 end # === class WWW_App ==========================================
 
