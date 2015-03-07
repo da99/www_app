@@ -1,5 +1,8 @@
 
 class WWW_App
+
+  AT_RULES    = [ 'font-face', 'media' ]
+
   module CSS
 
   # === From:

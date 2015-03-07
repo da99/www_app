@@ -5,6 +5,7 @@ end # === class WWW_App
 
 require 'www_app/CSS'
 require 'www_app/HTML'
+require 'www_app/JavaScript'
 require 'www_app/TO'
 
 # ===================================================================
@@ -23,9 +24,6 @@ class WWW_App
 
   ALWAYS_END_TAGS = [:script]
 
-  SYM_CACHE = { attrs: {}, css_props: {}}
-
-  Classes                     = []
   INVALID_ATTR_CHARS          = /[^a-z0-9\_\-]/i
   IMAGE_AT_END                = /image\z/i
 
@@ -39,10 +37,6 @@ class WWW_App
   BODY       = 'body'.freeze
   UNDERSCORE = '_'.freeze
 
-  Document_Template  = ::File.read(__FILE__).split("__END__").last.strip
-
-  AT_RULES    = [ 'font-face', 'media' ]
-  NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
 
   #
   # NOTE: Properties are defined first,
@@ -52,6 +46,7 @@ class WWW_App
   include WWW_App::CSS
   include WWW_App::HTML
   include WWW_App::TO
+  include WWW_App::JavaScript
 
   attr_reader :tag, :tags
   def initialize
@@ -136,20 +131,6 @@ class WWW_App
 
   def dom_id?
     tag && !!tag[:id]
-  end
-
-  def parent name
-    js :parent, [name]
-  end
-
-  def add_class *classes
-    js :add_class, classes.flatten
-  end
-
-  def js func, args
-    @tag[:js] ||= []
-    @tag[:js] << [func, args]
-    self
   end
 
   def parent?
@@ -461,25 +442,6 @@ class WWW_App
     @tag[:css] ||= {}
     @tag[:css][name] = args
     self
-  end
-
-  def on name, &blok
-    fail "Block required." unless blok
-
-    @js << 'create_event'
-    @js << [selector_id, name]
-
-    orig             = @css_id_override
-    @css_id_override = name
-    results          = yield
-    @css_id_override = orig
-
-    if @js.last.size == 2
-      @js.pop
-      @js.pop
-    end
-
-    results
   end
 
   def input *args

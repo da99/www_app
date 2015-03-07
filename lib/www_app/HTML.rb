@@ -2,6 +2,8 @@
 class WWW_App
   module HTML
 
+    NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
+
     HTML_TAGS   = %w[
     title
     body   div    span

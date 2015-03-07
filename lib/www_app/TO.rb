@@ -86,6 +86,8 @@ end # === class Mustache
 
 class WWW_App
 
+  Document_Template  = ::File.read(__FILE__).split("__END__").last.strip
+
   class Clean
 
     MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
