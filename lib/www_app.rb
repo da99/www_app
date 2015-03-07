@@ -68,11 +68,23 @@ class WWW_App
     ' '.freeze * indent
   end
 
-  def tag? name
-    tag && tag[:type] == name
+  def tag? *args
+    case args.size
+    when 1
+      tag = @tag
+      name = args.first
+    when 2
+      tag = args.first
+      name = args.last
+    else
+      fail "Unknown args: #{args.inspect}"
+    end
+
+    tag && (tag[:type] == name || !!tag[name])
   end
 
   def tag_or_ancestor? name
+
     !!find_nearest(name)
   end
 
@@ -82,11 +94,12 @@ class WWW_App
   end
 
   def find_ancestor name
-    ancestor = @tag && @tag[:parent]
-    while ancestor && ancestor[:type] != name
+    ancestor = parent
+    while ancestor && !tag?(ancestor, name)
       ancestor = ancestor[:parent]
-    end
-    ancestor
+    end 
+
+    return ancestor if tag?(ancestor, name)
   end
 
   def go_up_to_if_exists name
@@ -97,7 +110,7 @@ class WWW_App
 
   def go_up_to name
     go_up_to_if_exists name
-    fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+    fail "No parent found: #{name.inspect}" unless tag?(name)
     self
   end
 
@@ -111,7 +124,7 @@ class WWW_App
 
   def stay_or_go_up_to name
     stay_or_go_up_to_if_exists name
-    fail "No parent found: #{name.inspect}" unless tag && tag[:type] == name
+    fail "No parent found: #{name.inspect}" unless tag?(name)
     self
   end
 
@@ -135,10 +148,15 @@ class WWW_App
     tag && tag[:parent]
   end
 
-  def create name, opts = nil
-    old = @tag
-    new = {:type=>name}
+  def in_tag t
+    orig = @tag
+    @tag = t
+    yield
+    @tag = orig
+    nil
+  end
 
+  def create name, opts = nil
     # === If:
     #   we are creating an HTML element
     #   within a group, then we either start
@@ -151,6 +169,9 @@ class WWW_App
         stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
       end
     end
+
+    old = @tag
+    new = {:type=>name}
 
     # === Add to parent's children array:
     if old
@@ -173,7 +194,9 @@ class WWW_App
   end # === def create
 
   def close
+
     group = find_nearest(:group)
+
     if group
       stay_or_go_up_to :group
       final_parent = parent
@@ -190,7 +213,10 @@ class WWW_App
     end
 
     @tag[:closed] = true
+
     final_parent = parent
+
+    orig = @tag
 
     if block_given?
       results = yield
@@ -200,7 +226,7 @@ class WWW_App
       # The :yield may have left some opened tags, :input, :br/
       # So we make sure we are in the original tag/element
       # when we want to make some final changes.
-      in_tag(orig_tag) {
+      in_tag(orig) {
         if tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
         end
@@ -219,20 +245,6 @@ class WWW_App
 
     self
   end # === close
-
-  def in_tag t
-    orig = @tag
-    @tag = t
-    yield
-    @tag = orig
-    nil
-  end
-
-  def alter_css_property name, *args
-    @tag[:css] ||= {}
-    @tag[:css][name] = args
-    self
-  end
 
 end # === class WWW_App ==========================================
 

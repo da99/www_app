@@ -145,6 +145,12 @@ class WWW_App
 
   private # ==================================
 
+  def alter_css_property name, *args
+    @tag[:css] ||= {}
+    @tag[:css][name] = args
+    self
+  end
+
   def style
     create :styles, :groups=>true
     close { yield }
