@@ -143,4 +143,12 @@ class WWW_App
 
   end # === module CSS
 
+  private # ==================================
+
+  def style
+    create :styles, :groups=>true
+    close { yield }
+    nil
+  end
+
 end # === class WWW_App

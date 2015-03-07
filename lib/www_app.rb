@@ -47,8 +47,10 @@ class WWW_App
   include JavaScript
   include TO
 
+  private # ===============================================
+
   attr_reader :tag, :tags
-  def initialize
+  def initialize &blok
     @mustache          = nil
     @html_ids          = {}
 
@@ -56,18 +58,11 @@ class WWW_App
     @tag  = nil
 
     create(:body) do
-      yield
+      instance_eval &blok
     end
 
     freeze
   end
-  private :style
-
-  private # ===============================================
-
-  # =================================================================
-  #                 Miscellaneaous Helpers
-  # =================================================================
 
   def SPACE indent
     ' '.freeze * indent
@@ -196,215 +191,11 @@ class WWW_App
 
     @tag[:closed] = true
     final_parent = parent
-    yield if block_given?
-    @tag = final_parent
-
-    self
-  end # === close
-
-  # =====================================================
-  # ==== FROM: v.1.x ====================================
-  # =====================================================
-
-  private # =========================================================
-
-  #
-  # Examples
-  #    dom_id             -> the current dom id of the current element
-  #    dom_id :default    -> if no dom it, set/get default of current element
-  #    dom_id {:element:} -> dom id of element: {:type=>:html, :tag=>...}
-  #
-  def dom_id *args
-
-    use_default = false
-
-    case
-    when args.empty?
-      e = tag!
-      # do nothing else
-
-    when args.size == 1 && args.first == :default
-      e = tag!
-      use_default = true
-
-    when args.size == 1 && args.first.is_a?(::Hash) && args.first[:type]==:html
-      e = args.first
-
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
-
-    id = e[:attrs][:id]
-    return id if id
-    return nil unless use_default
-
-    e[:default_id] ||= begin
-                           key = e[:tag]
-                           @default_ids[key] ||= -1
-                           @default_ids[key] += 1
-                         end
-  end # === def dom_id
-
-  #
-  # Examples
-  #    selector_id   -> a series of ids and tags to be used as a JS selector
-  #                     Example:
-  #                        #id tag tag
-  #                        tag tag
-  #
-  #
-  def selector_id
-    i        = tag![:tag_index]
-    id_given = false
-    classes  = []
-
-    while !id_given && i && i > -1
-      e         = @tag_arr[i]
-      id        = dom_id e
-      (id_given = true) if id
-
-      if e[:tag] == :body && !classes.empty?
-        # do nothing because
-        # we do not want 'body tag.class tag.class'
-      else
-        case
-        when id
-          classes << "##{id}"
-        else
-          classes << e[:tag]
-        end # === case
-      end # === if
-
-      i = e[:parent_index]
-    end
-
-    return 'body' if classes.empty?
-    classes.join SPACE
-  end
-
-  #
-  # Examples
-  #    css_id             -> current css id of element.
-  #                          It uses the first class, if any, found.
-  #                          #id.class     -> if #id and first class found.
-  #                          #id           -> if class is missing and id given.
-  #                          #id tag.class -> if class given and ancestor has id.
-  #                          #id tag tag   -> if no class given and ancestor has id.
-  #                          tag tag tag   -> if no ancestor has class.
-  #
-  #    css_id :my_class   -> same as 'css_id()' except
-  #                          'my_class' overrides :class attribute of current
-  #                          element.
-  #
-  #
-  def css_id *args
-
-    str_class = nil
-
-    case args.size
-    when 0
-      fail "Not in a tag." unless tag!
-      str_class = @css_id_override
-    when 1
-      str_class = args.first
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
-
-    i        = tag![:tag_index]
-    id_given = false
-    classes  = []
-
-    while !id_given && i && i > -1
-      e           = @tag_arr[i]
-      id          = dom_id e
-      first_class = e[:attrs][:class].first
-
-      if id
-        id_given = true
-        if str_class
-          classes.unshift(
-            str_class.is_a?(::Symbol) ?
-            "##{id}.#{str_class}" :
-            "##{id}#{str_class}"
-          )
-        else
-          classes.unshift "##{id}"
-        end
-
-      else # no id given
-        if str_class
-          classes.unshift(
-            str_class.is_a?(::Symbol) ?
-            "#{e[:tag]}.#{str_class}" :
-            "#{e[:tag]}#{str_class}"
-          )
-        elsif first_class
-          classes.unshift "#{e[:tag]}.#{first_class}"
-        else
-          if e[:tag] != :body || (classes.empty?)
-            classes.unshift "#{e[:tag]}"
-          end
-        end # if first_class
-
-      end # if id
-
-      i = e[:parent_index]
-      break if i == @body[:tag_index] && !classes.empty?
-    end
-
-    classes.join SPACE
-  end
-
-  # =================================================================
-  #                    Parent-related methods
-  # =================================================================
-
-  def css_parent?
-    !@css_arr.empty?
-  end
-
-  def parent? *args
-    return(tag! && !tag![:parent_index].nil?) if args.empty?
-    fail("Unknown args: #{args.first}") if args.size > 1
-    return false unless parent
-
-    sym_tag = args.first
-
-    case sym_tag
-    when :html, :css, :script
-      parent[:type] == sym_tag
-    else
-      parent[:tag] == sym_tag
-    end
-  end
-
-  # =================================================================
-  #                    Tag (aka element)-related methods
-  # =================================================================
-
-  def in_tag t
-    orig = @current_tag_index
-    @current_tag_index = t[:tag_index]
-    yield
-    @current_tag_index = orig
-    nil
-  end
-
-  public def /
-    fail "No block allowed here: :/" if block_given?
-    close_tag
-  end
-
-  def close_tag
-    orig_tag = tag!
-    is_script = tag?(:script)
 
     if block_given?
-
       results = yield
 
-      results = nil if is_script
+      results = nil if tag?(:script)
 
       # The :yield may have left some opened tags, :input, :br/
       # So we make sure we are in the original tag/element
@@ -424,9 +215,16 @@ class WWW_App
       }
     end
 
-    orig_tag[:is_closed] = true
-    @current_tag_index = orig_tag[:parent_index]
+    @tag = final_parent
 
+    self
+  end # === close
+
+  def in_tag t
+    orig = @tag
+    @tag = t
+    yield
+    @tag = orig
     nil
   end
 
@@ -434,15 +232,6 @@ class WWW_App
     @tag[:css] ||= {}
     @tag[:css][name] = args
     self
-  end
-
-  def input *args
-    case
-    when args.size === 3
-      tag(:input).type(args[0]).name(args[1]).value(args[2])
-    else
-      super
-    end
   end
 
 end # === class WWW_App ==========================================

@@ -106,12 +106,6 @@ class WWW_App
       end
     end
 
-    def style
-      create :styles, :groups=>true
-      close { yield }
-      nil
-    end
-
     #
     # Example:
     #   div.^(:alert, :red_hot) { 'my content' }
@@ -154,6 +148,15 @@ class WWW_App
         yield
       }
       nil
+    end
+
+    def input *args
+      case
+      when args.size === 3
+        create(:input).type(args[0]).name(args[1]).value(args[2])
+      else
+        super
+      end
     end
 
 
