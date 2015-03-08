@@ -168,7 +168,7 @@ class WWW_App
           last = indent
           final << "</#{todo.shift}>"
 
-        when HTML_TAGS.include?(tag[:type])
+        when ::WWW_App::HTML_TAGS.include?(tag[:type])
 
           new_todo = [:open, tag[:type]]
 
@@ -182,7 +182,11 @@ class WWW_App
         when tag[:type] == :style || tag[:type] == :styles
           todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
 
-          # ===  v1.3 ===========================
+
+        # ==============================================================
+        # ===  v1.3 ====================================================
+        # ==============================================================
+
         when type == :javascript && vals.is_a?(::Array)
           clean_vals = vals.map { |raw_x|
             x = case raw_x
@@ -383,17 +387,22 @@ class WWW_App
       final
 
       @mustache ||= begin
-                      final = if is_doc?
-                                # Remember: to use !BODY first, because
-                                # :head content might include a '!HEAD'
-                                # value.
+                      final = if false
                                 (page_title { 'Unknown Page Title' }) unless @page_title
 
-                                Document_Template.
-                                  sub('!BODY', to_clean_text(:html, @body)).
-                                  sub('!HEAD', to_clean_text(:html, @head[:childs]))
+                                Document_Template.gsub(/:(HEAD|BODY)/) { |match|
+                                  case name
+                                  when ':HEAD'
+                                    to_clean_text(:html, @head[:childs])
+                                  when ':BODY'
+                                    to_clean_text(:html, @body)
+                                  else
+                                    match
+                                  end
+                                }
                               else
-                                to_clean_text(:html, @body[:childs])
+                                # to_clean_text(:html, final)
+                                final
                               end
 
                       mustache = ::Mustache.new
@@ -564,7 +573,7 @@ __END__
 <html lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    !HEAD
+    :HEAD
   </head>
-  !BODY
+  :BODY
 </html>

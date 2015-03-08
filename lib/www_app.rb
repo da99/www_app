@@ -60,8 +60,6 @@ class WWW_App
     create(:body) do
       instance_eval &blok
     end
-
-    freeze
   end
 
   def SPACE indent
