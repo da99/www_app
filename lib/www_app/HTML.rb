@@ -4,21 +4,21 @@ class WWW_App
 
     NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
 
-    HTML_TAGS   = %w[
-    title
-    body   div    span
+    TAGS   = %w[
+      title
+      body   div    span
 
-    img
-    b      em     i  strong  u  a 
-    abbr   blockquote  cite
-    br     cite   code 
-    ul     ol     li  p  pre  q 
-    sup    sub 
-    form   input  button
+      img
+      b      em     i  strong  u  a 
+      abbr   blockquote  cite
+      br     cite   code 
+      ul     ol     li  p  pre  q 
+      sup    sub 
+      form   input  button
 
-    link
+      link
 
-    script
+      script
     ].map(&:to_sym)
 
     TAGS_TO_ATTRIBUTES = {
@@ -59,7 +59,9 @@ class WWW_App
       EOF
     }
 
-    HTML_TAGS.each { |name|
+    ATTRIBUTES = ATTRIBUTES_TO_TAGS.keys
+
+    TAGS.each { |name|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name}
           if block_given?
@@ -86,17 +88,19 @@ class WWW_App
     end
 
     def id new_id
-      old_id = tag[:id]
 
-      if old_id && old_id != new_id
-        fail("Id already set: #{old_id} new: #{new_id}")
+      if !ancestor?(:group)
+        old_id = tag[:id]
+        if old_id && old_id != new_id
+          fail("Id already set: #{old_id} new: #{new_id}")
+        end
+
+        if @html_ids[new_id]
+          fail(HTML_ID_Duplicate, "Id already used: #{new_id.inspect}, tag index: #{@html_ids[new_id]}")
+        end
+        @html_ids[ new_id ] = new_id
       end
 
-      if @html_ids[new_id] && !ancestor?(:group)
-        fail(HTML_ID_Duplicate, "Id already used: #{new_id.inspect}, tag index: #{@html_ids[new_id]}")
-      end
-
-      @html_ids[ new_id ] = new_id
       tag[:id] = new_id
 
       if block_given?

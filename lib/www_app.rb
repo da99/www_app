@@ -85,6 +85,10 @@ class WWW_App
     !!find_nearest(name)
   end
 
+  def ancestor? name
+    !!(find_ancestor name)
+  end
+
   def find_nearest name
     return @tag if tag?(name)
     find_ancestor name
@@ -158,7 +162,7 @@ class WWW_App
     #   we are creating an HTML element
     #   within a group, then we either start
     #   a new group or stay here.
-    if HTML_TAGS.include?(name) && tag_or_ancestor?(:groups)
+    if HTML::TAGS.include?(name) && tag_or_ancestor?(:groups)
       if tag?(:groups)
         create :group
       else
@@ -233,7 +237,8 @@ class WWW_App
         end
 
         if (results.is_a?(::Hash) && results[:type] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
-          tag![:text] = results
+          tag[:children] ||= []
+          tag[:children] << {:type=>:text, :value => results}
         end
       }
     end

@@ -117,6 +117,10 @@ class WWW_App
 
   module TO
 
+    KEY_REQUIRED = proc { |hash, k|
+      fail "Key not set: #{k.inspect}"
+    }
+
     def to_raw_text
       str    = ""
       indent = 0
@@ -144,19 +148,31 @@ class WWW_App
       indent = 0
       todo   = @tags.dup
       last   = nil
+      stacks = {}
 
       while !todo.empty?
         tag = todo.shift
+
         case
 
         when tag == :new_line
           final << NEW_LINE
 
         when tag == :open
+          attributes = stacks.delete :attributes
+
           unless indent.zero?
             final << NEW_LINE << SPACE(indent)
           end
-          final << "<#{todo.shift}>"
+
+          tag_sym = todo.shift
+
+          if attributes
+            final << "<#{tag_sym} #{attributes}>"
+          else
+            final << "<#{tag_sym}>"
+          end
+
           last = indent
           indent += 2
 
@@ -168,18 +184,78 @@ class WWW_App
           last = indent
           final << "</#{todo.shift}>"
 
-        when ::WWW_App::HTML_TAGS.include?(tag[:type])
+        when tag == :clean_attrs
+          attributes = todo.shift
+          target     = todo.shift
 
-          new_todo = [:open, tag[:type]]
+          attributes.each { |attr, val|
+            attributes[attr] = case
+
+                               when attr == :href && target[:type] == :a
+                                 Clean.mustach :href, val
+
+                               when [:action, :src, :href].include?(attr)
+                                 Clean.relative_href(val)
+
+                               when attr == :id
+                                 Clean.html_id(val.to_s)
+
+                               when attr == :class
+                                 val.map { |name|
+                                   Clean.css_class_name(name)
+                                 }.join(" ".freeze)
+
+                               when ::WWW_App::ATTIBUTES[attr]
+                                 Clean.html(v)
+
+                               else
+                                 fail "Invalid attr: #{attr.inspect}"
+
+                               end # case attr
+
+          } # === each attr
+
+          stacks[:attributes] = attributes.inject([]) { |memo, (k,v)|
+            memo << "#{k}=\"#{v}\""
+            memo
+          }.join " ".freeze
+
+        when tag.is_a?(Hash) && tag[:type] == :text
+          final.<<(
+            tag[:skip_escape] ?
+            tag[:value] :
+            Clean.html(tag[:value])
+          )
+
+        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:type])
+          attrs = {}
+          attrs.default KEY_REQUIRED
+
+          new_todo = []
+          t2a = ::WWW_App::HTML::TAGS_TO_ATTRIBUTES
+
+          tag.each { |attr_name, v|
+            if t2a[:all].include?(attr_name) || (t2a[tag[:type]] && t2a[tag[:type]].include?(attr_name))
+              attrs[attr_name] = v
+            end
+          }
+
+          if !attrs.empty?
+            new_todo.concat [:clean_attrs, attrs, tag]
+          end
+
+          new_todo.concat [:open, tag[:type]]
 
           if tag[:children]
             new_todo.concat tag[:children]
-            new_todo << :new_line
+            if tag[:children].last[:type] != :text
+              new_todo << :new_line
+            end
           end
           new_todo.concat [:close, tag[:type]]
           todo = new_todo.concat(todo)
 
-        when tag[:type] == :style || tag[:type] == :styles
+        when tag.is_a?(Hash) && (tag[:type] == :style || tag[:type] == :styles)
           todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
 
 
@@ -187,7 +263,8 @@ class WWW_App
         # ===  v1.3 ====================================================
         # ==============================================================
 
-        when type == :javascript && vals.is_a?(::Array)
+        when tag == :javascript
+          vals = todo.shift
           clean_vals = vals.map { |raw_x|
             x = case raw_x
                 when ::Symbol, ::String
@@ -201,23 +278,23 @@ class WWW_App
                 end
           }
 
-        when type == :to_json && vals.is_a?(::Array)
+        when tag == :to_json
+          vals = todo.shift
           ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
 
-        when type == :style_classes && vals.is_a?(::Hash)
-          h = vals
+        when tag == :style_classes
+          h = todo.shift
           h.map { |raw_k,styles|
             k = raw_k.to_s
-
             <<-EOF
-            #{Clean.css_selector k} {
-            #{to_clean_text :styles, styles}
-          }
+              #{Clean.css_selector k} {
+                #{to_clean_text :styles, styles}
+              }
             EOF
           }.join.strip
 
-        when type == :styles && vals.is_a?(::Hash)
-          h = vals
+        when tag == :styles
+          h = todo.shift
           h.map { |k,raw_v|
             name  = begin
                       clean_k = ::WWW_App::Clean.css_attr(k.to_s.gsub('_','-'))
@@ -248,58 +325,8 @@ class WWW_App
             %^#{name}: #{v};^
           }.join("\n").strip
 
-        when type == :attrs && vals.is_a?(::Hash)
-          h     = vals[:attrs]
-          tag   = vals
-          final = h.map { |k,raw_v|
 
-            fail "Unknown attr: #{k.inspect}" if !ALLOWED_ATTRS.include?(k)
-
-            next if raw_v.is_a?(::Array) && raw_v.empty?
-
-            v = raw_v
-
-            attr_name = k.to_s.gsub(::WWW_App::INVALID_ATTR_CHARS, '_')
-            fail("Invalid name for html attr: #{k.inspect}") if !attr_name || attr_name.empty?
-
-            attr_val = case
-                       when k == :href && tag[:tag] == :a
-                         Clean.mustache :href, v
-
-                       when k == :action || k == :src || k == :href
-                         Clean.relative_href(v)
-
-                       when k == :class
-                         v.map { |n|
-                           Clean.css_class_name(n)
-                         }.join SPACE
-
-                       when k == :id
-                         Clean.html_id v.to_s
-
-                       when ALLOWED_ATTRS[k]
-                         Clean.html(v)
-
-                       else
-                         fail "Invalid attr: #{k.inspect}"
-
-                       end # === case
-
-            %*#{attr_name}="#{attr_val}"*
-
-          }.compact.join SPACE
-
-          final.empty? ?
-            '' :
-            (" " << final)
-
-        when type == :html && vals.is_a?(::Array)
-          a = vals
-          a.map { |tag_index|
-            to_clean_text(:html, @tag_arr[tag_index])
-          }.join NEW_LINE
-
-        when type == :html && vals.is_a?(::Hash)
+        when tag == :style
 
           h = vals
 
@@ -307,19 +334,19 @@ class WWW_App
 
           if h[:tag] == :style
             return <<-EOF
-          <style type="text/css">
-            #{to_clean_text :style_classes, h[:css]}
-          </style>
+              <style type="text/css">
+                #{to_clean_text :style_classes, h[:css]}
+              </style>
             EOF
           end
 
           if h[:tag] == :script && h[:content] && !h[:content].empty?
             return <<-EOF
-          <script type="text/css">
-            WWW_App.compile(
-            #{to_clean_text :to_json, h[:content]}
-            );
-          </script>
+              <script type="text/css">
+                WWW_App.compile(
+                  #{to_clean_text :to_json, h[:content]}
+                );
+              </script>
             EOF
           end
 
@@ -377,9 +404,10 @@ class WWW_App
             [open, html, close].compact.join
           else
             html
-          end
+          end # === if
 
         else
+          puts todo.inspect
           fail "Unknown: #{tag.inspect}"
         end # === case
       end # === while
