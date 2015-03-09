@@ -125,9 +125,9 @@ class WWW_App
       str    = ""
       indent = 0
       print_tag = lambda { |t|
-        info      = t.reject { |n| [:type, :parent, :children].include?( n ) }
+        info      = t.reject { |n| [:tag_name, :parent, :children].include?( n ) }
 
-        str += "#{" " * indent}#{t[:type].inspect} -- #{info.inspect}\n"
+        str += "#{" " * indent}#{t[:tag_name].inspect} -- #{info.inspect}\n"
         indent += 1
         if t[:children]
           t[:children].each { |c|
@@ -191,7 +191,7 @@ class WWW_App
           attributes.each { |attr, val|
             attributes[attr] = case
 
-                               when attr == :href && target[:type] == :a
+                               when attr == :href && target[:tag_name] == :a
                                  Clean.mustach :href, val
 
                                when [:action, :src, :href].include?(attr)
@@ -205,8 +205,11 @@ class WWW_App
                                    Clean.css_class_name(name)
                                  }.join(" ".freeze)
 
-                               when ::WWW_App::ATTIBUTES[attr]
-                                 Clean.html(v)
+                               when target[:tag_name] == :style && attr == :type
+                                 'text/css'
+
+                               when ::WWW_App::HTML::TAGS_TO_ATTRIBUTES[target[:tag_name]].include?(attr)
+                                 Clean.html(val)
 
                                else
                                  fail "Invalid attr: #{attr.inspect}"
@@ -220,14 +223,14 @@ class WWW_App
             memo
           }.join " ".freeze
 
-        when tag.is_a?(Hash) && tag[:type] == :text
+        when tag.is_a?(Hash) && tag[:tag_name] == :text
           final.<<(
             tag[:skip_escape] ?
             tag[:value] :
             Clean.html(tag[:value])
           )
 
-        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:type])
+        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:tag_name])
           attrs = {}
           attrs.default KEY_REQUIRED
 
@@ -235,7 +238,7 @@ class WWW_App
           t2a = ::WWW_App::HTML::TAGS_TO_ATTRIBUTES
 
           tag.each { |attr_name, v|
-            if t2a[:all].include?(attr_name) || (t2a[tag[:type]] && t2a[tag[:type]].include?(attr_name))
+            if t2a[:all].include?(attr_name) || (t2a[tag[:tag_name]] && t2a[tag[:tag_name]].include?(attr_name))
               attrs[attr_name] = v
             end
           }
@@ -244,24 +247,16 @@ class WWW_App
             new_todo.concat [:clean_attrs, attrs, tag]
           end
 
-          new_todo.concat [:open, tag[:type]]
+          new_todo.concat [:open, tag[:tag_name]]
 
           if tag[:children]
             new_todo.concat tag[:children]
-            if tag[:children].last[:type] != :text
+            if tag[:children].last[:tag_name] != :text
               new_todo << :new_line
             end
           end
-          new_todo.concat [:close, tag[:type]]
+          new_todo.concat [:close, tag[:tag_name]]
           todo = new_todo.concat(todo)
-
-        when tag.is_a?(Hash) && (tag[:type] == :style || tag[:type] == :styles)
-          todo = [:open, tag[:type], :close, tag[:type]].concat(todo)
-
-
-        # ==============================================================
-        # ===  v1.3 ====================================================
-        # ==============================================================
 
         when tag == :javascript
           vals = todo.shift
@@ -293,44 +288,79 @@ class WWW_App
             EOF
           }.join.strip
 
-        when tag == :styles
-          h = todo.shift
-          h.map { |k,raw_v|
-            name  = begin
-                      clean_k = ::WWW_App::Clean.css_attr(k.to_s.gsub('_','-'))
-                      fail("Invalid name for css property name: #{k.inspect}") if !clean_k || clean_k.empty?
-                      clean_k
-                    end
+        when tag.is_a?(Hash) && tag[:tag_name] == :style # =============== <style ..> TAG =================
+          new_todo = [
+            :clean_attrs, {:type=>'text/css'}, tag,
+            :open, tag[:tag_name]
+          ]
 
-            raw_v = raw_v.to_s
+          indent += 2
+          css_final = ""
+          tag[:children].each { |group|
+            names = group[:children].inject([]) { |memo, child|
+              name = child[:tag_name].to_s
+              if child[:id]
+                name << '#'.freeze << Clean.html_id(child[:id]).to_s
+              end
 
-            v = case
+              if child[:class]
+                name.<< '.'.freeze << (child[:class].map { |name| Clean.css_class_name(name) }.join('.'.freeze))
+              end
 
-                when name[IMAGE_AT_END]
-                  case raw_v
-                  when 'inherit', 'none'
-                    raw_v
-                  else
-                    "url(#{Clean.href(raw_v)})"
-                  end
+              if child[:pseudo]
+                name << ":#{child[:pseudo]}"
+              end
 
-                when Methods[:css][:properties].include?(k)
-                  Clean.css_value raw_v
+              memo << name
+            }.join(', '.freeze)
 
-                else
-                  fail "Invalid css attr: #{name.inspect}"
+            css_final << "\n" << SPACE(indent) << names << " {\n".freeze
 
-                end # === case
+            if group[:css]
+              indent += 2
+              group[:css].each { |raw_k, raw_val|
+                name = begin
+                          clean_k = ::WWW_App::Clean.css_attr(raw_k.to_s.gsub('_','-'))
+                          fail("Invalid name for css property name: #{raw_k.inspect}") if !clean_k || clean_k.empty?
+                          clean_k
+                        end
+                raw_val  = raw_val.is_a?(Array) ? raw_val.join(', ') : raw_val.to_s
+                v = case
 
-            %^#{name}: #{v};^
-          }.join("\n").strip
+                    when name[IMAGE_AT_END]
+                      case raw_val
+                      when 'inherit', 'none'
+                        raw_val
+                      else
+                        "url(#{Clean.href(raw_val)})"
+                      end
+
+                    when ::WWW_App::CSS::PROPERTIES.include?(raw_k)
+                      Clean.css_value raw_val
+
+                    else
+                      fail "Invalid css attr: #{name.inspect}"
+
+                    end # === case
+
+                css_final << SPACE(indent) << "#{name}: #{v};\n"
+              } # === each group
+              indent -= 2
+            end # === if group[:css]
+
+            css_final << SPACE(indent) << "}\n".freeze << SPACE(indent - 2)
+          }
+
+          indent -= 2
+          new_todo.concat [{:tag_name=>:text, :skip_escape=>true, :value=>css_final}, :close, tag[:tag_name]]
+          todo = new_todo.concat(todo)
 
 
         when tag == :style
 
           h = vals
 
-          fail("Unknown type: #{h.inspect}") if h[:type] != :html
+          fail("Unknown type: #{h.inspect}") if h[:tag_name] != :html
 
           if h[:tag] == :style
             return <<-EOF
@@ -407,8 +437,7 @@ class WWW_App
           end # === if
 
         else
-          puts todo.inspect
-          fail "Unknown: #{tag.inspect}"
+          fail "Unknown: #{tag.inspect[0,30]}"
         end # === case
       end # === while
 

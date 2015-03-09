@@ -78,7 +78,7 @@ class WWW_App
       fail "Unknown args: #{args.inspect}"
     end
 
-    tag && (tag[:type] == name || !!tag[name])
+    tag && (tag[:tag_name] == name || !!tag[name])
   end
 
   def tag_or_ancestor? name
@@ -172,7 +172,7 @@ class WWW_App
     end
 
     old = @tag
-    new = {:type=>name}
+    new = {:tag_name=>name}
 
     # === Add to parent's children array:
     if old
@@ -232,13 +232,13 @@ class WWW_App
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
         end
 
-        if (results.is_a?(::Hash) && results[:type] && !results[:tag] && results[:type] != :string)
-          fail Invalid_Type, results[:type].inspect
+        if (results.is_a?(::Hash) && results[:tag_name] && !results[:tag] && results[:tag_name] != :string)
+          fail Invalid_Type, results[:tag_name].inspect
         end
 
-        if (results.is_a?(::Hash) && results[:type] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
+        if (results.is_a?(::Hash) && results[:tag_name] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
           tag[:children] ||= []
-          tag[:children] << {:type=>:text, :value => results}
+          tag[:children] << {:tag_name=>:text, :value => results}
         end
       }
     end

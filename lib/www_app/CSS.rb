@@ -23,7 +23,7 @@ class WWW_App
     ].select { |name| name[/\A[a-z0-9\-]+\Z/] }.map { |name| name.gsub('-', '_').to_sym }
 
       # From: Sanitize::Config::RELAXED[:css][:properties]
-    CSS_PROPERTIES = %w[
+    PROPERTIES = %w[
       background                 bottom                     font_variant_numeric       position
       background_attachment      box_decoration_break       font_variant_position      quotes
       background_clip            box_shadow                 font_weight                resize
@@ -68,7 +68,7 @@ class WWW_App
       border_width               font_variant_ligatures     padding_top
     ].map(&:to_sym)
 
-    CSS_PROPERTIES.each { |name|
+    PROPERTIES.each { |name|
       str_name = name.to_s.gsub('_', '-')
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} *args
@@ -129,7 +129,7 @@ class WWW_App
 
     def _
       case
-      when tag[:type] == :group
+      when tag[:tag_name] == :group
         create :_
       when tag[:groups]
         create :group
@@ -152,7 +152,7 @@ class WWW_App
   end
 
   def style
-    create :styles, :groups=>true
+    create :style, :type=>'text/css', :groups=>true
     close { yield }
     nil
   end

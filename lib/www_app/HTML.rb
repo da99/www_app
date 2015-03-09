@@ -45,7 +45,7 @@ class WWW_App
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} val
           allowed = ATTRIBUTES_TO_TAGS[:#{name}]
-          allowed = allowed && allowed[tag[:type]]
+          allowed = allowed && allowed[tag[:tag_name]]
           return super unless allowed
 
           tag[:attrs][:#{name}] = val
