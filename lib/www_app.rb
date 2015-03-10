@@ -57,13 +57,40 @@ class WWW_App
     @tags = []
     @tag  = nil
 
-    create(:body) do
-      instance_eval &blok
-    end
+    instance_eval &blok
   end
 
   def SPACE indent
     ' '.freeze * indent
+  end
+
+  def lang name
+    in_tag(:html) {
+      @tag[:lang] = name.to_s.downcase.gsub(/[^a-z0-9\_\-]+/, ''.freeze)
+      @tag[:lang] = 'en' if @tag[:lang].empty?
+    }
+    self
+  end
+
+  def find tag_name
+    case tag_name
+    when :html, :body
+      @tags.detect { |t| t[:tag_name] == tag_name }
+    when :head
+      find(:html)[:children].detect { |t| t[:tag_name] == tag_name }
+    else
+      tags = @tags.dup
+      found  = nil
+      while !found && !tags.empty?
+        found = tags.shift
+        if found[:tag_name] != tag_name
+          if found[:children]
+            tags = found[:children].concat tags
+          end
+          found = nil
+        end
+      end
+    end
   end
 
   def tag? *args
@@ -149,12 +176,43 @@ class WWW_App
     tag && tag[:parent]
   end
 
+  def doc!
+    if @tags.empty?
+      create :text, :skip_escape=>true, :closed=>true, :value=>"<!DOCTYPE html>\n".freeze
+      go_up
+      create :html, :lang=>"en"
+      create :head
+      go_up
+      create :body
+    else
+      head = find(:head)
+      body = find(:body)
+      if !head || !body
+        fail "HTML elements in wrong place."
+      end
+    end
+
+    self
+  end
+
   def in_tag t
-    orig = @tag
-    @tag = t
-    yield
-    @tag = orig
-    nil
+    case
+
+    when t.is_a?(::Symbol)
+      doc!
+      in_tag(find(t)) {
+        yield
+      }
+      return self
+
+    else # =============================
+      orig = @tag
+      @tag = t
+      yield
+      @tag = orig
+      nil
+
+    end # === if t == :head
   end
 
   def create name, opts = nil

@@ -180,7 +180,7 @@ class WWW_App
 
       selectors = []
       parent = tag[:parent]
-      while parent && parent[:tag_name] != :body
+      while parent && parent[:tag_name] != :head
         selectors.unshift css_selector(parent)
         parent = parent[:parent]
       end # === while
@@ -202,8 +202,10 @@ class WWW_App
   end
 
   def style
-    create :style, :type=>'text/css', :groups=>true
-    close { yield }
+    in_tag(:head) {
+      create :style, :type=>'text/css', :groups=>true
+      close { yield }
+    }
     nil
   end
 

@@ -86,8 +86,6 @@ end # === class Mustache
 
 class WWW_App
 
-  Document_Template  = ::File.read(__FILE__).split("__END__").last.strip
-
   class Clean
 
     MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
@@ -233,7 +231,19 @@ class WWW_App
             Clean.html(tag[:value])
           )
 
-        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:tag_name])
+        when tag.is_a?(Hash) && tag[:tag_name] == :html  # === :html tag ================
+          todo = [
+            :clean_attrs, {:lang=>(tag[:lang] || 'en')}, tag,
+            :open, :html
+          ].concat(tag[:children]).concat([:new_line, :close, :html]).concat(todo)
+
+        when tag.is_a?(Hash) && tag[:tag_name] == :head # === :head tag =================
+          todo = [ :open, :head ].
+            concat(tag[:children] || []).
+            concat([:new_line, :close, :head]).
+            concat(todo)
+
+        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:tag_name]) # === HTML tags =====
           attrs = {}
           attrs.default KEY_REQUIRED
 

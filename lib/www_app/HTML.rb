@@ -30,7 +30,8 @@ class WWW_App
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
       :meta        => [:name, :http_equiv, :property, :content, :charset],
-      :img         => [:src, :width, :height]
+      :img         => [:src, :width, :height],
+      :html        => [:lang]
     }
 
     ATTRIBUTES_TO_TAGS = TAGS_TO_ATTRIBUTES.inject({}) { |memo, (tag, attrs)|
@@ -76,19 +77,21 @@ class WWW_App
     def meta *args
       fail "No block allowed." if block_given?
       fail "Not allowed here." unless tag?(:body)
-      c = nil
-      in_tag(@tag) { c = tag(:meta, *args) }
-      c
+      in_tag(:head) {
+        create(:meta, *args)
+      }
     end
 
     def title
-      create :title do
-        yield
+      fail ":title not allowed here" unless (tag?(:body) || tag?(:head))
+      head! do
+        create :title do
+          yield
+        end
       end
     end
 
     def id new_id
-
       if !ancestor?(:group)
         old_id = tag[:id]
         if old_id && old_id != new_id
@@ -108,7 +111,34 @@ class WWW_App
       else
         self
       end
+    end # === def id
+
+    def is_fragment?
+      !is_doc?
     end
+
+    def is_doc?
+      @is_doc ||= begin
+                    found = false
+                    tags = @tags.dup
+                    while !found && !tags.empty?
+                      t = tags.shift
+                      found = begin
+                                (t[:tag_name] == :body && (t[:id] || t[:css]) ) ||
+                                  t[:tag_name] == :style                        ||
+                                  t[:tag_name] == :script                       ||
+                                  t[:tag_name] == :meta                         ||
+                                  t[:css]                                       ||
+                                  (t[:tag_name] == :title && t[:parent] && t[:parent][:tag_name] == :body)
+                              end
+                      if !found && t[:children]
+                        tags = t[:children].concat(tags)
+                      end
+                    end
+
+                    found
+                  end
+    end # === def is_doc?
 
     #
     # Example:
