@@ -141,6 +141,56 @@ class WWW_App
       self
     end
 
+    #
+    # Returns:
+    #  String or nil: css selector of the current tag or the tag passed to it.
+    #
+    def css_selector tag = :current
+      (tag = @tag) if tag == :current
+
+      name = "#{tag[:tag_name]}"
+      if tag[:id]
+        name << '#'.freeze << Clean.html_id(tag[:id]).to_s
+      end
+
+      if tag[:class]
+        name << '.'.freeze 
+        name.<<(
+          tag[:class].map { |name|
+            Clean.css_class_name(name)
+          }.join('.'.freeze)
+        )
+      end
+
+      if tag[:pseudo]
+        name << ":#{tag[:pseudo]}"
+      end
+
+      return nil if name.empty?
+      name
+    end
+
+    #
+    # Returns:
+    #  String or nil: css selector of the ancestors of the
+    #                 current tag or the tag passed to it.
+    #
+    def css_ancestor_selector tag = :current
+      (tag = @tag) if tag == :current
+
+      selectors = []
+      parent = tag[:parent]
+      while parent && parent[:tag_name] != :body
+        selectors.unshift css_selector(parent)
+        parent = parent[:parent]
+      end # === while
+
+      return nil if selectors.empty?
+
+      selectors.join(' ')
+
+    end # === def css_selector
+
   end # === module CSS
 
   private # ==================================

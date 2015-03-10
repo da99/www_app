@@ -116,6 +116,9 @@ class WWW_App
   end # === class Clean
 
   module TO
+    COMMA   = ", ".freeze
+    SPACE   = " ".freeze
+    NOTHING = "".freeze
 
     KEY_REQUIRED = proc { |hash, k|
       fail "Key not set: #{k.inspect}"
@@ -295,25 +298,44 @@ class WWW_App
           ]
 
           indent += 2
-          css_final = ""
-          tag[:children].each { |group|
-            names = group[:children].inject([]) { |memo, child|
-              name = child[:tag_name].to_s
-              if child[:id]
-                name << '#'.freeze << Clean.html_id(child[:id]).to_s
+          css_final      = ""
+          flatten_groups = []
+          groups         = tag[:children].dup
+
+          tag[:cache] ||= {}
+          tag[:cache][:css_selectors] = [css_ancestor_selector(tag)].compact
+
+          while !groups.empty? # ======================================
+            group = groups.shift
+            group[:cache] ||= {}
+            group[:cache][:css_selectors] = []
+
+            flatten_groups << group
+            group[:children].each { |child|
+
+              if child[:tag_name] == :group # =========================
+                groups.unshift child
+                next
               end
 
-              if child[:class]
-                name.<< '.'.freeze << (child[:class].map { |name| Clean.css_class_name(name) }.join('.'.freeze))
+              # ======== HTML element =================================
+              grand_css = group[:parent][:cache][:css_selectors].dup
+              this      = css_selector(child)
+              if grand_css.empty?
+                group[:cache][:css_selectors] << this
+              else
+                group[:cache][:css_selectors].concat(
+                  grand_css.map { |css|
+                    "#{css} #{this}"
+                  }
+                )
               end
+              # =======================================================
+            } # === each child
+          end # === while !groups.empty? ==============================
 
-              if child[:pseudo]
-                name << ":#{child[:pseudo]}"
-              end
-
-              memo << name
-            }.join(', '.freeze)
-
+          flatten_groups.each { |group|
+            names = group[:cache][:css_selectors].join COMMA
             css_final << "\n" << SPACE(indent) << names << " {\n".freeze
 
             if group[:css]
@@ -324,7 +346,7 @@ class WWW_App
                           fail("Invalid name for css property name: #{raw_k.inspect}") if !clean_k || clean_k.empty?
                           clean_k
                         end
-                raw_val  = raw_val.is_a?(Array) ? raw_val.join(', ') : raw_val.to_s
+                raw_val  = raw_val.is_a?(Array) ? raw_val.join(COMMA) : raw_val.to_s
                 v = case
 
                     when name[IMAGE_AT_END]
@@ -359,16 +381,6 @@ class WWW_App
         when tag == :style
 
           h = vals
-
-          fail("Unknown type: #{h.inspect}") if h[:tag_name] != :html
-
-          if h[:tag] == :style
-            return <<-EOF
-              <style type="text/css">
-                #{to_clean_text :style_classes, h[:css]}
-              </style>
-            EOF
-          end
 
           if h[:tag] == :script && h[:content] && !h[:content].empty?
             return <<-EOF
