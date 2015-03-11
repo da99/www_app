@@ -51,70 +51,87 @@ class WWW_App
 
   attr_reader :tag, :tags
   def initialize &blok
-    @mustache          = nil
-    @html_ids          = {}
-
-    @tags = []
-    @tag  = nil
+    @html_ids = {}
+    @tags     = []
+    @tag      = nil
 
     instance_eval &blok
   end
 
-  def SPACE indent
-    ' '.freeze * indent
+  def SPACES indent
+    SPACE * indent
   end
 
-  def lang name
-    in_tag(:html) {
-      @tag[:lang] = name.to_s.downcase.gsub(/[^a-z0-9\_\-]+/, ''.freeze)
-      @tag[:lang] = 'en' if @tag[:lang].empty?
-    }
-    self
-  end
+  def args_to_traversal_args *args
+    tags = nil
+    tag  = nil
+    syms = []
 
-  def _
-    if ancestor?(:style)
-      case
-      when tag[:tag_name] == :group
-        create :_
-      when tag[:groups]
-        create :group
-        create :_
+    args.each { |a|
+      case a
+      when ::Symbol
+        syms << a
+      when ::Array
+        tags = a
+      when ::Hash
+        tag  = a
+        tags = [a]
       else
-        tag[:_] = true
+        fail ::ArgumentError, "#{args.inspect}"
+      end
+    }
+
+    tags ||= @tags.dup
+    tag  ||= @tag
+    return [tags, tag, syms]
+  end
+
+  # Ex:
+  #
+  #   find_all :body, :style, :span
+  #   find_all [], :body, :a
+  #   find_all {tag}, :body, :a
+  #
+  def find_all *raw_args
+    tags, tag, syms = args_to_traversal_args(*raw_args)
+
+    fail ::ArgumentError, "tag names to find empty: #{syms.inspect}" if syms.empty?
+
+    found = []
+    while !tags.empty?
+      t = tags.shift
+      if t[:children]
+        tags = t[:children].dup.concat tags
       end
 
-    else # === in the :body
-      create :_
-      if block_given?
-        return(close { yield })
-      end
-    end # === if
-
-    self
-  end # === def _
-
-  def find tag_name
-    case tag_name
-    when :html
-      @tags.detect { |t| t[:tag_name] == tag_name }
-    when :head, :body
-      find(:html)[:children].detect { |t| t[:tag_name] == tag_name }
-    else
-      tags = @tags.dup
-      found  = nil
-      while !found && !tags.empty?
-        found = tags.shift
-        if found[:tag_name] != tag_name
-          if found[:children]
-            tags = found[:children].dup.concat tags
-          end
-          found = nil
-        end
-      end
-
-      found
+      (found << t) if syms.include?(t[:tag_name])
     end
+
+    found
+  end
+
+  #
+  # Ex:
+  #
+  #   detect :body, :style, :span
+  #   detect [], :body, :a
+  #   detect {tag}, :body, :a
+  #
+  def detect *raw_args
+    tags, tag, syms = args_to_traversal_args(*raw_args)
+
+    found = nil
+    while !found && !tags.empty?
+      found = tags.shift
+      if !syms.include?(found[:tag_name])
+        if found[:children]
+          tags = found[:children].dup.concat tags
+        end
+        found = nil
+      end
+    end
+
+    found
   end
 
   def tag? *args
@@ -132,31 +149,25 @@ class WWW_App
     tag && (tag[:tag_name] == name || !!tag[name])
   end
 
-  def tag_or_ancestor? name
-    !!find_nearest(name)
+  def tag_or_ancestor? *args
+    !!find_nearest(*args)
   end
 
   def ancestor? *args
     !!(find_ancestor *args)
   end
 
-  def find_nearest name
-    return @tag if tag?(name)
-    find_ancestor name
+  def find_nearest *raw_args
+    tags, tag, syms = args_to_traversal_args(*raw_args)
+    return tag if tag?(tag, syms.first)
+    find_ancestor *raw_args
   end
 
-  def find_ancestor *args
-    case args.size
-    when 1
-      name = args.first
-      tag = @tag
-    when 2
-      tag = args.first
-      name = args.last
-    else
-      fail ArgumentError, "Unknown: #{args.inspect}"
-    end
+  def find_ancestor *raw_args
+    tags, tag, syms = args_to_traversal_args(*raw_args)
+    name = syms.first
 
+    return nil unless tag
     ancestor = tag[:parent]
     while ancestor && !tag?(ancestor, name)
       ancestor = ancestor[:parent]
@@ -211,36 +222,9 @@ class WWW_App
     tag && tag[:parent]
   end
 
-  def doc!
-    if @tags.empty?
-      create :text, :skip_escape=>true, :closed=>true, :value=>"<!DOCTYPE html>\n".freeze
-      go_up
-      create :html, :lang=>"en"
-      create :head
-      go_up
-      create :body
-    end
-
-    self
-  end
-
   def in_tag t
-    case
-
-    when t == :style
-      doc!
-      tag = find(:style)
-      if tag
-        in_tag(tag) { yield }
-      else
-        in_tag(:head) {
-          style { yield }
-        }
-      end
-
-    when t.is_a?(::Symbol)
-      doc!
-      in_tag(find(t)) {
+    if t.is_a?(::Symbol)
+      in_tag(detect(t)) {
         yield
       }
       return self
@@ -331,7 +315,7 @@ class WWW_App
         end
 
         if (results.is_a?(::Hash) && results[:tag_name] && !results[:tag] && results[:tag_name] != :string)
-          fail Invalid_Type, results[:tag_name].inspect
+          fail ::Invalid_Type, results[:tag_name].inspect
         end
 
         if (results.is_a?(::Hash) && results[:tag_name] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
@@ -345,6 +329,31 @@ class WWW_App
 
     self
   end # === close
+
+  public # =======================================================
+
+  #
+  # Ex:
+  #   div.id(:main) {
+  #     style {
+  #       div.__._ { .. }
+  #     }
+  #   }
+  #
+  #   div {
+  #     _.^(:sad) {
+  #       color '#000'
+  #     }
+  #   }
+  def _
+    create :_
+    if block_given?
+      return(close { yield })
+    end
+
+    self
+  end # === def _
+
 
 end # === class WWW_App ==========================================
 

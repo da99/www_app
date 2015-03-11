@@ -76,24 +76,20 @@ class WWW_App
 
     def meta *args
       fail "No block allowed." if block_given?
-      fail "Not allowed here." unless tag?(:body)
-      in_tag(:head) {
-        create(:meta, *args)
-      }
+      fail "Not allowed here." if parent
+      create(:meta, *args)
     end
 
     def title
-      fail ":title not allowed here" unless (tag?(:body) || tag?(:head))
-      head! do
-        create :title do
-          yield
-        end
+      fail ":title not allowed here" if parent
+      create :title do
+        yield
       end
     end
 
     def id new_id
-      if @tags.empty?
-        doc!
+      if !@tag
+        fail "No HTML tag found. Try using _.id(#{new_id.inspect})"
       end
 
       if !ancestor?(:group)
@@ -144,9 +140,14 @@ class WWW_App
                   end
     end # === def is_doc?
 
-    def body
-      doc!
-      @tag = find(:body)
+    def lang name
+      fail "Tag has to be placed tomost of the page." if parent
+      fail "Block not allowed here." if block_given?
+      create :html_tag_attr do
+        @tag[:lang] = name.to_s.downcase.gsub(/[^a-z0-9\_\-]+/, ''.freeze)
+        @tag[:lang] = 'en' if @tag[:lang].empty?
+      end
+
       self
     end
 

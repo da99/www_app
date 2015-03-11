@@ -1,9 +1,9 @@
 
 class WWW_App
 
-  AT_RULES    = [ 'font-face', 'media' ]
-
   module CSS
+
+    AT_RULES    = [ 'font-face', 'media' ]
 
     # === From:
     # https://developer.mozilla.org/en-US/docs/Web/CSS/Pseudo-classes
@@ -69,15 +69,12 @@ class WWW_App
     ].map(&:to_sym)
 
     PROPERTIES.each { |name|
-      str_name = name.to_s.gsub('_', '-')
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} *args
           alter_css_property(:#{name}, *args)
-          if block_given?
-            close { yield }
-          else
+          block_given? ?
+            close { yield } :
             self
-          end
         end
       EOF
     }
@@ -86,31 +83,26 @@ class WWW_App
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def _#{name} *args
           pseudo :#{name}, *args
-          if block_given?
-            close { yield } 
-          else
+          block_given? ?
+            close { yield } :
             self
-          end
         end
       EOF
     }
 
-    def pseudo name
-      case
-      when tag[:closed]
-        create :group
-        create :__
-
-      when tag[:pseudo] && !tag[:closed]
-        go_up_to :group
-        create :__
-
-      end # === case
-
-      tag[:pseudo] = name
-      if block_given?
-        close { yield }
+    #
+    # Ex:
+    #   style {
+    #     div.__div {
+    #     }
+    #
+    def __
+      fail "Can only be used inside :style tag" unless ancestor?(:style)
+      if !tag || (tag[:tag_name] == :group || tag[:tag_name] == :groups)
+        fail "Can only be used after an HTML element is created: #{tag[:tag_name].inspect}"
       end
+
+      tag[:__] = true
       self
     end
 
@@ -154,7 +146,6 @@ class WWW_App
           :parent   => tag[:parent][:parent],
           :pseudo   => tag[:pseudo] || tag[:parent][:pseudo]
         }
-        puts new_tag[:class].inspect
         tag = new_tag
       end
 
@@ -202,29 +193,42 @@ class WWW_App
       final
     end
 
-  end # === module CSS
+    private # ==================================
 
-  private # ==================================
+    def pseudo name
+      case
+      when ancestor?(:groups) && tag[:closed]
+        #
+        # Ex:
+        #   style {
+        #     div   { ... }
+        #     _link { ... }
+        #
+        create :group
+        create :__
 
-  def alter_css_property name, *args
-    @tag[:css] ||= {}
-    @tag[:css][name] = args
-    if !ancestor?(:groups) && !@tag[:in_style_and_body]
-      tag = @tag
-      in_tag(:style) {
-        @tag[:children] << tag
-        tag[:in_style_and_body] = true
-      }
+      when tag[:pseudo] && !tag[:closed]
+        # Ex:
+        #   a._link._visited { ... }
+        fail "Applying two pseudos at the same element."
+
+      end # === case
+
+      tag[:pseudo] = name
+      close { yield } if block_given?
+      self
     end
-    self
-  end
 
-  def style
-    in_tag(:head) {
+    def alter_css_property name, *args
+      @tag[:css] ||= {}
+      @tag[:css][name] = args.size == 1 ? args.first : args
+      self
+    end
+
+    def style
       create :style, :type=>'text/css', :groups=>true
       close { yield }
-    }
-    nil
-  end
+    end
 
-end # === class WWW_App
+  end # === module CSS ==============
+end # === class WWW_App =============
