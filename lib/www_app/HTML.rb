@@ -92,6 +92,10 @@ class WWW_App
     end
 
     def id new_id
+      if @tags.empty?
+        doc!
+      end
+
       if !ancestor?(:group)
         old_id = tag[:id]
         if old_id && old_id != new_id
@@ -139,6 +143,12 @@ class WWW_App
                     found
                   end
     end # === def is_doc?
+
+    def body
+      doc!
+      @tag = find(:body)
+      self
+    end
 
     #
     # Example:

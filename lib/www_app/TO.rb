@@ -243,6 +243,10 @@ class WWW_App
             concat([:new_line, :close, :head]).
             concat(todo)
 
+        when tag.is_a?(Hash) && tag[:tag_name] == :_  # ============================ :_ tag ========
+          nil # do nothing
+
+
         when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:tag_name]) # === HTML tags =====
           attrs = {}
           attrs.default KEY_REQUIRED
@@ -313,7 +317,7 @@ class WWW_App
           groups         = tag[:children].dup
 
           tag[:cache] ||= {}
-          tag[:cache][:css_selectors] = [css_ancestor_selector(tag)].compact
+          tag[:cache][:css_selectors] = []
 
           while !groups.empty? # ======================================
             group = groups.shift
@@ -321,27 +325,33 @@ class WWW_App
             group[:cache][:css_selectors] = []
 
             flatten_groups << group
-            group[:children].each { |child|
 
-              if child[:tag_name] == :group # =========================
-                groups.unshift child
-                next
-              end
+            if group[:in_style_and_body]
+              group[:cache][:css_selectors] << css_selector(group, :full)
 
-              # ======== HTML element =================================
-              grand_css = group[:parent][:cache][:css_selectors].dup
-              this      = css_selector(child)
-              if grand_css.empty?
-                group[:cache][:css_selectors] << this
-              else
-                group[:cache][:css_selectors].concat(
-                  grand_css.map { |css|
-                    "#{css} #{this}"
-                  }
-                )
-              end
-              # =======================================================
-            } # === each child
+            else
+              group[:children].each { |child|
+                if child[:tag_name] == :group # =========================
+                  groups.unshift child
+                  next
+                end
+
+                # ======== HTML element =================================
+                grand_css = group[:parent][:cache][:css_selectors].dup
+                this      = css_selector(child, :tag)
+                if grand_css.empty?
+                  group[:cache][:css_selectors] << this
+                else
+                  group[:cache][:css_selectors].concat(
+                    grand_css.map { |css|
+                      "#{css} #{this}"
+                    }
+                  )
+                end
+                # =======================================================
+              } # === each child
+            end # !:in_style_and_body
+
           end # === while !groups.empty? ==============================
 
           flatten_groups.each { |group|

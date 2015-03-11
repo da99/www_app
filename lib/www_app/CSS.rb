@@ -72,12 +72,11 @@ class WWW_App
       str_name = name.to_s.gsub('_', '-')
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} *args
+          alter_css_property(:#{name}, *args)
           if block_given?
-            alter_css_property(:#{name}, *args) {
-              yield
-            }
+            close { yield }
           else
-            alter_css_property(:#{name}, *args)
+            self
           end
         end
       EOF
@@ -86,10 +85,11 @@ class WWW_App
     PSEUDO.each { |name|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def _#{name} *args
+          pseudo :#{name}, *args
           if block_given?
-            pseudo(:#{name}, *args) { yield }
+            close { yield } 
           else
-            pseudo :#{name}, *args
+            self
           end
         end
       EOF
@@ -127,69 +127,80 @@ class WWW_App
       self
     end
 
-    def _
-      case
-      when tag[:tag_name] == :group
-        create :_
-      when tag[:groups]
-        create :group
-        create :_
-      else
-        tag[:_] = true
+    #
+    # Example:
+    #   css_selector
+    #   css_selector tag
+    #   css_selector :full || :tag || :ancestor
+    #   css_selector tag, :full || :tag || :ancestor
+    #
+    def css_selector *args
+      tag  = @tag
+      type = :full
+      args.each { |a|
+        case
+        when a.is_a?(Symbol)
+          type = a
+        else
+          tag = a
+        end
+      }
+
+      if tag[:tag_name] == :_
+        new_tag = {
+          :tag_name => tag[:parent][:tag_name],
+          :id       => (tag[:id] || tag[:parent][:id]),
+          :class    => tag[:class] || tag[:parent][:class],
+          :parent   => tag[:parent][:parent],
+          :pseudo   => tag[:pseudo] || tag[:parent][:pseudo]
+        }
+        puts new_tag[:class].inspect
+        tag = new_tag
       end
 
-      self
+      final = case type
+
+              when :tag
+                name = tag[:tag_name].to_s
+                if tag[:id]
+                  name << '#'.freeze << Clean.html_id(tag[:id]).to_s
+                end
+
+                if tag[:class]
+                  name << '.'.freeze 
+                  name.<<(
+                    tag[:class].map { |name|
+                      Clean.css_class_name(name)
+                    }.join('.'.freeze)
+                  )
+                end
+
+                if tag[:pseudo]
+                  name << ":#{tag[:pseudo]}"
+                end
+
+                name
+
+              when :ancestor
+                if !ancestor?(tag, :group) && tag[:id]
+                  nil
+                else
+                  selectors = []
+                  parent = tag[:parent]
+                  while parent && !([:head, :style, :body].include? parent[:tag_name])
+                    selectors.unshift css_selector(parent, :tag)
+                    parent = parent[:parent]
+                  end # === while
+
+                  selectors.join(' ')
+                end
+              else
+                [css_selector(tag, :ancestor), css_selector(tag, :tag)].compact.join SPACE
+              end
+
+      return nil if !final || final.empty?
+      final
     end
-
-    #
-    # Returns:
-    #  String or nil: css selector of the current tag or the tag passed to it.
-    #
-    def css_selector tag = :current
-      (tag = @tag) if tag == :current
-
-      name = "#{tag[:tag_name]}"
-      if tag[:id]
-        name << '#'.freeze << Clean.html_id(tag[:id]).to_s
-      end
-
-      if tag[:class]
-        name << '.'.freeze 
-        name.<<(
-          tag[:class].map { |name|
-            Clean.css_class_name(name)
-          }.join('.'.freeze)
-        )
-      end
-
-      if tag[:pseudo]
-        name << ":#{tag[:pseudo]}"
-      end
-
-      return nil if name.empty?
-      name
-    end
-
-    #
-    # Returns:
-    #  String or nil: css selector of the ancestors of the
-    #                 current tag or the tag passed to it.
-    #
-    def css_ancestor_selector tag = :current
-      (tag = @tag) if tag == :current
-
-      selectors = []
-      parent = tag[:parent]
-      while parent && parent[:tag_name] != :head
-        selectors.unshift css_selector(parent)
-        parent = parent[:parent]
-      end # === while
-
-      return nil if selectors.empty?
-
-      selectors.join(' ')
-
-    end # === def css_selector
 
   end # === module CSS
 
@@ -198,6 +209,13 @@ class WWW_App
   def alter_css_property name, *args
     @tag[:css] ||= {}
     @tag[:css][name] = args
+    if !ancestor?(:groups) && !@tag[:in_style_and_body]
+      tag = @tag
+      in_tag(:style) {
+        @tag[:children] << tag
+        tag[:in_style_and_body] = true
+      }
+    end
     self
   end
 

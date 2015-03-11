@@ -72,11 +72,33 @@ class WWW_App
     self
   end
 
+  def _
+    if ancestor?(:style)
+      case
+      when tag[:tag_name] == :group
+        create :_
+      when tag[:groups]
+        create :group
+        create :_
+      else
+        tag[:_] = true
+      end
+
+    else # === in the :body
+      create :_
+      if block_given?
+        return(close { yield })
+      end
+    end # === if
+
+    self
+  end # === def _
+
   def find tag_name
     case tag_name
-    when :html, :body
+    when :html
       @tags.detect { |t| t[:tag_name] == tag_name }
-    when :head
+    when :head, :body
       find(:html)[:children].detect { |t| t[:tag_name] == tag_name }
     else
       tags = @tags.dup
@@ -85,11 +107,13 @@ class WWW_App
         found = tags.shift
         if found[:tag_name] != tag_name
           if found[:children]
-            tags = found[:children].concat tags
+            tags = found[:children].dup.concat tags
           end
           found = nil
         end
       end
+
+      found
     end
   end
 
@@ -112,8 +136,8 @@ class WWW_App
     !!find_nearest(name)
   end
 
-  def ancestor? name
-    !!(find_ancestor name)
+  def ancestor? *args
+    !!(find_ancestor *args)
   end
 
   def find_nearest name
@@ -121,8 +145,19 @@ class WWW_App
     find_ancestor name
   end
 
-  def find_ancestor name
-    ancestor = parent
+  def find_ancestor *args
+    case args.size
+    when 1
+      name = args.first
+      tag = @tag
+    when 2
+      tag = args.first
+      name = args.last
+    else
+      fail ArgumentError, "Unknown: #{args.inspect}"
+    end
+
+    ancestor = tag[:parent]
     while ancestor && !tag?(ancestor, name)
       ancestor = ancestor[:parent]
     end 
@@ -184,12 +219,6 @@ class WWW_App
       create :head
       go_up
       create :body
-    else
-      head = find(:head)
-      body = find(:body)
-      if !head || !body
-        fail "HTML elements in wrong place."
-      end
     end
 
     self
@@ -197,6 +226,17 @@ class WWW_App
 
   def in_tag t
     case
+
+    when t == :style
+      doc!
+      tag = find(:style)
+      if tag
+        in_tag(tag) { yield }
+      else
+        in_tag(:head) {
+          style { yield }
+        }
+      end
 
     when t.is_a?(::Symbol)
       doc!
