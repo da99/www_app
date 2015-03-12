@@ -139,23 +139,12 @@ class WWW_App
         end
       }
 
-      real_tag = (de_ref(tag) || {}.freeze)
-
-      if tag[:tag_name] == :_
-        new_tag = {
-          :tag_name => real_tag[:tag_name] || :body,
-          :id       => tag[:id] || real_tag[:id],
-          :class    => tag[:class] || real_tag[:class],
-          :parent   => real_tag[:parent],
-          :pseudo   => tag[:pseudo] || real_tag[:pseudo]
-        }
-        tag = new_tag
-      end
+      metaphor = (de_ref(tag) || {}.freeze)
 
       final = case
 
-              when type == :full && tag?(real_tag, :group)
-                css = real_tag[:children].inject([]) { |memo, c|
+              when type == :full && tag?(metaphor, :group)
+                css = metaphor[:children].inject([]) { |memo, c|
                   if !(tag?(c, :group))
                     memo << css_selector(c, :full)
                   end
@@ -168,28 +157,28 @@ class WWW_App
                   nil
                 end
 
-              when tag?(real_tag, :style)
-                p = real_tag[:parent]
+              when tag?(metaphor, :style)
+                p = metaphor[:parent]
                 if p
                   css_selector p, type
                 end
 
-              when type == :full && parent?(real_tag, :group)
-                grand_parent = real_tag[:parent][:parent]
+              when type == :full && parent?(metaphor, :group)
+                grand_parent = metaphor[:parent][:parent]
                 grand_css = grand_parent && css_selector(grand_parent, :full)
                 if grand_css
                   grand_css.split(COMMA).map { |css|
-                    css << SPACE << css_selector(real_tag, :tag)
+                    css << SPACE << css_selector(metaphor, :tag)
                   }.join COMMA
                 else
-                  css_selector(:tag, real_tag)
+                  css_selector(:tag, metaphor)
                 end
 
               when type == :tag
 
-                name = real_tag[:tag_name].to_s
+                name = metaphor[:tag_name].to_s
 
-                id = tag[:id] || real_tag[:id]
+                id = tag[:id] || metaphor[:id]
                 if id
                   name << '#'.freeze << Clean.html_id(id).to_s
                 end

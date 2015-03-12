@@ -86,11 +86,23 @@ class WWW_App
   end
 
   def de_ref tag, sym = nil
-    t = tag 
-    while t && :_ == t[:tag_name]
-      t = t[:parent]
+    t = tag
+
+    if tag[:tag_name] == :_
+      r = tag
+      while r && [:_, :style, :group].freeze.include?(r[:tag_name])
+        r = r[:parent]
+      end
+
+      r ||= {}.freeze
+      t = {
+        :tag_name => r[:tag_name] || :body,
+        :id       => tag[:id] || r[:id],
+        :class    => tag[:class] || r[:class],
+        :parent   => r[:parent],
+        :pseudo   => tag[:pseudo] || r[:pseudo]
+      }
     end
-    t
 
     case sym
     when :tag_name, :id
@@ -326,8 +338,8 @@ class WWW_App
       if tag?(:groups)
         create :group
       else
-        # Example: div.id(:main)._.div.^(:my_class)
-        stay_or_go_up_to_if_exists(:group) if @tag && !@tag[:_]
+        # Example: div.id(:main).__.div.^(:my_class)
+        stay_or_go_up_to_if_exists(:group) if @tag && @tag[:__]
       end
     end
 
