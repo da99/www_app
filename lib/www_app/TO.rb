@@ -316,7 +316,7 @@ class WWW_App
           when tag[:http_equiv]
             key_name    = "http-equiv"
             key_content = tag[:http_equiv].gsub(/[^a-zA-Z\/\;\ 0-9\=\-]+/, '')
-            content     = tag[:content].gsub(/[^a-z\/\;\ 0-9\=\-]+/, '')
+            content     = tag[:content].gsub(/[^a-zA-Z\/\;\ 0-9\=\-]+/, '')
           else
             fail ArgumentError, tag.keys.inspect
           end
@@ -342,7 +342,6 @@ class WWW_App
 
         when t_name == :_  # =============== :_ tag ========
           nil # do nothing
-
 
         when t_name && ::WWW_App::HTML::TAGS.include?(t_name) # === HTML tags =====
           attrs = {}
@@ -408,6 +407,14 @@ class WWW_App
           flatten_groups = []
           groups         = tag[:children].dup
 
+          # === flatten groups
+          #  style
+          #    div, span {
+          #      a:link, a:visited {
+          #   --->
+          #  style
+          #    div a:link, div a:visited, span a:link, span a:visited  {
+          #
           while (style = groups.shift)
             style[:cache] ||= {}
             style[:cache][:css_selectors] = []
@@ -418,6 +425,10 @@ class WWW_App
 
             when style[:tag_name] == :group
               groups = style[:children].dup.concat(groups)
+              flatten_groups << style
+
+            when parent?(style, :group)
+               nil # ignore, do nothing
 
             else # === it's an HTML element w/:css
               flatten_groups << style
@@ -425,17 +436,20 @@ class WWW_App
           end # === while style
 
           flatten_groups.each { |style|
-            css_final << "\n" << SPACES(indent) << css_selector(style, :full).to_s << " {\n".freeze
+            css_final << "\n" << SPACES(indent) << css_selector(style, :full) << " {\n".freeze
 
-            if style[:css]
+            the_css = style[:css] || (parent?(style, :group) && style[:parent][:css])
+            if the_css
               indent += 2
-              style[:css].each { |raw_k, raw_val|
+              the_css.each { |raw_k, raw_val|
                 name = begin
                           clean_k = ::WWW_App::Clean.css_attr(raw_k.to_s.gsub('_','-'))
                           fail("Invalid name for css property name: #{raw_k.inspect}") if !clean_k || clean_k.empty?
                           clean_k
                         end
+
                 raw_val  = raw_val.is_a?(Array) ? raw_val.join(COMMA) : raw_val.to_s
+
                 v = case
 
                     when name[IMAGE_AT_END]

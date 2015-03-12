@@ -2,6 +2,7 @@
 class WWW_App
 
   module CSS
+    COMMA = ", ".freeze
 
     AT_RULES    = [ 'font-face', 'media' ]
 
@@ -151,9 +152,40 @@ class WWW_App
         tag = new_tag
       end
 
-      final = case type
+      final = case
 
-              when :tag
+              when type == :full && tag?(real_tag, :group)
+                css = real_tag[:children].inject([]) { |memo, c|
+                  if !(tag?(c, :group))
+                    memo << css_selector(c, :full)
+                  end
+                  memo
+                }
+
+                if css
+                  css.join COMMA
+                else
+                  nil
+                end
+
+              when tag?(real_tag, :style)
+                p = real_tag[:parent]
+                if p
+                  css_selector p, type
+                end
+
+              when type == :full && parent?(real_tag, :group)
+                grand_parent = real_tag[:parent][:parent]
+                grand_css = grand_parent && css_selector(grand_parent, :full)
+                if grand_css
+                  grand_css.split(COMMA).map { |css|
+                    css << SPACE << css_selector(real_tag, :tag)
+                  }.join COMMA
+                else
+                  css_selector(:tag, real_tag)
+                end
+
+              when type == :tag
 
                 name = real_tag[:tag_name].to_s
 
@@ -178,7 +210,7 @@ class WWW_App
                 name = nil if name.empty?
                 name
 
-              when :ancestor
+              when type == :ancestor
                 if tag[:id]
                   nil
                 else
