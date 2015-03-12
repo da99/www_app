@@ -98,11 +98,11 @@ class WWW_App
     #
     def __
       fail "Can only be used inside :style tag" unless ancestor?(:style)
-      if !tag || (tag[:tag_name] == :group || tag[:tag_name] == :groups)
-        fail "Can only be used after an HTML element is created: #{tag[:tag_name].inspect}"
+      if !@tag || (@tag[:tag_name] == :group || @tag[:tag_name] == :groups)
+        fail "Can only be used after an HTML element is created: #{@tag[:tag_name].inspect}"
       end
 
-      tag[:__] = true
+      @tag[:__] = true
       self
     end
 
@@ -138,13 +138,15 @@ class WWW_App
         end
       }
 
+      real_tag = (de_ref(tag) || {}.freeze)
+
       if tag[:tag_name] == :_
         new_tag = {
-          :tag_name => tag[:parent][:tag_name],
-          :id       => (tag[:id] || tag[:parent][:id]),
-          :class    => tag[:class] || tag[:parent][:class],
-          :parent   => tag[:parent][:parent],
-          :pseudo   => tag[:pseudo] || tag[:parent][:pseudo]
+          :tag_name => real_tag[:tag_name] || :body,
+          :id       => tag[:id] || real_tag[:id],
+          :class    => tag[:class] || real_tag[:class],
+          :parent   => real_tag[:parent],
+          :pseudo   => tag[:pseudo] || real_tag[:pseudo]
         }
         tag = new_tag
       end
@@ -152,9 +154,12 @@ class WWW_App
       final = case type
 
               when :tag
-                name = tag[:tag_name].to_s
-                if tag[:id]
-                  name << '#'.freeze << Clean.html_id(tag[:id]).to_s
+
+                name = real_tag[:tag_name].to_s
+
+                id = tag[:id] || real_tag[:id]
+                if id
+                  name << '#'.freeze << Clean.html_id(id).to_s
                 end
 
                 if tag[:class]
@@ -170,21 +175,23 @@ class WWW_App
                   name << ":#{tag[:pseudo]}"
                 end
 
+                name = nil if name.empty?
                 name
 
               when :ancestor
-                if !ancestor?(tag, :group) && tag[:id]
+                if tag[:id]
                   nil
                 else
                   selectors = []
-                  parent = tag[:parent]
-                  while parent && !([:head, :style, :body].include? parent[:tag_name])
-                    selectors.unshift css_selector(parent, :tag)
-                    parent = parent[:parent]
+                  p         = tag[:parent]
+                  while p
+                    selectors.unshift(css_selector(p, :tag)) unless [:style, :group].freeze.include?(p[:tag_name])
+                    p = p[:parent]
                   end # === while
 
-                  selectors.join(' ')
+                  selectors.compact.join(SPACE)
                 end
+
               else
                 [css_selector(tag, :ancestor), css_selector(tag, :tag)].compact.join SPACE
               end
@@ -197,7 +204,7 @@ class WWW_App
 
     def pseudo name
       case
-      when ancestor?(:groups) && tag[:closed]
+      when ancestor?(:groups) && @tag[:closed]
         #
         # Ex:
         #   style {
@@ -207,16 +214,17 @@ class WWW_App
         create :group
         create :__
 
-      when tag[:pseudo] && !tag[:closed]
+      when @tag[:pseudo] && !@tag[:closed]
         # Ex:
         #   a._link._visited { ... }
         fail "Applying two pseudos at the same element."
 
       end # === case
 
-      tag[:pseudo] = name
-      close { yield } if block_given?
-      self
+      @tag[:pseudo] = name
+      block_given? ?
+        close { yield } :
+        self
     end
 
     def alter_css_property name, *args

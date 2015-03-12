@@ -93,7 +93,7 @@ class WWW_App
       end
 
       if !ancestor?(:group)
-        old_id = tag[:id]
+        old_id = @tag[:id]
         if old_id && old_id != new_id
           fail("Id already set: #{old_id} new: #{new_id}")
         end
@@ -104,7 +104,7 @@ class WWW_App
         @html_ids[ new_id ] = new_id
       end
 
-      tag[:id] = new_id
+      @tag[:id] = new_id
 
       if block_given?
         close { yield }
@@ -156,8 +156,8 @@ class WWW_App
     #   div.^(:alert, :red_hot) { 'my content' }
     #
     def ^ *names
-      tag[:class] ||= []
-      tag[:class].concat(names)
+      @tag[:class] ||= []
+      @tag[:class].concat(names)
 
       if block_given?
         close { yield }

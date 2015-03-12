@@ -154,11 +154,14 @@ class WWW_App
 
       doc = [
         (doc_type = {:tag_name=>:doc_type, :text=>"<!DOCTYPE html>"}),
-        (html     = {:tag_name=>:html, :children=>[
-          (head     = {:tag_name=>:head, :lang=>'en', :children=>[]}),
+        (html          = {:tag_name=>:html, :children=>[
+          (head        = {:tag_name=>:head, :lang=>'en', :children=>[
+          ]}),
           (body     = {:tag_name=>:body, :children=>[]})
         ]})
       ]
+
+      style_tags = {:tag_name=>:style_tags, :children=>[]}
 
       tags = @tags.dup
       while (t = tags.shift)
@@ -172,8 +175,12 @@ class WWW_App
         when t_name == :meta
           head[:children] << t
 
-        when t_name == :style
+        when t_name == :title
+          fail "Title already set." if head[:children].detect { |c| c[:tag_name] == :title }
           head[:children] << t
+
+        when t_name == :style
+          style_tags[:children] << t
 
         when t_name == :_ && !parent
           body[:css] = (body[:css] || []).concat(t[:css]) if t[:css]
@@ -194,12 +201,18 @@ class WWW_App
             body[:children] << t
           end
 
+          if t[:css]
+            style_tags[:children] << t
+          end
+
           if t[:children]
             tags = t[:children].dup.concat(tags)
           end
 
         end # === case ========
       end # === while
+
+      head[:children] << style_tags
 
       content_type = head[:children].detect { |t| t[:tag_name] == :meta && t[:http_equiv] && t[:http_equiv].downcase=='Content-Type'.downcase }
       if !content_type
@@ -324,11 +337,14 @@ class WWW_App
             concat([:new_line, :close, :head]).
             concat(todo)
 
-        when tag.is_a?(Hash) && tag[:tag_name] == :_  # ============================ :_ tag ========
+        when t_name == :title && !parent(tag)
+          nil # do nothing
+
+        when t_name == :_  # =============== :_ tag ========
           nil # do nothing
 
 
-        when tag.is_a?(Hash) && ::WWW_App::HTML::TAGS.include?(tag[:tag_name]) # === HTML tags =====
+        when t_name && ::WWW_App::HTML::TAGS.include?(t_name) # === HTML tags =====
           attrs = {}
           attrs.default KEY_REQUIRED
 
@@ -375,21 +391,16 @@ class WWW_App
           vals = todo.shift
           ::Escape_Escape_Escape.json_encode(to_clean_text(:javascript, vals))
 
-        when tag == :style_classes
-          h = todo.shift
-          h.map { |raw_k,styles|
-            k = raw_k.to_s
-            <<-EOF
-              #{Clean.css_selector k} {
-                #{to_clean_text :styles, styles}
-              }
-            EOF
-          }.join.strip
 
-        when tag.is_a?(Hash) && tag[:tag_name] == :style # =============== <style ..> TAG =================
+        when t_name == :style
+          next
+
+        when t_name == :style_tags # =============== <style ..> TAG =================
+          next if tag[:children].empty?
+
           new_todo = [
-            :clean_attrs, {:type=>'text/css'}, tag,
-            :open, tag[:tag_name]
+            :clean_attrs, {:type=>'text/css'}, {:tag_name=>:style},
+            :open, :style
           ]
 
           indent += 2
@@ -397,51 +408,28 @@ class WWW_App
           flatten_groups = []
           groups         = tag[:children].dup
 
-          tag[:cache] ||= {}
-          tag[:cache][:css_selectors] = []
+          while (style = groups.shift)
+            style[:cache] ||= {}
+            style[:cache][:css_selectors] = []
 
-          while !groups.empty? # ======================================
-            group = groups.shift
-            group[:cache] ||= {}
-            group[:cache][:css_selectors] = []
+            case
+            when style[:tag_name] == :style
+              groups = style[:children].dup.concat(groups)
 
-            flatten_groups << group
+            when style[:tag_name] == :group
+              groups = style[:children].dup.concat(groups)
 
-            if group[:in_style_and_body]
-              group[:cache][:css_selectors] << css_selector(group, :full)
+            else # === it's an HTML element w/:css
+              flatten_groups << style
+            end
+          end # === while style
 
-            elsif group[:children]
-                group[:children].each { |child|
-                  if child[:tag_name] == :group # =========================
-                    groups.unshift child
-                    next
-                  end
+          flatten_groups.each { |style|
+            css_final << "\n" << SPACES(indent) << css_selector(style, :full).to_s << " {\n".freeze
 
-                  # ======== HTML element =================================
-                  grand_css = group[:parent][:cache][:css_selectors].dup
-                  this      = css_selector(child, :tag)
-                  if grand_css.empty?
-                    group[:cache][:css_selectors] << this
-                  else
-                    group[:cache][:css_selectors].concat(
-                      grand_css.map { |css|
-                        "#{css} #{this}"
-                      }
-                    )
-                  end
-                  # =======================================================
-                } # === each child
-            end # !:in_style_and_body
-
-          end # === while !groups.empty? ==============================
-
-          flatten_groups.each { |group|
-            names = group[:cache][:css_selectors].join COMMA
-            css_final << "\n" << SPACES(indent) << names << " {\n".freeze
-
-            if group[:css]
+            if style[:css]
               indent += 2
-              group[:css].each { |raw_k, raw_val|
+              style[:css].each { |raw_k, raw_val|
                 name = begin
                           clean_k = ::WWW_App::Clean.css_attr(raw_k.to_s.gsub('_','-'))
                           fail("Invalid name for css property name: #{raw_k.inspect}") if !clean_k || clean_k.empty?
@@ -467,15 +455,15 @@ class WWW_App
                     end # === case
 
                 css_final << SPACES(indent) << "#{name}: #{v};\n"
-              } # === each group
+              } # === each style
               indent -= 2
-            end # === if group[:css]
+            end # === if style[:css]
 
             css_final << SPACES(indent) << "}\n".freeze << SPACES(indent - 2)
           }
 
           indent -= 2
-          new_todo.concat [{:tag_name=>:text, :skip_escape=>true, :value=>css_final}, :close, tag[:tag_name]]
+          new_todo.concat [{:tag_name=>:text, :skip_escape=>true, :value=>css_final}, :close, :style]
           todo = new_todo.concat(todo)
 
 

@@ -49,7 +49,6 @@ class WWW_App
 
   private # ===============================================
 
-  attr_reader :tag, :tags
   def initialize &blok
     @html_ids = {}
     @tags     = []
@@ -84,6 +83,23 @@ class WWW_App
     tags ||= @tags.dup
     tag  ||= @tag
     return [tags, tag, syms]
+  end
+
+  def de_ref tag, sym = nil
+    t = tag 
+    while t && [:_, :style, :group].freeze.include?(t[:tag_name])
+      t = t[:parent]
+    end
+    t
+
+    case sym
+    when :tag_name, :id
+      t && t[sym]
+    when nil
+      t
+    else
+      fail ::ArgumentError, "Unknown args: #{sym.inspect}"
+    end
   end
 
   # Ex:
@@ -214,11 +230,55 @@ class WWW_App
     tag && !!tag[:id]
   end
 
-  def parent?
-    !!parent
-  end
+  #
+  # Ex:
+  #
+  #   parent?
+  #   parent? :body
+  #   parent? tag, :div
+  #
+  def parent? *args
+    case
+    when args.length == 0
+      tag = @tag[:parent]
+      name = nil
 
-  def parent
+    when args.length == 1 && args.first.is_a?(::Symbol)
+      tag  = @tag
+      name = args.first
+
+    when args.length == 2
+      tag = args.first
+      name = args.last
+
+    else
+      fail ::ArgumentError, "Unknown args: #{args.inspect}"
+    end # === case
+
+    p = parent(tag)
+    return true if p && !name
+    return true if p && p[:tag_name] == name
+    return true if !p && name == :body
+    false
+  end # === def parent?
+
+  #
+  # Ex:
+  #
+  #   parent
+  #   parent tag
+  #
+  def parent *args
+    case
+    when args.length == 0
+      tag = @tag
+
+    when args.length == 1 && args.first.is_a?(::Hash)
+      tag  = args.first
+    else
+      fail ::ArgumentError, "Unknown args: #{args.inspect}"
+    end # === case
+
     tag && tag[:parent]
   end
 
@@ -240,6 +300,24 @@ class WWW_App
   end
 
   def create name, opts = nil
+    #
+    # Ex:
+    #   _.id(:the_body).^(:loading)
+    #   div {
+    #   }
+    #
+    if @tag && @tag[:tag_name] == :_
+      go_up if !@tag[:closed]
+
+      #
+      # Ex:
+      #   _.^(:happy) {
+      #     a { }
+      #   }
+      #
+      fail "New tags not allowed here." if (@tag && @tag[:closed]) && !ancestor?(:group)
+    end
+
     # === If:
     #   we are creating an HTML element
     #   within a group, then we either start
@@ -249,7 +327,7 @@ class WWW_App
         create :group
       else
         # Example: div.id(:main)._.div.^(:my_class)
-        stay_or_go_up_to_if_exists(:group) if tag && !tag[:_]
+        stay_or_go_up_to_if_exists(:group) if @tag && !@tag[:_]
       end
     end
 
@@ -319,8 +397,8 @@ class WWW_App
         end
 
         if (results.is_a?(::Hash) && results[:tag_name] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
-          tag[:children] ||= []
-          tag[:children] << {:tag_name=>:text, :value => results}
+          @tag[:children] ||= []
+          @tag[:children] << {:tag_name=>:text, :value => results}
         end
       }
     end
