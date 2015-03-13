@@ -397,7 +397,6 @@ class WWW_App
         when t_name == :style_tags # =============== <style ..> TAG =================
           next if tag[:children].empty?
 
-
           style_and_other_tags = tag[:children].dup
           flatten = []
 

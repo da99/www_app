@@ -335,8 +335,7 @@ class WWW_App
       if tag?(:groups)
         create :group
       else
-        # Example: div.id(:main).__.div.^(:my_class)
-        stay_or_go_up_to_if_exists(:group) if @tag && @tag[:__]
+        stay_or_go_up_to_if_exists(:group)
       end
     end
 
