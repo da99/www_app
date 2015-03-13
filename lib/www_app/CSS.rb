@@ -267,6 +267,9 @@ class WWW_App
     end
 
     def alter_css_property name, *args
+      if !@tag
+        self._
+      end
       @tag[:css] ||= {}
       @tag[:css][name] = args.size == 1 ? args.first : args
       self

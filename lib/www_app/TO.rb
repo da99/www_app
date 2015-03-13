@@ -48,10 +48,6 @@ class Mustache
 
   class Context
 
-    def find *args
-      fail "No longer needed."
-    end
-
     alias_method :[], :fetch
     def fetch *args
       raise ContextMiss.new("Can't find: #{args.inspect}") if args.size != 2
@@ -183,7 +179,7 @@ class WWW_App
           style_tags[:children] << t
 
         when t_name == :_ && !parent
-          body[:css] = (body[:css] || []).concat(t[:css]) if t[:css]
+          body[:css] = (body[:css] || {}).merge(t[:css]) if t[:css]
           body[:class] = (body[:class] || []).concat(t[:class]) if t[:class]
 
           if t[:id]
@@ -211,6 +207,10 @@ class WWW_App
 
         end # === case ========
       end # === while
+
+      if body[:css] && !body[:css].empty?
+        style_tags[:children] << body
+      end
 
       is_fragment = style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
 

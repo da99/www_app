@@ -1,7 +1,7 @@
 
 describe "body with inner style" do
 
-  it "uses 'body' instead of id" do
+  it "adds styles to page as: body { ... }" do
     target :style, %^
       body {
         border-width: 3px;
