@@ -117,9 +117,19 @@ class WWW_App
     #     }
     #   }
     #
-    def / app
+    #   link.href('/file')./
+    #
+    def / *args
       fail "No block allowed here." if block_given?
-      self
+
+      case args.size
+      when 0
+        close
+      when 1
+        self
+      else
+        fail ::ArgumentError, "Unknown args: #{args.inspect[0,50]}"
+      end
     end
 
     #
