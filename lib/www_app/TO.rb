@@ -508,6 +508,8 @@ class WWW_App
           #   }
           #
           flatten.each { |style|
+            next if !style[:css] || style[:css].empty?
+
             css_final << "\n" << SPACES(indent) << css_selector(style, :full) << " {\n".freeze
 
             the_css = style[:css] || (parent?(style, :group) && style[:parent][:css])

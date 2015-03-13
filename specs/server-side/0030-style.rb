@@ -1,6 +1,20 @@
 
 describe ":style block" do
 
+  it "does not render empty style classes: div {  }" do
+      target :style, <<-EOF
+        div a {
+          color: #fff;
+        }
+      EOF
+
+      actual do
+        style {
+          div { a { color '#fff' } }
+        }
+      end
+  end
+
   %w[link visited hover].each { |name|
     it "adds :#{name} pseudo-class" do
       target :style, <<-EOF
