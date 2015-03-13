@@ -284,6 +284,7 @@ class WWW_App
             attributes[attr] = case
 
                                when attr == :src && tag_name == :script
+                                 fail ::ArgumentError, "Invalid type: #{val.inspect}" unless val.is_a?(String)
                                  Clean.relative_href val
 
                                when attr == :type && tag_name == :script

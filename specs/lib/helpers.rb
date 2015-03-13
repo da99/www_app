@@ -118,6 +118,8 @@ module Bacon
       end
 
       norm_actual.should == norm_target
+
+      @target_args = nil
     end
 
   end # === class Context ===
