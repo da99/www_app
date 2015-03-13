@@ -180,22 +180,22 @@ class WWW_App
 
                 name = metaphor[:tag_name].to_s
 
-                id = tag[:id] || metaphor[:id]
+                id = metaphor[:id]
                 if id
                   name << '#'.freeze << Clean.html_id(id).to_s
                 end
 
-                if tag[:class]
+                if metaphor[:class]
                   name << '.'.freeze
                   name.<<(
-                    tag[:class].map { |name|
+                    metaphor[:class].map { |name|
                       Clean.css_class_name(name)
                     }.join('.'.freeze)
                   )
                 end
 
-                if tag[:pseudo]
-                  name << ":#{tag[:pseudo]}"
+                if metaphor[:pseudo]
+                  name << ":#{metaphor[:pseudo]}"
                 end
 
                 if tag[:__]
@@ -208,11 +208,11 @@ class WWW_App
                 name
 
               when type == :ancestor
-                if tag[:id]
+                if metaphor[:id]
                   nil
                 else
                   selectors = []
-                  p         = tag[:parent]
+                  p         = metaphor[:parent]
                   while p
                     selectors.unshift(css_selector(p, :tag)) unless [:style, :group].freeze.include?(p[:tag_name])
                     p = p[:parent]
@@ -222,7 +222,7 @@ class WWW_App
                 end
 
               else
-                [css_selector(tag, :ancestor), css_selector(tag, :tag)].compact.join SPACE
+                [css_selector(metaphor, :ancestor), css_selector(metaphor, :tag)].compact.join SPACE
               end
 
       return nil if !final || final.empty?

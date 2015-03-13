@@ -362,7 +362,7 @@ class WWW_App
 
           new_todo.concat [:open, tag[:tag_name]]
 
-          if tag[:children]
+          if tag[:children] && !tag[:children].empty?
             new_todo.concat tag[:children]
             if tag[:children].last[:tag_name] != :text
               new_todo << :new_line
@@ -397,15 +397,9 @@ class WWW_App
         when t_name == :style_tags # =============== <style ..> TAG =================
           next if tag[:children].empty?
 
-          new_todo = [
-            :clean_attrs, {:type=>'text/css'}, {:tag_name=>:style},
-            :open, :style
-          ]
 
-          indent += 2
-          css_final      = ""
-          flatten_groups = []
-          groups         = tag[:children].dup
+          style_and_other_tags = tag[:children].dup
+          flatten = []
 
           # === flatten groups
           #  style
@@ -416,34 +410,55 @@ class WWW_App
           #    div a:link, div a:visited, span a:link, span a:visited  {
           #
           prev = nil
-          while (style = groups.shift)
+
+          while e = style_and_other_tags.shift
             case
-            when style[:tag_name] == :style
-              groups = style[:children].dup.concat(groups)
+            when e[:tag_name] == :style
+              style_and_other_tags = e[:children].dup.concat(style_and_other_tags)
 
-            when style[:tag_name] == :group
-              groups = style[:children].dup.concat(groups)
+            when e[:tag_name] == :group
+              style_and_other_tags = e[:children].dup.concat(style_and_other_tags)
               prev = nil
-              flatten_groups << style
+              flatten << e
 
-            when parent?(style, :group)
-              if style[:__]
-                style[:__children] = []
+            when parent?(e, :group)
+              if e[:__]
+                e[:__children] = []
               end
 
               if prev && prev[:__]
-                prev[:__children] << style
-                style[:__parent] = prev
+                prev[:__children] << e
+                e[:__parent] = prev
               end
+              prev = e
 
-              prev = style
+            else
+              flatten << e
 
-            else # === it's an HTML element w/:css
-              flatten_groups << style
-            end
-          end # === while style
+            end # === case
+          end # === while
 
-          flatten_groups.each { |style|
+          todo = [
+            :clean_attrs, {:type=>'text/css'}, {:tag_name=>:style},
+            :open, :style,
+            :flat_style_groups, flatten,
+            :close, :style
+          ].concat(todo)
+
+        when tag == :flat_style_groups
+
+          indent += 2
+          css_final = ""
+          flatten   = todo.shift
+
+          #
+          # Each produces:
+          #
+          #   selectors {
+          #     escaped/sanitized css;
+          #   }
+          #
+          flatten.each { |style|
             css_final << "\n" << SPACES(indent) << css_selector(style, :full) << " {\n".freeze
 
             the_css = style[:css] || (parent?(style, :group) && style[:parent][:css])
@@ -485,11 +500,11 @@ class WWW_App
           }
 
           indent -= 2
-          new_todo.concat [{:tag_name=>:text, :skip_escape=>true, :value=>css_final}, :close, :style]
-          todo = new_todo.concat(todo)
+          todo = [
+            {:tag_name=>:text, :skip_escape=>true, :value=>css_final}
+          ].concat(todo)
 
-
-        when tag == :style # ============
+        when tag == :script # ============
 
           h = vals
 
