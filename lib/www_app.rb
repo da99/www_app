@@ -394,15 +394,17 @@ class WWW_App
       # So we make sure we are in the original tag/element
       # when we want to make some final changes.
       in_tag(orig) {
-        if tag?(:form)
+        case
+        when tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
-        end
 
-        if (results.is_a?(::Hash) && results[:tag_name] && !results[:tag] && results[:tag_name] != :string)
+        when (results.is_a?(::Hash) && results[:tag_name] && !results[:tag] && results[:tag_name] != :string)
           fail ::Invalid_Type, results[:tag_name].inspect
-        end
 
-        if (results.is_a?(::Hash) && results[:tag_name] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
+        when results.is_a?(::Symbol)
+          create :text, :skip_escape=>true, :value => results.to_mustache(:html)
+
+        when results.is_a?(::String)
           create :text, :value => results
         end
       }

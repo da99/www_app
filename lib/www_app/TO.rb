@@ -48,7 +48,6 @@ class Mustache
 
   class Context
 
-    alias_method :[], :fetch
     def fetch *args
       raise ContextMiss.new("Can't find: #{args.inspect}") if args.size != 2
 
@@ -75,6 +74,11 @@ class Mustache
       raise ContextMiss.new("Can't find .#{meth}(#{key.inspect})")
     end
 
+    # NOTE: :alias_method has to go after the re-definition of
+    # :fetch or else it uses the original :fetch method/definition.
+    alias_method :[], :fetch 
+
+
   end # === class Context
 
 end # === class Mustache
@@ -100,9 +104,6 @@ class WWW_App
       end
 
       def method_missing name, *args
-        if args.last.is_a?(::Symbol)
-          args.push(args.pop.to_s)
-        end
         ::Escape_Escape_Escape.send(name, *args)
       end
 
@@ -630,24 +631,6 @@ class WWW_App
       final
 
       @mustache ||= begin
-                      final = if false
-                                (page_title { 'Unknown Page Title' }) unless @page_title
-
-                                Document_Template.gsub(/:(HEAD|BODY)/) { |match|
-                                  case name
-                                  when ':HEAD'
-                                    to_clean_text(:html, @head[:childs])
-                                  when ':BODY'
-                                    to_clean_text(:html, @body)
-                                  else
-                                    match
-                                  end
-                                }
-                              else
-                                # to_clean_text(:html, final)
-                                final
-                              end
-
                       mustache = ::Mustache.new
                       mustache.template = Clean.clean_utf8(final)
                       mustache
