@@ -30,7 +30,7 @@ class WWW_App
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
       :meta        => [:name, :http_equiv, :property, :content, :charset],
-      :img         => [:src, :width, :height],
+      :img         => [:src], # :width, :height will be used by CSS only.
       :html        => [:lang]
     }
 

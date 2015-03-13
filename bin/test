@@ -28,7 +28,7 @@ if [[ "$first_opt" == "js" ]]; then
   exit 0
 fi
 
-cmd="bundle exec bacon specs/lib/helpers.rb"
+cmd="bundle exec bacon -rpry specs/lib/helpers.rb"
 
 # === Find file by partial file name.
 file="$(echo specs/server-side/*-${first_opt}.rb)"

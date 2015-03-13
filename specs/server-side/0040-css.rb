@@ -78,7 +78,7 @@ describe :css do
     EOF
 
     actual {
-      div.*(:my_box) {
+      div.id(:my_box) {
         div.^(:box) { border '1px' }
       }
     }
@@ -94,7 +94,7 @@ describe :css do
     ^
 
     actual do
-      div.*(:the_box) {
+      div.id(:the_box) {
         border_width '10px'
       }
     end
@@ -108,7 +108,7 @@ describe :css do
     ^
 
     actual do
-      div.*(:my_box) {
+      div.id(:my_box) {
         border_width '1px'
       }
     end
@@ -135,7 +135,7 @@ describe :css do
 
     actual do
       div.^(:top) {
-        div.*(:my_box) {
+        div.id(:my_box) {
           div.^(:box) { border '15px' }
         }
       }

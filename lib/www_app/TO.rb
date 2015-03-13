@@ -304,7 +304,7 @@ class WWW_App
 
                                when attr == :class
                                  val.map { |name|
-                                   Clean.css_class_name(name)
+                                   Clean.css_class_name(name.to_s)
                                  }.join(" ".freeze)
 
                                when tag_name == :style && attr == :type

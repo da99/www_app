@@ -36,16 +36,28 @@ class WWW_App
   BODY       = 'body'.freeze
   UNDERSCORE = '_'.freeze
 
+  class << self
+  end # === class << self
 
-  #
-  # NOTE: CSS Properties are defined first,
-  # so HTML elements methods can over-write them,
-  # just in case there are duplicates.
-  #
   include CSS
   include HTML
   include JavaScript
   include TO
+
+  mods = included_modules.reject { |mod| mod == ::Kernel }
+  MULTI_DEFINED_METHS = mods.inject({}) { |memo, mod|
+    mod.instance_methods.each { |meth|
+      defs = mods.select { |o| o.instance_methods.include?(meth) }
+      if defs.size > 1
+        memo[meth] ||= defs
+      end
+    }
+    memo
+  }
+
+  if !MULTI_DEFINED_METHS.empty?
+    fail ::ArgumentError, "Methods already defined:\n#{MULTI_DEFINED_METHS.inspect}"
+  end
 
   private # ===============================================
 

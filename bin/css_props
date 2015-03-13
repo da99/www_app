@@ -95,7 +95,8 @@ Sanitize::Config::RELAXED[:css][:properties].
   sort.
   reject { |s|
     s[/_(moz|webkit|ms)/] ||
-      s[/^(align|animation|backface|page|break|caption|flex|writing|outline|persp|object)/]
+      s[/^(align|animation|backface|page|break|caption|flex|writing|outline|persp|object)/] ||
+      s == 'content'
   }.
   map { |s|  Row << s }
 

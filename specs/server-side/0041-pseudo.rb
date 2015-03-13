@@ -6,7 +6,7 @@ describe "pseudo classes" do
       <a id="main" href="&#47;test">test</a>
     EOF
     actual do
-      a.*(:main).href("/test") { 
+      a.id(:main).href("/test") { 
         _link { color '#fff' }
         "test"
       }
@@ -20,7 +20,7 @@ describe "pseudo classes" do
       }
     EOF
     actual do
-      a.*(:main).href("/test") { 
+      a.id(:main).href("/test") { 
         _link { color '#ffc' }
         "test"
       }
