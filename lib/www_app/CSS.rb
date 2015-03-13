@@ -228,7 +228,7 @@ class WWW_App
                   p         = metaphor[:parent]
                   while p
                     selectors.unshift(css_selector(p, :tag)) unless [:style, :group].freeze.include?(p[:tag_name])
-                    p = p[:parent]
+                    p = p[:id] ? nil : p[:parent]
                   end # === while
 
                   selectors.compact.join(SPACE)
