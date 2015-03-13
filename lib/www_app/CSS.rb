@@ -186,7 +186,7 @@ class WWW_App
                 end
 
                 if tag[:class]
-                  name << '.'.freeze 
+                  name << '.'.freeze
                   name.<<(
                     tag[:class].map { |name|
                       Clean.css_class_name(name)

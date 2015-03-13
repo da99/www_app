@@ -432,16 +432,13 @@ class WWW_App
               end
 
               if prev && prev[:__]
-                puts prev[:tag_name].inspect
                 prev[:__children] << style
                 style[:__parent] = prev
               end
 
+              prev = style
+
             else # === it's an HTML element w/:css
-              if style[:tag_name] == :_  && style[:__]
-                puts "#{style[:tag_name]} #{style.keys.inspect} #{style[:class]}"
-                binding.pry
-              end
               flatten_groups << style
             end
           end # === while style
