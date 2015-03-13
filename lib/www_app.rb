@@ -250,6 +250,7 @@ class WWW_App
 
   def go_up
     @tag = @tag[:parent]
+    self
   end
 
   def first_class
