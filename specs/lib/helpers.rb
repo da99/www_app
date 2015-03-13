@@ -81,6 +81,18 @@ end
 module Bacon
   class Context
 
+    #
+    # NOTE: I know this is a lazy hack,
+    # but I was short on time.
+    #
+    alias_method :rr_wo_target_args, :run_requirement
+    def run_requirement *args
+      @target_args = nil
+      rr_wo_target_args(*args) {
+        yield if block_given?
+      }
+    end
+
     def target *args
       @target_args = args
     end
