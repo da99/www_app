@@ -2,7 +2,7 @@
 class WWW_App
   module HTML
 
-    NO_END_TAGS = [:br, :input, :link, :meta, :hr, :img]
+    SELF_CLOSING_TAGS = [:br, :input, :link, :meta, :hr, :img]
 
     TAGS   = %w[
       title

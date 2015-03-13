@@ -246,14 +246,29 @@ class WWW_App
 
           tag_sym = todo.shift
 
-          if attributes
-            final << "<#{tag_sym} #{attributes}>"
-          else
-            final << "<#{tag_sym}>"
-          end
+          if HTML::SELF_CLOSING_TAGS.include?(tag_sym)
+            final << (
+              attributes ?
+              "<#{tag_sym} #{attributes} />" :
+              "<#{tag_sym} />"
+            )
+            final << NEW_LINE
+            if todo.first == :close && todo[1] == tag_sym
+              todo.shift
+              todo.shift
+            end
 
-          last = indent
-          indent += 2
+          else # === has closing tag
+            if attributes
+              final << "<#{tag_sym} #{attributes}>"
+            else
+              final << "<#{tag_sym}>"
+            end
+
+            last = indent
+            indent += 2
+          end # === if HTML
+
 
         when tag == :close
           indent -= 2
@@ -356,10 +371,10 @@ class WWW_App
         when t_name == :title && !parent(tag)
           nil # do nothing
 
-        when t_name == :_  # =============== :_ tag ========
+        when t_name == :_       # =============== :_ tag ========
           nil # do nothing
 
-        when t_name == :script                                # === :script tag ===
+        when t_name == :script  # =============== :script tag ===
           attrs = {}
           attrs[:src]  = tag[:src]  if tag[:src]
           attrs[:type] = tag[:type] if tag[:type]
