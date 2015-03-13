@@ -383,11 +383,13 @@ class WWW_App
   def text str
     fail "No block allowed." if block_given?
     create(:text, :value=>str, :closed=>true)
+    go_up
   end
 
   def raw_text str
     fail "No block allowed." if block_given?
     create(:text, :skip_escape=>true, :value=>str, :closed=>true)
+    go_up
   end
 
   def close
@@ -426,14 +428,11 @@ class WWW_App
         when tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
 
-        when (results.is_a?(::Hash) && results[:tag_name] && !results[:tag] && results[:tag_name] != :string)
-          fail ::Invalid_Type, results[:tag_name].inspect
-
         when results.is_a?(::Symbol)
           create :text, :skip_escape=>true, :value => results.to_mustache(:html)
 
         when results.is_a?(::String)
-          create :text, :value => results
+          text results
         end
       }
     end

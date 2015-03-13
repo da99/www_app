@@ -173,31 +173,18 @@ class WWW_App
     end
 
     def render_if name
-      create(:render_if, :key=>name) {
-        yield
-      }
+      fail ::ArgumentError, "Not a symbol: #{name.inspect}" unless name.is_a?(Symbol)
+      raw_text %^{{#coll.#{name}}}^
+      yield
+      raw_text %^{{/coll.#{name}}}^
       nil
     end
 
     def render_unless name
-      create(:render_unless, :key=>name) {
-        yield
-      }
-      nil
-    end
-
-
-    def render_if name
-      create(:render_if, :key=>name) {
-        yield
-      }
-      nil
-    end
-
-    def render_unless name
-      create(:render_unless, :key=>name) {
-        yield
-      }
+      fail ::ArgumentError, "Not a symbol: #{name.inspect}" unless name.is_a?(Symbol)
+      raw_text %!{{^coll.#{name}}}!
+      yield
+      raw_text %!{{/coll.#{name}}}!
       nil
     end
 

@@ -642,153 +642,153 @@ class WWW_App
     end # === to_html
 
     module OLD
-  #
-  # Examples
-  #    dom_id             -> the current dom id of the current element
-  #    dom_id :default    -> if no dom it, set/get default of current element
-  #    dom_id {:element:} -> dom id of element: {:type=>:html, :tag=>...}
-  #
-  def dom_id *args
+      #
+      # Examples
+      #    dom_id             -> the current dom id of the current element
+      #    dom_id :default    -> if no dom it, set/get default of current element
+      #    dom_id {:element:} -> dom id of element: {:type=>:html, :tag=>...}
+      #
+      def dom_id *args
 
-    use_default = false
+        use_default = false
 
-    case
-    when args.empty?
-      e = tag!
-      # do nothing else
-
-    when args.size == 1 && args.first == :default
-      e = tag!
-      use_default = true
-
-    when args.size == 1 && args.first.is_a?(::Hash) && args.first[:type]==:html
-      e = args.first
-
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
-
-    id = e[:attrs][:id]
-    return id if id
-    return nil unless use_default
-
-    e[:default_id] ||= begin
-                           key = e[:tag]
-                           @default_ids[key] ||= -1
-                           @default_ids[key] += 1
-                         end
-  end # === def dom_id
-
-  #
-  # Examples
-  #    selector_id   -> a series of ids and tags to be used as a JS selector
-  #                     Example:
-  #                        #id tag tag
-  #                        tag tag
-  #
-  #
-  def selector_id
-    i        = tag![:tag_index]
-    id_given = false
-    classes  = []
-
-    while !id_given && i && i > -1
-      e         = @tag_arr[i]
-      id        = dom_id e
-      (id_given = true) if id
-
-      if e[:tag] == :body && !classes.empty?
-        # do nothing because
-        # we do not want 'body tag.class tag.class'
-      else
         case
-        when id
-          classes << "##{id}"
+        when args.empty?
+          e = tag!
+          # do nothing else
+
+        when args.size == 1 && args.first == :default
+          e = tag!
+          use_default = true
+
+        when args.size == 1 && args.first.is_a?(::Hash) && args.first[:type]==:html
+          e = args.first
+
         else
-          classes << e[:tag]
-        end # === case
-      end # === if
-
-      i = e[:parent_index]
-    end
-
-    return 'body' if classes.empty?
-    classes.join SPACE
-  end
-
-  #
-  # Examples
-  #    css_id             -> current css id of element.
-  #                          It uses the first class, if any, found.
-  #                          #id.class     -> if #id and first class found.
-  #                          #id           -> if class is missing and id given.
-  #                          #id tag.class -> if class given and ancestor has id.
-  #                          #id tag tag   -> if no class given and ancestor has id.
-  #                          tag tag tag   -> if no ancestor has class.
-  #
-  #    css_id :my_class   -> same as 'css_id()' except
-  #                          'my_class' overrides :class attribute of current
-  #                          element.
-  #
-  #
-  def css_id *args
-
-    str_class = nil
-
-    case args.size
-    when 0
-      fail "Not in a tag." unless tag!
-      str_class = @css_id_override
-    when 1
-      str_class = args.first
-    else
-      fail "Unknown args: #{args.inspect}"
-    end
-
-    i        = tag![:tag_index]
-    id_given = false
-    classes  = []
-
-    while !id_given && i && i > -1
-      e           = @tag_arr[i]
-      id          = dom_id e
-      first_class = e[:attrs][:class].first
-
-      if id
-        id_given = true
-        if str_class
-          classes.unshift(
-            str_class.is_a?(::Symbol) ?
-            "##{id}.#{str_class}" :
-            "##{id}#{str_class}"
-          )
-        else
-          classes.unshift "##{id}"
+          fail "Unknown args: #{args.inspect}"
         end
 
-      else # no id given
-        if str_class
-          classes.unshift(
-            str_class.is_a?(::Symbol) ?
-            "#{e[:tag]}.#{str_class}" :
-            "#{e[:tag]}#{str_class}"
-          )
-        elsif first_class
-          classes.unshift "#{e[:tag]}.#{first_class}"
+        id = e[:attrs][:id]
+        return id if id
+        return nil unless use_default
+
+        e[:default_id] ||= begin
+                             key = e[:tag]
+                             @default_ids[key] ||= -1
+                             @default_ids[key] += 1
+                           end
+      end # === def dom_id
+
+      #
+      # Examples
+      #    selector_id   -> a series of ids and tags to be used as a JS selector
+      #                     Example:
+      #                        #id tag tag
+      #                        tag tag
+      #
+      #
+      def selector_id
+        i        = tag![:tag_index]
+        id_given = false
+        classes  = []
+
+        while !id_given && i && i > -1
+          e         = @tag_arr[i]
+          id        = dom_id e
+          (id_given = true) if id
+
+          if e[:tag] == :body && !classes.empty?
+            # do nothing because
+            # we do not want 'body tag.class tag.class'
+          else
+            case
+            when id
+              classes << "##{id}"
+            else
+              classes << e[:tag]
+            end # === case
+          end # === if
+
+          i = e[:parent_index]
+        end
+
+        return 'body' if classes.empty?
+        classes.join SPACE
+      end
+
+      #
+      # Examples
+      #    css_id             -> current css id of element.
+      #                          It uses the first class, if any, found.
+      #                          #id.class     -> if #id and first class found.
+      #                          #id           -> if class is missing and id given.
+      #                          #id tag.class -> if class given and ancestor has id.
+      #                          #id tag tag   -> if no class given and ancestor has id.
+      #                          tag tag tag   -> if no ancestor has class.
+      #
+      #    css_id :my_class   -> same as 'css_id()' except
+      #                          'my_class' overrides :class attribute of current
+      #                          element.
+      #
+      #
+      def css_id *args
+
+        str_class = nil
+
+        case args.size
+        when 0
+          fail "Not in a tag." unless tag!
+          str_class = @css_id_override
+        when 1
+          str_class = args.first
         else
-          if e[:tag] != :body || (classes.empty?)
-            classes.unshift "#{e[:tag]}"
-          end
-        end # if first_class
+          fail "Unknown args: #{args.inspect}"
+        end
 
-      end # if id
+        i        = tag![:tag_index]
+        id_given = false
+        classes  = []
 
-      i = e[:parent_index]
-      break if i == @body[:tag_index] && !classes.empty?
-    end
+        while !id_given && i && i > -1
+          e           = @tag_arr[i]
+          id          = dom_id e
+          first_class = e[:attrs][:class].first
 
-    classes.join SPACE
-  end
+          if id
+            id_given = true
+            if str_class
+              classes.unshift(
+                str_class.is_a?(::Symbol) ?
+                "##{id}.#{str_class}" :
+                "##{id}#{str_class}"
+              )
+            else
+              classes.unshift "##{id}"
+            end
+
+          else # no id given
+            if str_class
+              classes.unshift(
+                str_class.is_a?(::Symbol) ?
+                "#{e[:tag]}.#{str_class}" :
+                "#{e[:tag]}#{str_class}"
+              )
+            elsif first_class
+              classes.unshift "#{e[:tag]}.#{first_class}"
+            else
+              if e[:tag] != :body || (classes.empty?)
+                classes.unshift "#{e[:tag]}"
+              end
+            end # if first_class
+
+          end # if id
+
+          i = e[:parent_index]
+          break if i == @body[:tag_index] && !classes.empty?
+        end
+
+        classes.join SPACE
+      end
 
     end # === module OLD
   end # === module TO
@@ -799,9 +799,9 @@ end # === class WWW_App
 __END__
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    :HEAD
-  </head>
-  :BODY
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+:HEAD
+</head>
+:BODY
 </html>
