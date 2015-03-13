@@ -390,8 +390,6 @@ class WWW_App
     if block_given?
       results = yield
 
-      results = nil if tag?(:script)
-
       # The :yield may have left some opened tags, :input, :br/
       # So we make sure we are in the original tag/element
       # when we want to make some final changes.

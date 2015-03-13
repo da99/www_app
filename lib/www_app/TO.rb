@@ -118,6 +118,8 @@ class WWW_App
     SPACE   = " ".freeze
     NOTHING = "".freeze
 
+    INVALID_SCRIPT_TYPE_CHARS = /[^a-z0-9\-\/\_]+/
+
     KEY_REQUIRED = proc { |hash, k|
       fail "Key not set: #{k.inspect}"
     }
@@ -154,10 +156,10 @@ class WWW_App
 
       doc = [
         (doc_type = {:tag_name=>:doc_type, :text=>"<!DOCTYPE html>"}),
-        (html          = {:tag_name=>:html, :children=>[
-          (head        = {:tag_name=>:head, :lang=>'en', :children=>[
+        (html     = {:tag_name=>:html, :children=>[
+          (head   = {:tag_name=>:head, :lang=>'en', :children=>[
           ]}),
-          (body     = {:tag_name=>:body, :children=>[]})
+          (body   = {:tag_name=>:body, :children=>[]})
         ]})
       ]
 
@@ -259,11 +261,20 @@ class WWW_App
         when tag == :clean_attrs
           attributes = todo.shift
           target     = todo.shift
+          tag_name   = target[:tag_name]
 
           attributes.each { |attr, val|
             attributes[attr] = case
 
-                               when attr == :href && target[:tag_name] == :a
+                               when attr == :src && tag_name == :script
+                                 Clean.relative_href val
+
+                               when attr == :type && tag_name == :script
+                                 clean = val.gsub(INVALID_SCRIPT_TYPE_CHARS, '')
+                                 clean = 'text/unknown' if clean.empty?
+                                 clean
+
+                               when attr == :href && tag_name == :a
                                  Clean.mustach :href, val
 
                                when [:action, :src, :href].include?(attr)
@@ -277,10 +288,10 @@ class WWW_App
                                    Clean.css_class_name(name)
                                  }.join(" ".freeze)
 
-                               when target[:tag_name] == :style && attr == :type
+                               when tag_name == :style && attr == :type
                                  'text/css'
 
-                               when ::WWW_App::HTML::TAGS_TO_ATTRIBUTES[target[:tag_name]].include?(attr)
+                               when ::WWW_App::HTML::TAGS_TO_ATTRIBUTES[tag_name].include?(attr)
                                  Clean.html(val)
 
                                else
@@ -342,6 +353,24 @@ class WWW_App
 
         when t_name == :_  # =============== :_ tag ========
           nil # do nothing
+
+        when t_name == :script                                # === :script tag ===
+          attrs = {}
+          attrs[:src]  = tag[:src]  if tag[:src]
+          attrs[:type] = tag[:type] if tag[:type]
+
+          new_todo = [
+            :clean_attrs, attrs, tag,
+            :open, :script,
+          ]
+
+          new_todo.concat(tag[:children]) if tag[:children]
+
+          new_todo.concat [
+            :close, :script
+          ].concat(todo)
+
+          todo = new_todo
 
         when t_name && ::WWW_App::HTML::TAGS.include?(t_name) # === HTML tags =====
           attrs = {}

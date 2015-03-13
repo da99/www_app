@@ -204,6 +204,16 @@ class WWW_App
       end
     end
 
+    def script type_or_src
+      if block_given?
+        create :script, :type=>type_or_src do
+          yield
+        end
+      else
+        create(:script, :src=>type_or_src) { }
+      end
+    end
+
   end # === module HTML
 end # === class WWW_App
 
