@@ -405,8 +405,7 @@ class WWW_App
         end
 
         if (results.is_a?(::Hash) && results[:tag_name] == :string) || results.is_a?(::String) || results.is_a?(::Symbol)
-          @tag[:children] ||= []
-          @tag[:children] << {:tag_name=>:text, :value => results}
+          create :text, :value => results
         end
       }
     end

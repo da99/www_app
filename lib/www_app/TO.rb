@@ -139,7 +139,7 @@ class WWW_App
         indent -= 1
       }
 
-      tags.each { |t| print_tag.call(t) }
+      @tags.each { |t| print_tag.call(t) }
       str
     end
 
