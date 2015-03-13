@@ -280,7 +280,7 @@ class WWW_App
                                  clean
 
                                when attr == :href && tag_name == :a
-                                 Clean.mustach :href, val
+                                 Clean.mustache :href, val
 
                                when [:action, :src, :href].include?(attr)
                                  Clean.relative_href(val)

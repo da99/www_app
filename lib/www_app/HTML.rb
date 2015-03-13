@@ -42,37 +42,43 @@ class WWW_App
       memo
     }
 
+    ATTRIBUTES = ATTRIBUTES_TO_TAGS.keys
+
     ATTRIBUTES_TO_TAGS.each { |name, tags|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name} val
-          allowed = ATTRIBUTES_TO_TAGS[:#{name}]
-          allowed = allowed && allowed[tag[:tag_name]]
-          return super unless allowed
-
-          tag[:attrs][:#{name}] = val
-
-          if block_given?
-            close_tag { yield }
-          else
+          alter_attribute :#{name}, val
+          block_given? ?
+            close { yield } :
             self
-          end
         end
       EOF
     }
-
-    ATTRIBUTES = ATTRIBUTES_TO_TAGS.keys
 
     TAGS.each { |name|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
         def #{name}
-          if block_given?
-            create(:#{name}) { yield }
-          else
-            create(:#{name})
-          end
+          create(:#{name})
+          block_given? ?
+            close { yield } :
+            self
         end
       EOF
     }
+
+    def alter_attribute name, val
+      allowed = @tag &&
+        ATTRIBUTES_TO_TAGS[name] &&
+        ATTRIBUTES_TO_TAGS[name].include?(@tag[:tag_name])
+
+      fail "#{name.inspect} not allowed to be set here." unless allowed
+
+      @tag[name] = val
+
+      block_given? ?
+        close { yield } :
+        self
+    end
 
     def meta *args
       fail "No block allowed." if block_given?

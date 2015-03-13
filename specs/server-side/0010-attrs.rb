@@ -1,15 +1,14 @@
 
 describe "all attrs" do
 
-  it "raises a RuntimeError if tag has an unknown attribute" do
+  it "raises a RuntimeError if tag has an invalid attribute" do
     should.raise(RuntimeError) {
       actual {
-        a.href('/href') {
-          tag![:attrs][:hi] = 'hiya'
+        a.href('/href').src('file') {
           "here"
         }
       }
-    }.message.should.match /Unknown attr: :hi/
+    }.message.should.match /:src not allowed to be set here/
   end
 
   it "escapes attributes" do
