@@ -209,13 +209,16 @@ class WWW_App
                 end
 
                 if tag[:__]
-                  name <<  SPACE << tag[:__children].map { |c|
+                  name << SPACE << tag[:__children].map { |c|
                     css_selector(c, :tag)
                   }.join(SPACE)
                 end
 
-                name = nil if name.empty?
-                name
+                name = if name.empty?
+                         nil
+                       else
+                         name
+                       end
 
               when type == :ancestor
                 if metaphor[:id]
@@ -236,7 +239,7 @@ class WWW_App
               end
 
       return nil if !final || final.empty?
-      final
+      final.gsub(' _!:'.freeze, ':'.freeze)
     end
 
     private # ==================================
@@ -244,14 +247,12 @@ class WWW_App
     def pseudo name
       case
       when ancestor?(:groups) && @tag[:closed]
-        #
         # Ex:
         #   style {
         #     div   { ... }
         #     _link { ... }
-        #
         create :group
-        create :__
+        create :_!
 
       when @tag[:pseudo] && !@tag[:closed]
         # Ex:

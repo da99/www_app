@@ -86,15 +86,21 @@ class WWW_App
   end
 
   def de_ref tag, sym = nil
-    t = tag
+    t      = tag
+    t_name = tag[:tag_name]
 
-    if tag[:tag_name] == :_
-      r = tag
-      while r && [:_, :style, :group].freeze.include?(r[:tag_name])
-        r = r[:parent]
+    if t_name == :_
+
+      if t_name == :_
+        r = tag
+        while r && [:_, :style, :group].freeze.include?(r[:tag_name])
+          r = r[:parent]
+        end
+        r ||= {}.freeze
+      else
+        r = tag[:parent] || {}.freeze
       end
 
-      r ||= {}.freeze
       t = {
         :tag_name => r[:tag_name] || :body,
         :id       => tag[:id] || r[:id],
