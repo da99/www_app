@@ -155,15 +155,13 @@ class WWW_App
       stacks = {}
 
       doc = [
-        (doc_type = {:tag_name=>:doc_type, :text=>"<!DOCTYPE html>"}),
-        (html     = {:tag_name=>:html, :children=>[
-          (head   = {:tag_name=>:head, :lang=>'en', :children=>[
-          ]}),
-          (body   = {:tag_name=>:body, :children=>[]})
-        ]})
+        doc_type   = {:tag_name => :doc_type,   :text     => "<!DOCTYPE html>"},
+        html       = {:tag_name=>:html, :children=>[
+          head     = {:tag_name=>:head, :lang=>'en', :children=>[]},
+          body     = {:tag_name=>:body, :children=>[]}
+        ]}
       ]
-
-      style_tags = {:tag_name=>:style_tags, :children=>[]}
+      style_tags = {:tag_name => :style_tags, :children => []}
 
       tags = @tags.dup
       while (t = tags.shift)
@@ -214,14 +212,21 @@ class WWW_App
         end # === case ========
       end # === while
 
-      head[:children] << style_tags
+      is_fragment = style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
 
-      content_type = head[:children].detect { |t| t[:tag_name] == :meta && t[:http_equiv] && t[:http_equiv].downcase=='Content-Type'.downcase }
-      if !content_type
-        head[:children].unshift(
-          {:tag_name=>:meta, :http_equiv=>'Content-Type', :content=>"text/html; charset=UTF-8"}
-        )
-      end
+      if is_fragment
+        doc = body[:children]
+
+      else # is doc
+        head[:children] << style_tags
+        content_type = head[:children].detect { |t| t[:tag_name] == :meta && t[:http_equiv] && t[:http_equiv].downcase=='Content-Type'.downcase }
+        if !content_type
+          head[:children].unshift(
+            {:tag_name=>:meta, :http_equiv=>'Content-Type', :content=>"text/html; charset=UTF-8"}
+          )
+        end
+
+      end # if is_fragment
 
       todo = doc.dup
       while (tag = todo.shift)
