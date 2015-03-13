@@ -166,13 +166,10 @@ class WWW_App
 
         case # ==============
         when t_name == :title && !parent
+          fail "Title already set." if head[:children].detect { |c| c[:tag_name] == :title }
           head[:children] << t
 
         when t_name == :meta
-          head[:children] << t
-
-        when t_name == :title
-          fail "Title already set." if head[:children].detect { |c| c[:tag_name] == :title }
           head[:children] << t
 
         when t_name == :style
@@ -369,7 +366,9 @@ class WWW_App
             concat(todo)
 
         when t_name == :title && !parent(tag)
-          nil # do nothing
+          todo = [
+            :open, :title
+          ].concat(tag[:children]).concat([:close, :title]).concat(todo)
 
         when t_name == :_       # =============== :_ tag ========
           nil # do nothing
