@@ -94,16 +94,18 @@ class WWW_App
     #
     # Ex:
     #   style {
-    #     div.__div {
+    #     div.^(:bad).__.div {
     #     }
     #
     def __
       fail "Can only be used inside :style tag" unless ancestor?(:style)
+
       if !@tag || (@tag[:tag_name] == :group || @tag[:tag_name] == :groups)
         fail "Can only be used after an HTML element is created: #{@tag[:tag_name].inspect}"
       end
 
       @tag[:__] = true
+      go_up
       self
     end
 
@@ -145,7 +147,7 @@ class WWW_App
 
               when type == :full && tag?(metaphor, :group)
                 css = metaphor[:children].inject([]) { |memo, c|
-                  if !(tag?(c, :group))
+                  if !(tag?(c, :group)) && !c[:__parent]
                     memo << css_selector(c, :full)
                   end
                   memo
@@ -171,7 +173,7 @@ class WWW_App
                     css << SPACE << css_selector(metaphor, :tag)
                   }.join COMMA
                 else
-                  css_selector(:tag, metaphor)
+                  css_selector metaphor, :tag
                 end
 
               when type == :tag
@@ -194,6 +196,12 @@ class WWW_App
 
                 if tag[:pseudo]
                   name << ":#{tag[:pseudo]}"
+                end
+
+                if tag[:__]
+                  name <<  SPACE << tag[:__children].map { |c|
+                    css_selector(c, :tag)
+                  }.join(SPACE)
                 end
 
                 name = nil if name.empty?

@@ -312,21 +312,18 @@ class WWW_App
   end
 
   def create name, opts = nil
-    #
-    # Ex:
-    #   _.id(:the_body).^(:loading)
-    #   div {
-    #   }
-    #
     if @tag && @tag[:tag_name] == :_
+
+      # Ex:
+      #   _.id(:the_body).^(:loading)
+      #   div {
+      #   }
       go_up if !@tag[:closed]
 
-      #
       # Ex:
       #   _.^(:happy) {
       #     a { }
       #   }
-      #
       fail "New tags not allowed here." if (@tag && @tag[:closed]) && !ancestor?(:group)
     end
 
@@ -334,7 +331,7 @@ class WWW_App
     #   we are creating an HTML element
     #   within a group, then we either start
     #   a new group or stay here.
-    if HTML::TAGS.include?(name) && tag_or_ancestor?(:groups)
+    if name != :group && tag_or_ancestor?(:groups)
       if tag?(:groups)
         create :group
       else

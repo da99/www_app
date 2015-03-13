@@ -411,26 +411,37 @@ class WWW_App
           #  style
           #    div, span {
           #      a:link, a:visited {
-          #   --->
+          #  --->
           #  style
           #    div a:link, div a:visited, span a:link, span a:visited  {
           #
+          prev = nil
           while (style = groups.shift)
-            style[:cache] ||= {}
-            style[:cache][:css_selectors] = []
-
             case
             when style[:tag_name] == :style
               groups = style[:children].dup.concat(groups)
 
             when style[:tag_name] == :group
               groups = style[:children].dup.concat(groups)
+              prev = nil
               flatten_groups << style
 
             when parent?(style, :group)
-               nil # ignore, do nothing
+              if style[:__]
+                style[:__children] = []
+              end
+
+              if prev && prev[:__]
+                puts prev[:tag_name].inspect
+                prev[:__children] << style
+                style[:__parent] = prev
+              end
 
             else # === it's an HTML element w/:css
+              if style[:tag_name] == :_  && style[:__]
+                puts "#{style[:tag_name]} #{style.keys.inspect} #{style[:class]}"
+                binding.pry
+              end
               flatten_groups << style
             end
           end # === while style
