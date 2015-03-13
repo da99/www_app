@@ -368,6 +368,16 @@ class WWW_App
     self
   end # === def create
 
+  def text str
+    fail "No block allowed." if block_given?
+    create(:text, :value=>str, :closed=>true)
+  end
+
+  def raw_text str
+    fail "No block allowed." if block_given?
+    create(:text, :skip_escape=>true, :value=>str, :closed=>true)
+  end
+
   def close
 
     group = find_nearest(:group)
