@@ -1,5 +1,5 @@
 
-describe :asterisk do
+describe :slash do
 
   it "defines multiple css classes" do
     target :style, %^
@@ -9,8 +9,10 @@ describe :asterisk do
     ^
 
     actual do
-      a._link * a._visited * a._hover {
-        color '#fff'
+      style {
+        a._link / a._visited / a._hover {
+          color '#fff'
+        }
       }
     end
   end # === it defines multiple css classes
