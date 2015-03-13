@@ -51,16 +51,17 @@ describe ":style block" do
       #main {
         color: #fff;
       }
+
       #main {
         background: #fff;
       }
     ^
     actual do
       style {
-        div.*(:main) { color '#fff' }
-        div.*(:main) { background '#fff' }
+        div.id(:main) { color '#fff' }
+        div.id(:main) { background '#fff' }
       }
-      div.*(:main) { 'main' }
+      div.id(:main) { 'main' }
     end
   end
 

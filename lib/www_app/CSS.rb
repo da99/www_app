@@ -188,12 +188,12 @@ class WWW_App
 
               when type == :tag
 
-                name = metaphor[:tag_name].to_s
-
                 id = metaphor[:id]
-                if id
-                  name << '#'.freeze << Clean.html_id(id).to_s
-                end
+                name = if id
+                         '#' << Clean.html_id(id).to_s
+                       else
+                         metaphor[:tag_name].to_s
+                       end
 
                 if metaphor[:class]
                   name << '.'.freeze
