@@ -21,6 +21,10 @@ def norm ugly
     join("\n")
 end
 
+def norm_wo_lines str
+  str.split("\n").map(&:strip).join ""
+end
+
 def strip_each_line str
   str.split("\n").map(&:strip).join "\n"
 end

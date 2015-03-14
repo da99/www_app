@@ -191,7 +191,8 @@ class WWW_App
     def input *args
       case
       when args.size === 3
-        create(:input).type(args[0]).name(args[1]).value(args[2])
+        create(:input, :type=>args[0].to_s, :name=>args[1].to_s, :value=>args[2], :closed=>true)
+        go_up
       else
         super
       end

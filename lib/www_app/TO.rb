@@ -250,7 +250,6 @@ class WWW_App
               "<#{tag_sym} #{attributes} />" :
               "<#{tag_sym} />"
             )
-            final << NEW_LINE
             if todo.first == :close && todo[1] == tag_sym
               todo.shift
               todo.shift
@@ -262,10 +261,10 @@ class WWW_App
             else
               final << "<#{tag_sym}>"
             end
-
-            last = indent
-            indent += 2
           end # === if HTML
+
+          last = indent
+          indent += 2
 
 
         when tag == :close
@@ -293,11 +292,18 @@ class WWW_App
                                  clean = 'text/unknown' if clean.empty?
                                  clean
 
+                               when attr == :type && val == :hidden
+                                 'hidden'
+
                                when attr == :href && tag_name == :a
                                  Clean.mustache :href, val
 
                                when [:action, :src, :href].include?(attr)
-                                 Clean.relative_href(val)
+                                 if val.is_a?(Symbol)
+                                   val.to_mustache(:relative_href)
+                                 else
+                                   Clean.relative_href(val)
+                                 end
 
                                when attr == :id
                                  Clean.html_id(val.to_s)
@@ -414,7 +420,7 @@ class WWW_App
 
           if tag[:children] && !tag[:children].empty?
             new_todo.concat tag[:children]
-            if tag[:children].last[:tag_name] != :text
+            if tag[:children].detect { |t| HTML::TAGS.include?(t[:tag_name]) }
               new_todo << :new_line
             end
           end

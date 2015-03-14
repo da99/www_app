@@ -56,36 +56,45 @@ describe :mustache do
   end
 
   it "escapes html in nested values" do
-    target <<-EOF
+    actual = WWW_App.new() {
+      div.id(:my_box) {
+        render_if(:hello) {
+          span { :msg } 
+          render_unless(:goodbye) {
+            span { '&& hello 2' }
+          }
+        }
+      }
+    }.to_html(:hello=>{:msg=>'& hello 1', :goodbye=>nil})
+
+    target = <<-EOF
       <div id="my_box"><span>&amp; hello 1</span>
         <span>&amp;&amp; hello 2</span></div>
     EOF
 
-    actual(:hello=>{:msg=>'& hello 1', :goodbye=>nil}) {
-      div.*(:my_box) {
-        render_if(:hello) {
-          span { :msg } 
-          render_unless(:goodbye) { span { '&& hello 2' } }
-        }
-      }
-    }
+    norm_wo_lines(actual).should == norm_wo_lines(target)
   end
 
   it "escapes :href in nested values" do
-    target %^<div><div><a href="&#47;hello">hello</a></div></div>^
-    actual(o: {url: '/hello', msg: 'hello'}) {
+    actual = WWW_App.new {
       div {
         render_if(:o) {
           div { a.href(:url) { :msg } }
         }
       }
-    }
+    }.to_html(o: {url: '/hello', msg: 'hello'})
+    target = %^<div><div><a href="&#47;hello">hello</a></div></div>^
+    norm_wo_lines(actual).should == norm_wo_lines(target)
   end
 
   it "does not allow vars to be used in form :action" do
-    target %^<form action="url"><input type="hidden" name="auth_token" value="hello" /></form>^
+    target <<-EOF
+      <form action="url">
+        <input type="hidden" name="auth_token" value="hello" />
+      </form>
+    EOF
 
-    actual :auth_token => 'hello' do
+    actual :url=>'url', :auth_token => 'hello' do
       form.action(:url) {}
     end
   end
