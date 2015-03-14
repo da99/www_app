@@ -116,6 +116,7 @@ module Bacon
       tag           = @target_args.first
       html          = WWW_App.new(&blok).to_html(vals)
       section       = case
+                      when tag == :script
                       when include_tag
                         html[/(<#{tag}[^\>]*>.+<\/#{tag}>)/m] && $1
                       else
