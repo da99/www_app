@@ -111,9 +111,24 @@ class WWW_App
   end # === class Clean
 
   module TO
-    COMMA   = ", ".freeze
-    SPACE   = " ".freeze
-    NOTHING = "".freeze
+    COMMA    = ", ".freeze
+    SPACE    = " ".freeze
+    NOTHING  = "".freeze
+    VERSION  = File.read(File.dirname(__FILE__).sub('lib/www_app'.freeze, NOTHING) + '/VERSION').strip
+    JS_FILES = %w{
+      jquery-2.1.3.min.js
+      jquery.serialize-object.min.js
+      underscore-min-1.8.2.js
+      underscore-min-1.8.2.map
+      underscore.string-3.0.3.js
+      www_app.js
+    }
+
+    PUBLIC_DIR = "/www_app-#{VERSION}"
+
+    JS_FILE_PATHS = JS_FILES.map { |file|
+      File.join(PUBLIC_DIR, file)
+    }
 
     INVALID_SCRIPT_TYPE_CHARS = /[^a-z0-9\-\/\_]+/
 
@@ -449,12 +464,27 @@ class WWW_App
               #{::Escape_Escape_Escape.json_encode(clean_vals)}
             );
           EOF
+
+          script_tag = {:tag_name=>:script}.freeze
+
           todo = [
-            :clean_attrs, {:type=>'application/javascript'}, {:tag_name=>:script},
+            :clean_attrs, {:type=>'application/javascript'}, script_tag,
             :open, :script,
             {:tag_name=>:text, :skip_escape=>true, :value=> content },
             :close, :script
           ].concat(todo)
+
+          script_tag = {:tag_name=>:script}.freeze
+
+          new_todo = []
+          files = JS_FILE_PATHS.each { |path|
+            new_todo.concat [
+              :clean_attrs, {:src=>path}, script_tag,
+              :open, :script,
+              :close, :script
+            ]
+          }
+          todo = new_todo.concat(todo)
 
         when tag == :javascript
           vals = todo.shift

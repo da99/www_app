@@ -38,5 +38,18 @@ describe :script do
     }
   end
 
+  it "includes client-side script files" do
+    actual = WWW_App.new {
+      div {
+        on :click do
+          add_class :happy
+        end
+      }
+    }.to_html
+    actual.scan(%r@<script src="([^"]+)"></script>@).flatten.
+    should == WWW_App::TO::JS_FILE_PATHS.map { |f|
+      Escape_Escape_Escape.relative_href f
+    }
+  end # === it includes client-side script files
 
 end # === describe :JS ===
