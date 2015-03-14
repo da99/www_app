@@ -149,7 +149,7 @@ class WWW_App
       indent = 0
       todo   = @tags.dup
       last   = nil
-      stacks = {}
+      stacks = {:js=>[]}
 
       doc = [
         doc_type   = {:tag_name => :doc_type,   :text     => "<!DOCTYPE html>"},
@@ -212,6 +212,7 @@ class WWW_App
 
       is_fragment = style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
 
+      body[:children] << {:tag_name=>:js_to_script_tag}
       if is_fragment
         doc = body[:children]
 
@@ -423,20 +424,40 @@ class WWW_App
           new_todo.concat [:close, tag[:tag_name]]
           todo = new_todo.concat(todo)
 
-        when tag == :javascript
-          vals = todo.shift
-          clean_vals = vals.map { |raw_x|
+        when t_name == :js
+          stacks[:js].concat [css_selector(tag[:parent])].concat(tag[:value])
+
+
+        when t_name == :js_to_script_tag
+          next if stacks[:js].empty?
+          stacks[:clean_text] ||= lambda { |raw_x|
             x = case raw_x
                 when ::Symbol, ::String
                   Clean.html(raw_x.to_s)
                 when ::Array
-                  to_clean_text :javascript, raw_x
+                  raw_x.map { |x| stacks[:clean_text].call x }
                 when ::Numeric
                   x
                 else
                   fail "Unknown type for json: #{raw_x.inspect}"
                 end
           }
+
+          clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
+          content = <<-EOF
+            \nWWW_App.compile(
+              #{::Escape_Escape_Escape.json_encode(clean_vals)}
+            );
+          EOF
+          todo = [
+            :clean_attrs, {:type=>'application/javascript'}, {:tag_name=>:script},
+            :open, :script,
+            {:tag_name=>:text, :skip_escape=>true, :value=> content },
+            :close, :script
+          ].concat(todo)
+
+        when tag == :javascript
+          vals = todo.shift
 
         when tag == :to_json
           vals = todo.shift
