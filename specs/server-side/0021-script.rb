@@ -52,4 +52,16 @@ describe :script do
     }
   end # === it includes client-side script files
 
+  it "is rendered inside a full document" do
+    actual = WWW_App.new {
+      div {
+        on(:click) {
+          add_class :happy
+        }
+      }
+    }.to_html
+
+    actual['<body>'].should == '<body>'
+  end
+
 end # === describe :JS ===

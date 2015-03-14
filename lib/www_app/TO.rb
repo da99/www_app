@@ -218,6 +218,10 @@ class WWW_App
             tags = t[:children].dup.concat(tags)
           end
 
+          if t_name == :js
+            stacks[:js].concat [css_selector(t[:parent])].concat(t[:value])
+          end
+
         end # === case ========
       end # === while
 
@@ -225,7 +229,7 @@ class WWW_App
         style_tags[:children] << body
       end
 
-      is_fragment = style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
+      is_fragment = stacks[:js].empty? && style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
 
       body[:children] << {:tag_name=>:js_to_script_tag}
       if is_fragment
@@ -440,7 +444,7 @@ class WWW_App
           todo = new_todo.concat(todo)
 
         when t_name == :js
-          stacks[:js].concat [css_selector(tag[:parent])].concat(tag[:value])
+          next
 
 
         when t_name == :js_to_script_tag
