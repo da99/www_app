@@ -5,13 +5,17 @@
 cmd="$1"
 set -u -e -o pipefail
 
-mkdir -p tmp
-
 export PORT=4567
 export PID="tmp/thin.pid"
 export LOG="tmp/log.txt"
 export RACK_ENV="production"
 
+dir="$(pwd)"
+cd /tmp
+rm -rf www_app
+mkdir -p www_app/tmp
+cd www_app
+$dir/bin/www_app Public
 
 # === Stop the current server, if found.
 if [[ "$1" == "start" ]]
@@ -19,7 +23,7 @@ then
 
   if [[ -f "$PID" && -s "$PID" ]]
   then
-    bin/server stop
+    $dir/bin/server stop
   fi
 
   # === Reset tmp files
@@ -33,7 +37,8 @@ then
   exit 0
 fi
 
-bundle exec thin -l $LOG -P $PID -p $PORT -e production -R specs/lib/config.ru $@
+cd $dir
+thin -c /tmp/www_app -l $LOG -P $PID -p $PORT -e production -R $dir/specs/lib/config.ru $@
 
 if [[ "$@" == *start* ]]
 then

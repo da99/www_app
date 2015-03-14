@@ -454,7 +454,7 @@ class WWW_App
 
           clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
           content = <<-EOF
-            \nWWW_App.compile(
+            \nWWW_App.run(
               #{::Escape_Escape_Escape.json_encode(clean_vals)}
             );
           EOF
@@ -609,7 +609,7 @@ class WWW_App
           if h[:tag] == :script && h[:content] && !h[:content].empty?
             return <<-EOF
               <script type="text/css">
-                WWW_App.compile(
+                WWW_App.run(
                   #{to_clean_text :to_json, h[:content]}
                 );
               </script>

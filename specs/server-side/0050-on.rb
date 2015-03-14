@@ -13,14 +13,14 @@ describe "HTML :on" do
 
     actual.scan(%r!<script type="application/javascript">([^<]+)</script>!).flatten.map { |s| norm_wo_lines(s) }.
       should == [norm_wo_lines(%^
-      WWW_App.compile(
+      WWW_App.run(
         ["#main","on",["click"],["add_class",["red&lt;red"]]]
       );^)]
   end
 
   it "renders js" do
     target = norm_wo_lines <<-EOF
-      WWW_App.compile(
+      WWW_App.run(
         #{
           Escape_Escape_Escape.json_encode( ["#my_box", "on", ["click"], ["add_class", ["hello"] ] ] )
         }

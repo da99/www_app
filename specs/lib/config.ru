@@ -5,6 +5,8 @@ require 'da99_rack_protect'
 require 'multi_json'
 require 'www_app'
 
+PATH = File.expand_path(File.dirname(__FILE__) + '../../..')
+
 Rack::Mime::MIME_TYPES.merge!({".map" => "application/json"})
 
 Cuba.use Da99_Rack_Protect do |c|
@@ -13,36 +15,36 @@ end
 
 Cuba.use Rack::ShowExceptions
 
-Cuba.use(Class.new {
-  def initialize app
-    @app = app
-  end
+# Cuba.use(Class.new {
+  # def initialize app
+    # @app = app
+  # end
 
-  def call env
-    results = @app.call(env)
-    if results.first == 404
-      if env['PATH_INFO'] == '/old'
-        return [
-          200,
-          {"Content-Type" => "text/html"},
-          [File.read("./specs/client-side/index.html").gsub("{token}", env['rack.session']['csrf'])]
-        ]
-      end
+  # def call env
+    # results = @app.call(env)
+    # if results.first == 404
+      # if env['PATH_INFO'] == '/old'
+        # return [
+          # 200,
+          # {"Content-Type" => "text/html"},
+          # [File.read("./specs/client-side/index.html").gsub("{token}", env['rack.session']['csrf'])]
+        # ]
+      # end
 
-      [
-        Rack::Directory.new(File.expand_path('./specs/lib')),
-        Rack::Directory.new(File.expand_path('./specs/client-side')),
-        Rack::Directory.new(File.expand_path('./lib/public'))
-      ].detect { |r|
-        status, headers, body = r.call(env)
-        return [status, headers, body] if status !=  404
-        false
-      }
-    end
+      # [
+        # Rack::Directory.new(File.expand_path('./specs/lib')),
+        # Rack::Directory.new(File.expand_path('./specs/client-side')),
+        # Rack::Directory.new(File.expand_path('./lib/public'))
+      # ].detect { |r|
+        # status, headers, body = r.call(env)
+        # return [status, headers, body] if status !=  404
+        # false
+      # }
+    # end
 
-    results
-  end
-})
+    # results
+  # end
+# })
 
 
 PAGES = {
@@ -60,7 +62,7 @@ PAGES = {
     }
 }
 
-Cuba.use Rack::Static, :urls=>["/www_app-#{File.read('VERSION').strip}"], :root=>'Public'
+Cuba.use Rack::Static, :urls=>["/www_app-#{File.read(PATH + '/VERSION').strip}"], :root=>'Public'
 
 Cuba.define do
 
