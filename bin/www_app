@@ -18,10 +18,12 @@ when "help"
   ^
 
 when 'PUBLIC'
-  path = File.expand_path(File.dirname(__FILE__ ) + '/..') + '/lib/public'
+  gem  = File.expand_path(File.dirname(__FILE__ ) + '/..')
+  path = gem + '/lib/public'
+  public_dir = "Public/www_app-#{File.read(gem + '/VERSION').strip}"
   Dir.glob(path + '/*.js').each { |p|
-    FileUtils.mkdir_p 'Public'
-    client = "Public/#{File.basename p}"
+    FileUtils.mkdir_p public_dir
+    client = "#{public_dir}/#{File.basename p}"
     #
     # We force the copy file in case the original
     # file was corrupted on previous copy operations.
