@@ -111,23 +111,13 @@ class WWW_App
   end # === class Clean
 
   module TO
-    COMMA    = ", ".freeze
-    SPACE    = " ".freeze
-    NOTHING  = "".freeze
-    VERSION  = File.read(File.dirname(__FILE__).sub('lib/www_app'.freeze, NOTHING) + '/VERSION').strip
-    JS_FILES = %w{
-      jquery-2.1.3.min.js
-      jquery.serialize-object.min.js
-      underscore-min-1.8.2.js
-      underscore-min-1.8.2.map
-      underscore.string-3.0.3.js
-      www_app.js
-    }
-
-    PUBLIC_DIR = "/www_app-#{VERSION}"
-
-    JS_FILE_PATHS = JS_FILES.map { |file|
-      File.join(PUBLIC_DIR, file)
+    COMMA         = ", ".freeze
+    SPACE         = " ".freeze
+    NOTHING       = "".freeze
+    GEM_PATH      = File.dirname(__FILE__).sub('lib/www_app'.freeze, NOTHING)
+    VERSION       = File.read(GEM_PATH + '/VERSION').strip
+    JS_FILE_PATHS = Dir.glob(GEM_PATH + '/*.js').map { |path|
+      "/www_app-#{VERSION}/#{File.basename path}"
     }
 
     INVALID_SCRIPT_TYPE_CHARS = /[^a-z0-9\-\/\_]+/

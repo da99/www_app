@@ -5,6 +5,8 @@ require 'da99_rack_protect'
 require 'multi_json'
 require 'www_app'
 
+Rack::Mime::MIME_TYPES.merge!({".map" => "application/json"})
+
 Cuba.use Da99_Rack_Protect do |c|
   c.config :host, :localhost if ENV['IS_DEV']
 end
