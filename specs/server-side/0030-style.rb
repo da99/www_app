@@ -88,4 +88,19 @@ describe ":style block" do
     end
   end # === it renders nested styles
 
+  it "includes parent when rendering" do
+    target :style, %^
+      div.main #ham {
+        color: #cheese;
+      }
+    ^
+    actual do
+      div.^(:main) do
+        style {
+          p.id(:ham) { color '#cheese' }
+        }
+      end
+    end
+  end # === it includes parent when rendering
+
 end # === describe "css pseudo"
