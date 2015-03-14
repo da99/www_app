@@ -47,8 +47,8 @@ describe :script do
       }
     }.to_html
     actual.scan(%r@<script src="([^"]+)"></script>@).flatten.
-    should == WWW_App::TO::JS_FILE_PATHS.map { |f|
-      Escape_Escape_Escape.relative_href f
+    should == Dir.glob('lib/public/*.js').sort.map { |f|
+      Escape_Escape_Escape.relative_href "/www_app-#{File.read('VERSION').strip}/#{File.basename f}"
     }
   end # === it includes client-side script files
 

@@ -116,7 +116,7 @@ class WWW_App
     NOTHING       = "".freeze
     GEM_PATH      = File.dirname(__FILE__).sub('lib/www_app'.freeze, NOTHING)
     VERSION       = File.read(GEM_PATH + '/VERSION').strip
-    JS_FILE_PATHS = Dir.glob(GEM_PATH + '/*.js').map { |path|
+    JS_FILE_PATHS = Dir.glob("#{GEM_PATH}/lib/public/*.js").sort.map { |path|
       "/www_app-#{VERSION}/#{File.basename path}"
     }
 
