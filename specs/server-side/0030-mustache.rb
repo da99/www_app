@@ -88,22 +88,20 @@ describe :mustache do
   end
 
   it "does not allow vars to be used in form :action" do
-    target <<-EOF
-      <form action="url">
-        <input type="hidden" name="auth_token" value="hello" />
-      </form>
-    EOF
+    should.raise(Escape_Escape_Escape::Invalid_Type) {
+      actual :url=>'not allowed', :auth_token => 'hello' do
+        form.action(:url) {}
+      end
+    }.message.should.match /:url/
 
-    actual :url=>'url', :auth_token => 'hello' do
-      form.action(:url) {}
-    end
   end
 
   it "does not allow vars to be used in :link :href" do
-    target %^<link href="hello" />^
-    actual {
-      link.href(:hello)./
-    }
+    should.raise(Escape_Escape_Escape::Invalid_Type) {
+      actual(:hello=>'not_allowed') {
+        link.href(:hello)./
+      }
+    }.message.should.match /:hello/
   end
 
   it "raises ContextMiss if encounters unescaped value" do

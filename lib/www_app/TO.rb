@@ -299,11 +299,7 @@ class WWW_App
                                  Clean.mustache :href, val
 
                                when [:action, :src, :href].include?(attr)
-                                 if val.is_a?(Symbol)
-                                   val.to_mustache(:relative_href)
-                                 else
-                                   Clean.relative_href(val)
-                                 end
+                                 Clean.relative_href(val)
 
                                when attr == :id
                                  Clean.html_id(val.to_s)
