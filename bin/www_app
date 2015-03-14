@@ -12,16 +12,16 @@ when "help"
   puts %^
     # ===================="
     www_app help
-    www_app PUBLIC
+    www_app Public
     www_app upgrade_js
     # ===================="
   ^
 
-when 'PUBLIC'
+when 'Public'
   gem  = File.expand_path(File.dirname(__FILE__ ) + '/..')
   path = gem + '/lib/public'
   public_dir = "Public/www_app-#{File.read(gem + '/VERSION').strip}"
-  Dir.glob(path + '/*.js').each { |p|
+  Dir.glob(path + '/*.{map,js}').each { |p|
     FileUtils.mkdir_p public_dir
     client = "#{public_dir}/#{File.basename p}"
     #

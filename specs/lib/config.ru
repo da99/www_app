@@ -3,10 +3,11 @@
 require 'cuba'
 require 'da99_rack_protect'
 require 'multi_json'
+require 'www_app'
 
-Cuba.use Da99_Rack_Protect.config { |c|
-  c.config :host, [:localhost, 'www_app.com']
-}
+Cuba.use Da99_Rack_Protect do |c|
+  c.config :host, :localhost if ENV['IS_DEV']
+end
 
 Cuba.use Rack::ShowExceptions
 
@@ -18,7 +19,7 @@ Cuba.use(Class.new {
   def call env
     results = @app.call(env)
     if results.first == 404
-      if env['PATH_INFO'] == '/'
+      if env['PATH_INFO'] == '/old'
         return [
           200,
           {"Content-Type" => "text/html"},
@@ -41,7 +42,31 @@ Cuba.use(Class.new {
   end
 })
 
+
+PAGES = {
+  :root => WWW_App.new {
+      title { 'hello' }
+      div {
+        _.^(:happy) {
+          border '1px dashed red'
+        }
+        on(:click) {
+          add_class :happy
+        }
+        "Almost done."
+      }
+    }
+}
+
+Cuba.use Rack::Static, :urls=>["/www_app-#{File.read('VERSION').strip}"], :root=>'Public'
+
 Cuba.define do
+
+  on get do
+    on root do
+      res.write PAGES[:root].to_html
+    end
+  end
 
   on post do
     data = (req.env["rack.request.form_hash"]).dup

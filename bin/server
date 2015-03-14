@@ -33,7 +33,7 @@ then
   exit 0
 fi
 
-bundle exec thin -d -l $LOG -P $PID -p $PORT -e production -R specs/lib/config.ru $@
+bundle exec thin -l $LOG -P $PID -p $PORT -e production -R specs/lib/config.ru $@
 
 if [[ "$@" == *start* ]]
 then
