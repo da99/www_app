@@ -3,24 +3,37 @@
 #
 #
 
+require "fileutils"
+
 case ARGV[0]
 
 when "help"
 
   puts %^
     # ===================="
-    www_app help"
-    www_app install_js"
+    www_app help
+    www_app PUBLIC
+    www_app upgrade_js
     # ===================="
   ^
 
-when "install_js"
+when 'PUBLIC'
+  path = File.expand_path(File.dirname(__FILE__ ) + '/..') + '/lib/public'
+  Dir.glob(path + '/*.js').each { |p|
+    FileUtils.mkdir_p 'Public'
+    client = "Public/#{File.basename p}"
+    #
+    # We force the copy file in case the original
+    # file was corrupted on previous copy operations.
+    FileUtils.cp(p, client, :verbose=>true)
+  }
+
+when "upgrade_js"
 
   fail "
     Must automate downloading of LATEST (security reason)
     underscore, jquery, etc.
   "
-  require "fileutils"
   args   = ARGV.dup
 
   applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_app.js"
