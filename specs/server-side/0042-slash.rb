@@ -1,7 +1,7 @@
 
 describe :slash do
 
-  it "defines multiple css classes" do
+  it "lets you define multiple css classes" do
     target :style, %^
       a:link, a:visited, a:hover {
         color: #fff;

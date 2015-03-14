@@ -65,4 +65,27 @@ describe ":style block" do
     end
   end
 
+  it "renders nested styles" do
+    target :style, %^
+      #main {
+        border: 1px solid grey;
+      }
+
+      #main a.high {
+         border: 2px solid blue;
+      }
+    ^
+
+    actual do
+      style {
+        div.id(:main) {
+          border '1px solid grey'
+          a.^(:high) {
+            border '2px solid blue'
+          }
+        }
+      } # === style
+    end
+  end # === it renders nested styles
+
 end # === describe "css pseudo"
