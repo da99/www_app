@@ -6,8 +6,8 @@ require 'escape_escape_escape'
 # ===================================================================
 class Symbol
 
-  def to_mustache meth
-    WWW_App::Clean.mustache meth, self
+  def to_mustache *args
+    WWW_App::Clean.mustache *args, self
   end
 
 end # === class Symbol
@@ -88,19 +88,30 @@ class WWW_App
 
   class Clean
 
-    MUSTACHE_Regex = /\A\{\{\{? [a-z0-9\_\.]+ \}\}\}?\z/i
+    MUSTACHE_Regex = /\A[a-z0-9\_\.]+\z/i
+    PERIOD = '.'.freeze
 
     class << self
 
       def mustache *args
-        meth, val = args
-        if val.is_a?(Symbol)
-          m = "{{{ #{meth}.#{val} }}}"
-          fail "Unknown chars: #{args.inspect}" unless m[MUSTACHE_Regex]
+        case args.size
+        when 2
+          meth, val = args
+          escape_it = false
+        when 3
+          escape_it, meth, val = args
         else
-          m = ::Escape_Escape_Escape.send(meth, val)
+          fail ::ArgumentError, "Unknown args: #{args}"
         end
-        m
+
+        v = meth.to_s + PERIOD + val.to_s
+        fail "Unknown chars: #{args.inspect}" unless v[MUSTACHE_Regex]
+
+        if escape_it
+          "!{ #{v} }!"
+        else
+          "{{{ #{v} }}}"
+        end
       end
 
       def method_missing name, *args
@@ -155,6 +166,7 @@ class WWW_App
       todo   = @tags.dup
       last   = nil
       stacks = {:js=>[]}
+      last_open = nil
 
       doc = [
         doc_type   = {:tag_name => :doc_type,   :text     => "<!DOCTYPE html>"},
@@ -248,17 +260,17 @@ class WWW_App
         when tag == :open
           attributes = stacks.delete :attributes
 
-          unless indent.zero?
+          tag_sym = todo.shift
+
+          if todo.first != :close && !indent.zero? && !HTML::NO_NEW_LINES.include?(last_open)
             final << NEW_LINE << SPACES(indent)
           end
-
-          tag_sym = todo.shift
 
           if HTML::SELF_CLOSING_TAGS.include?(tag_sym)
             final << (
               attributes ?
-              "<#{tag_sym} #{attributes} />" :
-              "<#{tag_sym} />"
+              "<#{tag_sym} #{attributes} />\n" :
+              "<#{tag_sym} />\n"
             )
             if todo.first == :close && todo[1] == tag_sym
               todo.shift
@@ -275,6 +287,7 @@ class WWW_App
 
           last = indent
           indent += 2
+          last_open = tag_sym
 
 
         when tag == :close
@@ -306,7 +319,11 @@ class WWW_App
                                  'hidden'
 
                                when attr == :href && tag_name == :a
-                                 Clean.mustache :href, val
+                                 if val.is_a? Symbol
+                                   Clean.mustache :href, val
+                                 else
+                                   Clean.href val
+                                 end
 
                                when [:action, :src, :href].include?(attr)
                                  Clean.relative_href(val)
@@ -398,6 +415,10 @@ class WWW_App
           ]
 
           new_todo.concat(tag[:children]) if tag[:children]
+
+          if tag[:children] && !tag[:children].empty? && tag[:children].first[:tag_name] != :text && tag[:children].last[:tag_name] != :text
+            new_todo << :new_line
+          end
 
           new_todo.concat [
             :close, :script

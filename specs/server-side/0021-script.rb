@@ -64,4 +64,17 @@ describe :script do
     actual['<body>'].should == '<body>'
   end
 
+  it "allows rendering of child elements" do
+    target :body, <<-EOF
+      <script type="text/mustache">
+        <div>!{ html.hello }!</div>
+      </script>
+    EOF
+    actual do
+      script 'text/mustache' do
+        div { :hello }
+      end
+    end
+  end # === it allows rendering of child elements
+
 end # === describe :JS ===

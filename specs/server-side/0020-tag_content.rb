@@ -1,5 +1,5 @@
 
-describe "HTML contents" do
+describe 'tag content' do
 
   it "uses last String value as content" do
     target %^<p>Hello</p>^

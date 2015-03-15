@@ -3,6 +3,7 @@ class WWW_App
   module HTML
 
     SELF_CLOSING_TAGS = [:br, :input, :link, :meta, :hr, :img]
+    NO_NEW_LINES = [:p, :code, :span].freeze
 
     TAGS   = %w[
       title

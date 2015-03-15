@@ -429,6 +429,9 @@ class WWW_App
         when tag?(:form)
           input(:hidden, :auth_token, :auth_token.to_mustache(:html))
 
+        when results.is_a?(::Symbol) && ancestor?(:script)
+          create :text, :skip_escape=>true, :value => results.to_mustache(:mustache, :html)
+
         when results.is_a?(::Symbol)
           create :text, :skip_escape=>true, :value => results.to_mustache(:html)
 
