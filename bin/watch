@@ -1,0 +1,53 @@
+#!/usr/bin/env bash
+# -*- bash -*-
+#
+#
+orig="$@"
+set -u -e -o pipefail
+
+
+
+www_app="$(pwd)"
+echo ""
+echo "=== Watching: "
+echo ""
+
+inotifywait -q -m --exclude .git/ -r . | while read CHANGE
+    do
+
+      dir=$(echo "$CHANGE" | cut -d' ' -f 1)
+      op=$(echo "$CHANGE" | cut -d' ' -f 2)
+      file=$(echo "$CHANGE" | cut -d' ' -f 3)
+      path="${dir}$file"
+
+      if [[ ( ! "$op" =~ "NOWRITE" ) && ( "$op" =~ "CLOSE" || "$op" =~ "WRITE" )  && ! -z "$file" ]]
+      then
+        echo ""
+        echo $CHANGE
+        echo $path
+
+        if [[ "$(readlink -f $path)" == "$(readlink -f $0)" ]]; then
+          echo "=== Restarting this script"
+          exec $0 $orig
+        fi
+
+        if [[ -d playground/tmp ]]; then
+          if [[ ( $file == *.ru* || $file == *.rb* ) && -f playground/tmp/thin.pid ]]; then
+            bin/server restart
+          fi
+
+          if [[ $path != *playground* ]]; then
+            if [[ $dir == *public* && $file == *.js* ]]; then
+              cmd="cp $path playground/Public/www_app-$(cat VERSION)/$file"
+              echo $cmd
+              $cmd
+            fi
+          fi
+
+          cd $www_app
+        fi
+      fi
+
+    done
+
+
