@@ -165,7 +165,7 @@ class WWW_App
       indent = 0
       todo   = @tags.dup
       last   = nil
-      stacks = {:js=>[]}
+      stacks = {:js=>[], :script_tags=>[]}
       last_open = nil
 
       doc = [
@@ -218,6 +218,10 @@ class WWW_App
 
           if t[:children]
             tags = t[:children].dup.concat(tags)
+          end
+
+          if t_name == :script
+            stacks[:script_tags] << t
           end
 
           if t_name == :js
@@ -459,7 +463,7 @@ class WWW_App
 
 
         when t_name == :js_to_script_tag
-          next if stacks[:js].empty?
+          next if stacks[:js].empty? && stacks[:script_tags].empty?
           stacks[:clean_text] ||= lambda { |raw_x|
             x = case raw_x
                 when ::Symbol, ::String
