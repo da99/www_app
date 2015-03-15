@@ -6,45 +6,45 @@ cmd="$1"
 set -u -e -o pipefail
 
 export PORT=4567
-export PID="tmp/thin.pid"
-export LOG="tmp/log.txt"
+export PID="/tmp/www_app/thin.pid"
+export LOG="/tmp/www_app/log.txt"
 export RACK_ENV="production"
 
 dir="$(pwd)"
-cd /tmp
-rm -rf www_app
-mkdir -p www_app/tmp
-cd www_app
-$dir/bin/www_app Public
 
-# === Stop the current server, if found.
-if [[ "$1" == "start" ]]
-then
+if [[ "$cmd" == "start" ]]; then
 
-  if [[ -f "$PID" && -s "$PID" ]]
-  then
+  if [[ -f "$PID" && -s "$PID" ]]; then
     $dir/bin/server stop
   fi
 
-  # === Reset tmp files
-  rm -f "$PID"
-  rm -f "$LOG"
+  echo "--- resetting files: $cmd"
+
+  cd /tmp
+  rm -rf www_app
+  mkdir -p www_app/tmp
 fi
 
-if [[ "$1" == "stop" && ! -f "$PID" ]]
-then
-  echo "No pid found. Exiting."
-  exit 0
+if [[ "$cmd" != "stop" ]]; then
+  echo "--- Public files: $cmd"
+  cd /tmp/www_app
+  $dir/bin/www_app Public
 fi
+
 
 cd $dir
-thin -c /tmp/www_app -l $LOG -P $PID -p $PORT -e production -R $dir/specs/lib/config.ru $@
+bundle exec thin -d -c /tmp/www_app -l $LOG --pid $PID -p $PORT -e production -R $dir/specs/lib/config.ru $@
+
+
+cd /tmp/www_app
 
 if [[ "$@" == *start* ]]
 then
   sleep 0.5
   if [[ -f "$PID" ]]; then
     echo "Started server: PORT: $PORT PID: $(cat $PID)"
+    sleep 1.0
+    cat $LOG
   else
     cat $LOG 1>&2
     exit 1
