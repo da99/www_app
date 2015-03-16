@@ -7,9 +7,10 @@ set -u -e -o pipefail
 
 export PORT=4567
 export PID="tmp/thin.pid"
-export LOG="tmp/log.txt"
+export LOG="/tmp/www_app/log.txt"
 export RACK_ENV="production"
 
+mkdir -p /tmp/www_app
 dir="$(pwd)"
 
 if [[ "$cmd" == "start" ]]; then
@@ -25,10 +26,10 @@ if [[ "$cmd" == "start" ]]; then
     kill "$(cat playground/$PID)"
     echo ""
   fi
-  rm -rf playground/tmp
+  rm -rf $LOG
 fi
 
-if [[ -f playground/$LOG && ( "$cmd" == "start" || "$cmd" == "restart" ) ]]; then
+if [[ -f $LOG && ( "$cmd" == "start" || "$cmd" == "restart" ) ]]; then
   echo ""
   echo "=== removing log file"
   rm -r playground/$LOG
