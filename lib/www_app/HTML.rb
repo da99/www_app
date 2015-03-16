@@ -199,14 +199,31 @@ class WWW_App
       end
     end
 
-    def script type_or_src
-      if block_given?
-        create :script, :type=>type_or_src do
-          yield
+    def script *classes
+      attrs = {}
+      classes.select! { |u|
+        case
+        when u.is_a?(String) && u['.js'.freeze]
+          attrs[:src] = u
+          false
+        when u.is_a?(String)
+          attrs[:type] = u
+          false
+        else
+          true
         end
-      else
-        create(:script, :src=>type_or_src) { }
+      }
+
+      if attrs[:src]
+        return create(:script, :src=>type_or_src) { }
       end
+
+      attrs[:class] = classes unless classes.empty?
+      attrs[:type]  ||= "text/hogan"
+
+      create :script, attrs
+      close { yield } if block_given?
+      self
     end
 
   end # === module HTML

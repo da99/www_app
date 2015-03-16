@@ -409,9 +409,9 @@ class WWW_App
           nil # do nothing
 
         when t_name == :script  # =============== :script tag ===
-          attrs = {}
-          attrs[:src]  = tag[:src]  if tag[:src]
-          attrs[:type] = tag[:type] if tag[:type]
+          attrs = tag.select { |k, v|
+            k == :src || k == :type || k == :class
+          }
 
           new_todo = [
             :clean_attrs, attrs, tag,

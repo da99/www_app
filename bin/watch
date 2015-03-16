@@ -12,6 +12,17 @@ echo ""
 echo "=== Watching: "
 echo ""
 
+# From: http://stackoverflow.com/questions/5947742/how-to-change-the-output-color-of-echo-in-linux 
+Color_Off='\e[0m'
+Green='\e[0;32m'        # Green
+
+log=playground/tmp/log.txt
+if [[ -f $log ]]; then
+  old_log="$(cat $log)"
+else
+  old_log=""
+fi
+
 inotifywait -q -m --exclude .git/ -r . | while read CHANGE
     do
 
@@ -20,11 +31,19 @@ inotifywait -q -m --exclude .git/ -r . | while read CHANGE
       file=$(echo "$CHANGE" | cut -d' ' -f 3)
       path="${dir}$file"
 
+      if [[ $file == "log.txt" && $op == "MODIFY" ]]; then
+        new_log="$(cat $log)"
+        output=${new_log/"$old_log"}
+        if [[ ! -z "$output" ]]; then
+          echo -e "${Green}$output${Color_Off}"
+        fi
+        old_log="$(cat $log)"
+      fi
+
       if [[ ( ! "$op" =~ "NOWRITE" ) && ( "$op" =~ "CLOSE" || "$op" =~ "WRITE" )  && ! -z "$file" ]]
       then
         echo ""
-        echo $CHANGE
-        echo $path
+        echo "$op: $path"
 
         if [[ "$(readlink -f $path)" == "$(readlink -f $0)" ]]; then
           echo "=== Restarting this script"
@@ -32,8 +51,12 @@ inotifywait -q -m --exclude .git/ -r . | while read CHANGE
         fi
 
         if [[ -d playground/tmp ]]; then
-          if [[ ( $file == *.ru* || $file == *.rb* ) && -f playground/tmp/thin.pid ]]; then
-            bin/server restart
+          if [[ ( $file == *.ru* || $file == *.rb* ) ]]; then
+            if [[ -f playground/tmp/thin.pid ]]; then
+              bin/server restart
+            else
+              bin/server start
+            fi
           fi
 
           if [[ $path != *playground* ]]; then
