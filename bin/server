@@ -32,7 +32,7 @@ fi
 if [[ -f $LOG && ( "$cmd" == "start" || "$cmd" == "restart" ) ]]; then
   echo ""
   echo "=== removing log file"
-  rm -r playground/$LOG
+  rm -r $LOG
   echo ""
 fi
 
