@@ -43,11 +43,14 @@ PAGES = {
       }
 
       script :news, :good do
-        div { :msg }
+        div.^(:good) {
+          span { 'GOOD: ' }
+          span { :msg }
+        }
       end
 
       script :news, :bad do
-        div { :msg }
+        div.^(:bad) { :msg }
       end
 
       script do
