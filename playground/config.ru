@@ -14,7 +14,7 @@ Cuba.use Da99_Rack_Protect do |c|
 end
 
 if ENV['IS_DEV']
-  Cuba.use Rack::ShowExceptions
+  # Cuba.use Rack::ShowExceptions
 end
 
 PAGES = {
@@ -29,6 +29,8 @@ PAGES = {
           border '1px dotted #fff'
           margin '10px'
           padding '10px'
+          float 'left'
+          min_width '80px'
         }
 
         div.^(:prepend) {
@@ -40,23 +42,34 @@ PAGES = {
         }
       }
 
-      script 'text/hogan', :skip_load, :on_first do
-        div.^(:active) { :first }
+      script :news, :good do
+        div { :msg }
       end
 
-      script 'text/hogan' do
-        div.^(:active) { :last }
+      script :news, :bad do
+        div { :msg }
       end
 
-      script 'text/hogan' do
-        div.^(:active) { 
+      script do
+        div { text('First: '); span { :first } }
+      end
+
+      script do
+        div { text('Last: '); span { :last } }
+      end
+
+      script do
+        div {
           text "This is a movie: "
           span { :movie }
         }
       end
 
-      script 'text/hogan', :prepend do
-        div.^(:prepend) { :movie }
+      script :prepend do
+        div.^(:prepend) {
+          text "TOP movie: "
+          span { :movie }
+        }
       end
 
       p {
@@ -72,6 +85,10 @@ Cuba.define do
   on get do
     on root do
       res.write PAGES[:root].to_html
+    end
+
+    on 'error' do
+      something
     end
   end
 
