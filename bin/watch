@@ -27,7 +27,7 @@ fi
 
 IFS=$'\n'
 re='^[0-9]+$'
-inotifywait -q -m --exclude .git/ -r . -r /tmp/www_app | while read CHANGE
+inotifywait -q -m --exclude .git/ -r .  | while read CHANGE
     do
 
       dir=$(echo "$CHANGE" | cut -d' ' -f 1)
@@ -35,37 +35,37 @@ inotifywait -q -m --exclude .git/ -r . -r /tmp/www_app | while read CHANGE
       file=$(echo "$CHANGE" | cut -d' ' -f 3)
       path="${dir}$file"
 
-      # if [[ "$op" == "MODIFY" && $file == "log.txt"  ]]; then
-        # new_log="$(cat $log)"
-        # output=${new_log/"$old_log"}
-        # for i in $output; do
-          # code="$(echo "$i" | cut -d' ' -f9 || echo '')"
-          # if [[ ! -z "$code" && "$code" =~ $re ]]; then
-            # if [[ "$code" -gt 199 && "$code" -lt 300 ]]; then
-              # color="$Green"
-            # fi
-            # if [[ "$code" -gt 299 && "$code" -lt 400 ]]; then
-              # color="$Orange"
-            # fi
-            # if [[ "$code" -gt 399 && "$code" -lt 500 ]]; then
-              # color="$Red"
-            # fi
-            # if [[ "$code" -gt 499 ]]; then
-              # color="$BRed"
-            # fi
-            # echo -e "${color}$i${Color_Off}"
-          # else
-            # if [[ ! ( "$i" == *ruby* ) ]]; then
-              # if [[ "$i" =~ ':in ' ]]; then
-                # echo -e "${Red}$i${Color_Off}"
-              # else
-                # echo -e "$i"
-              # fi
-            # fi
-          # fi
-        # done
-        # old_log="$new_log"
-      # fi
+      if [[ "$op" == "MODIFY" && $file == "log.txt"  ]]; then
+        new_log="$(cat $log)"
+        output=${new_log/"$old_log"}
+        for i in $output; do
+          code="$(echo "$i" | cut -d' ' -f9 || echo '')"
+          if [[ ! -z "$code" && "$code" =~ $re ]]; then
+            if [[ "$code" -gt 199 && "$code" -lt 300 ]]; then
+              color="$Green"
+            fi
+            if [[ "$code" -gt 299 && "$code" -lt 400 ]]; then
+              color="$Orange"
+            fi
+            if [[ "$code" -gt 399 && "$code" -lt 500 ]]; then
+              color="$Red"
+            fi
+            if [[ "$code" -gt 499 ]]; then
+              color="$BRed"
+            fi
+            echo -e "${color}$i${Color_Off}"
+          else
+            if [[ ! ( "$i" == *ruby* ) ]]; then
+              if [[ "$i" =~ ':in ' ]]; then
+                echo -e "${Red}$i${Color_Off}"
+              else
+                echo -e "$i"
+              fi
+            fi
+          fi
+        done
+        old_log="$new_log"
+      fi
 
       if [[ ( ! "$op" =~ "NOWRITE" ) && ( "$op" =~ "CLOSE" || "$op" =~ "WRITE" )  && ! -z "$file" ]]
       then
@@ -86,10 +86,18 @@ inotifywait -q -m --exclude .git/ -r . -r /tmp/www_app | while read CHANGE
             fi
           fi
 
+
           if [[ $path != *playground* && $dir == *public* && $file == *.js*  ]]; then
             dest="playground/Public/www_app-$(cat VERSION)/$file"
-            cp $path $dest
-            echo "=== copied to: $(pwd)/$dest"
+            hints=""
+            if [[ "$file" == "www_app.js" ]]; then
+              jshint $path || hints="false"
+            fi
+
+            if [[ -z "$hints" ]]; then
+              cp $path $dest
+              echo "=== copied to: $(pwd)/$dest"
+            fi
           else
             echo "=== ignored"
           fi
