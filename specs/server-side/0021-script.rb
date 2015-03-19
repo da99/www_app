@@ -77,4 +77,12 @@ describe :script do
     end
   end # === it allows rendering of child elements
 
+  it "puts custom script files w/ :src at the after vendor files and www_app.js" do
+    actual = WWW_App.new {
+      p { 'paragraph' }
+      script 'my_script.js'
+    }.to_html
+    actual.scan(%r!<script src="([^"]+)"></script>!).last.should == 'my_script.js'
+  end # === it puts custom script files w/ :src at the after vendor files and www_app.js
+
 end # === describe :JS ===
