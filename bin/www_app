@@ -1,54 +1,56 @@
-#!/usr/bin/env bash
+#!/usr/bin/env ruby
 # -*- bash -*-
 #
 #
-action="$1"
-shift
-set -u -e -o pipefail
 
-case "$action" in
-  "help")
-    echo "# ===================="
-    echo "www_app help"
-    echo "www_app Public"
-    echo "www_app upgrade_js"
-    echo "# ===================="
-  ;;
+require "fileutils"
 
-  "Public")
-    dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
-    path = "$dir/lib/public"
-    public_dir = "Public/www_app-$(cat "$dir/VERSION")"
-    cp -r "${path}/" "${public_dir}/"
-  ;;
+case ARGV[0]
 
-  "upgrade_js")
+when "help"
 
-    echo "
-      Must automate downloading of LATEST (security reason)
-      underscore, jquery, etc.
-    " 1>&2
-    echo 1
-    # args   = ARGV.dup
+  puts %^
+    # ===================="
+    www_app help
+    www_app Public
+    www_app upgrade_js
+    # ===================="
+  ^
 
-    # applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_app.js"
+when 'Public'
+  gem    = File.expand_path(File.dirname(__FILE__ ) + '/..')
+  source = gem + '/lib/public'
+  dest   = "Public/www_app-#{File.read(gem + '/VERSION').strip}"
+  FileUtils.mkdir_p dest
+  FileUtils.copy_entry source, dest
+  puts "=== Copied files into: #{dest}"
 
-    # target_dir = if ARGV[1]
-                   # ARGV[1]
-                 # else
-                   # Dir.pwd
-                 # end
+when "upgrade_js"
 
-    # new_file = File.join target_dir, "www_app.js"
-    # FileUtils.cp applet_file, new_file
-    # puts "#=== From:  #{applet_file}"
-    # puts "#=== Wrote: #{new_file}"
-  ;;
+  fail "
+    Must automate downloading of LATEST (security reason)
+    underscore, jquery, etc.
+  "
+  args   = ARGV.dup
+
+  applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_app.js"
+
+  target_dir = if ARGV[1]
+                 ARGV[1]
+               else
+                 Dir.pwd
+               end
+
+  new_file = File.join target_dir, "www_app.js"
+  FileUtils.cp applet_file, new_file
+  puts "#=== From:  #{applet_file}"
+  puts "#=== Wrote: #{new_file}"
+
+else
+
+  abort "Unknown operation: #{ARGV.first.inspect}"
+
+end # === case
 
 
-  *)
-    echo "Unknown option: $action" 1>&2
-    exit 1
-  ;;
-esac
 
