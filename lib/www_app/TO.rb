@@ -127,9 +127,12 @@ class WWW_App
     NOTHING       = "".freeze
     GEM_PATH      = File.dirname(__FILE__).sub('lib/www_app'.freeze, NOTHING)
     VERSION       = File.read(GEM_PATH + '/VERSION').strip
-    JS_FILE_PATHS = Dir.glob("#{GEM_PATH}/lib/public/*.js").sort.map { |path|
-      "/www_app-#{VERSION}/#{File.basename path}"
-    }
+    JS_FILE_PATHS = begin
+                      public = "#{GEM_PATH}/lib/public"
+                      Dir.glob("#{public}/**/*.{map,js}").map { |path|
+                        "/www_app-#{VERSION}/#{path.gsub("#{public}/", NOTHING)}"
+                      }
+                    end
 
     INVALID_SCRIPT_TYPE_CHARS = /[^a-z0-9\-\/\_]+/
 
@@ -477,6 +480,17 @@ class WWW_App
                 end
           }
 
+          script_tag = {:tag_name=>:script}.freeze
+
+          new_todo = []
+          JS_FILE_PATHS.each { |path|
+            new_todo.concat [
+              :clean_attrs, {:src=>path}, script_tag,
+              :open, :script,
+              :close, :script
+            ]
+          }
+
           clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
           content = <<-EOF
             \nWWW_App.run(
@@ -484,25 +498,13 @@ class WWW_App
             );
           EOF
 
-          script_tag = {:tag_name=>:script}.freeze
-
-          todo = [
+          new_todo.concat [
             :clean_attrs, {:type=>'application/javascript'}, script_tag,
             :open, :script,
             {:tag_name=>:text, :skip_escape=>true, :value=> content },
             :close, :script
-          ].concat(todo)
+          ]
 
-          script_tag = {:tag_name=>:script}.freeze
-
-          new_todo = []
-          files = JS_FILE_PATHS.each { |path|
-            new_todo.concat [
-              :clean_attrs, {:src=>path}, script_tag,
-              :open, :script,
-              :close, :script
-            ]
-          }
           todo = new_todo.concat(todo)
 
         when tag == :javascript

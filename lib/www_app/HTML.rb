@@ -215,7 +215,7 @@ class WWW_App
       }
 
       if attrs[:src]
-        return create(:script, :src=>type_or_src) { }
+        return create(:script, :src=>attrs[:src]) { }
       end
 
       attrs[:class] = classes unless classes.empty?
