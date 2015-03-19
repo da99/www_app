@@ -1,61 +1,54 @@
-#!/usr/bin/env ruby
+#!/usr/bin/env bash
 # -*- bash -*-
 #
 #
+action="$1"
+shift
+set -u -e -o pipefail
 
-require "fileutils"
+case "$action" in
+  "help")
+    echo "# ===================="
+    echo "www_app help"
+    echo "www_app Public"
+    echo "www_app upgrade_js"
+    echo "# ===================="
+  ;;
 
-case ARGV[0]
+  "Public")
+    dir=$( cd "$( dirname "${BASH_SOURCE[0]}" )/.." && pwd )
+    path = "$dir/lib/public"
+    public_dir = "Public/www_app-$(cat "$dir/VERSION")"
+    cp -r "${path}/" "${public_dir}/"
+  ;;
 
-when "help"
+  "upgrade_js")
 
-  puts %^
-    # ===================="
-    www_app help
-    www_app Public
-    www_app upgrade_js
-    # ===================="
-  ^
+    echo "
+      Must automate downloading of LATEST (security reason)
+      underscore, jquery, etc.
+    " 1>&2
+    echo 1
+    # args   = ARGV.dup
 
-when 'Public'
-  gem  = File.expand_path(File.dirname(__FILE__ ) + '/..')
-  path = gem + '/lib/public'
-  public_dir = "Public/www_app-#{File.read(gem + '/VERSION').strip}"
-  Dir.glob(path + '/*.{map,js}').each { |p|
-    FileUtils.mkdir_p public_dir
-    client = "#{public_dir}/#{File.basename p}"
-    #
-    # We force the copy file in case the original
-    # file was corrupted on previous copy operations.
-    FileUtils.cp(p, client, :verbose=>true)
-  }
+    # applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_app.js"
 
-when "upgrade_js"
+    # target_dir = if ARGV[1]
+                   # ARGV[1]
+                 # else
+                   # Dir.pwd
+                 # end
 
-  fail "
-    Must automate downloading of LATEST (security reason)
-    underscore, jquery, etc.
-  "
-  args   = ARGV.dup
-
-  applet_file = File.join File.dirname(File.dirname(__FILE__)), "lib/www_app.js"
-
-  target_dir = if ARGV[1]
-                 ARGV[1]
-               else
-                 Dir.pwd
-               end
-
-  new_file = File.join target_dir, "www_app.js"
-  FileUtils.cp applet_file, new_file
-  puts "#=== From:  #{applet_file}"
-  puts "#=== Wrote: #{new_file}"
-
-else
-
-  abort "Unknown operation: #{ARGV.first.inspect}"
-
-end # === case
+    # new_file = File.join target_dir, "www_app.js"
+    # FileUtils.cp applet_file, new_file
+    # puts "#=== From:  #{applet_file}"
+    # puts "#=== Wrote: #{new_file}"
+  ;;
 
 
+  *)
+    echo "Unknown option: $action" 1>&2
+    exit 1
+  ;;
+esac
 
