@@ -78,8 +78,9 @@ PAGES = {
       p {
         "Almost done."
       }
-    }
-}
+
+    } # === www_app
+} # === PAGES
 
 Cuba.use Rack::Static, :urls=>["/www_app-#{File.read(PATH + '/VERSION').strip}"], :root=>'Public'
 

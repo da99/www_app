@@ -14,7 +14,7 @@ export RACK_ENV="production"
 mkdir -p /tmp/www_app
 
 if [[ "$cmd" == "start" ]]; then
-  echo "--- Resetting files:"
+  echo "=== Resetting files:"
   mkdir -p playground/tmp
   cd playground
   ../bin/www_app Public
