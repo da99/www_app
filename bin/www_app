@@ -22,6 +22,7 @@ when 'Public'
   source = gem + '/lib/public'
   dest   = "Public/www_app-#{File.read(gem + '/VERSION').strip}"
   FileUtils.mkdir_p dest
+  FileUtils.rm_r Dir.glob('Public/www_app-*.*.*'), :secure=>true
   FileUtils.copy_entry source, dest
   puts "=== Copied files into: #{dest}"
 

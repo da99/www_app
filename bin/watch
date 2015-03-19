@@ -5,6 +5,14 @@
 orig="$@"
 set -u -e -o pipefail
 
+stop_server() {
+  if [[ -f "playground/tmp/thin.pid" ]]; then
+    echo ""
+    echo "=== Stopping server"
+    bin/server stop
+  fi
+}
+trap 'stop_server' SIGINT
 
 if [[ ! -f "playground/tmp/thin.pid" ]]; then
   bin/server start
