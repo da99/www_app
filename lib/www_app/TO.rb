@@ -129,9 +129,12 @@ class WWW_App
     VERSION       = File.read(GEM_PATH + '/VERSION').strip
     JS_FILE_PATHS = begin
                       public = "#{GEM_PATH}/lib/public"
-                      Dir.glob("#{public}/**/*.{map,js}").map { |path|
+                      all = Dir.glob("#{public}/**/*.{map,js}").map { |path|
                         "/www_app-#{VERSION}/#{path.gsub("#{public}/", NOTHING)}"
                       }
+                      special = all.select { |f| f[/(instruct.js|www_app.js)$/] }
+                      filtered = all.reject { |f| special.include?(f) }
+                      filtered + special
                     end
 
     INVALID_SCRIPT_TYPE_CHARS = /[^a-z0-9\-\/\_]+/
@@ -269,7 +272,7 @@ class WWW_App
 
           tag_sym = todo.shift
 
-          if todo.first != :close && !indent.zero? && !HTML::NO_NEW_LINES.include?(last_open)
+          if [:script].include?(tag_sym) || (todo.first != :close && !indent.zero? && !HTML::NO_NEW_LINES.include?(last_open))
             final << NEW_LINE << SPACES(indent)
           end
 
@@ -493,9 +496,7 @@ class WWW_App
 
           clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
           content = <<-EOF
-            \nWWW_App.run(
-              #{::Escape_Escape_Escape.json_encode(clean_vals)}
-            );
+            \n#{SPACES(indent)}WWW_App.run( #{::Escape_Escape_Escape.json_encode(clean_vals)} );
           EOF
 
           new_todo.concat [

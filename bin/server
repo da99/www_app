@@ -5,13 +5,13 @@
 cmd="$1"
 set -u -e -o pipefail
 
+dir="$(pwd)"
 export PORT=4567
-export PID="tmp/thin.pid"
-export LOG="/tmp/www_app/log.txt"
+export PID="$dir/playground/tmp/thin.pid"
+export LOG="$dir/playground/tmp/www_app/log.txt"
 export RACK_ENV="production"
 
 mkdir -p /tmp/www_app
-dir="$(pwd)"
 
 if [[ "$cmd" == "start" ]]; then
   echo "--- Resetting files:"
@@ -20,10 +20,10 @@ if [[ "$cmd" == "start" ]]; then
   ../bin/www_app Public
   cd ..
 
-  if [[ -f "playground/$PID" && -s "playground/$PID" ]]; then
+  if [[ -f "$PID" && -s "$PID" ]]; then
     echo ""
     echo "=== killing thin server"
-    kill "$(cat playground/$PID)"
+    kill "$(cat $PID)"
     echo ""
   fi
   rm -rf $LOG
@@ -44,23 +44,25 @@ fi
 bundle exec thin -d -c playground -l $LOG --pid $PID -p $PORT -e production -R $config $@
 
 
-cd playground
+if [[ "$cmd" != "stop" ]]; then
+  cd playground
 
-sleep 0.5
-if [[ -f "$PID" ]]; then
-  echo ""
-  if [[ "$cmd" == "start" ]]; then
-    prepend=""
+  sleep 0.5
+  if [[ -f "$PID" ]]; then
+    echo ""
+    if [[ "$cmd" == "start" ]]; then
+      prepend=""
+    else
+      prepend="NEW "
+    fi
+    echo "=== ${prepend}SERVER: PORT: $PORT PID: $(cat $PID)"
+    sleep 1.0
+    echo ""
+    cat $LOG
   else
-    prepend="NEW "
+    cat $LOG 1>&2
+    exit 1
   fi
-  echo "=== ${prepend}SERVER: PORT: $PORT PID: $(cat $PID)"
-  sleep 1.0
-  echo ""
-  cat $LOG
-else
-  cat $LOG 1>&2
-  exit 1
-fi
+fi # === if $cmd != stop
 
 

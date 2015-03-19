@@ -6,6 +6,9 @@ orig="$@"
 set -u -e -o pipefail
 
 
+if [[ ! -f "playground/tmp/thin.pid" ]]; then
+  bin/server start
+fi
 
 www_app="$(pwd)"
 echo ""
@@ -27,7 +30,7 @@ fi
 
 IFS=$'\n'
 re='^[0-9]+$'
-inotifywait -q -m --exclude .git/ -r .  | while read CHANGE
+inotifywait -q -m -e close_write,close --exclude .git/ -r .  | while read CHANGE
     do
 
       dir=$(echo "$CHANGE" | cut -d' ' -f 1)
