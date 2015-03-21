@@ -322,6 +322,10 @@ class WWW_App
   end
 
   def create name, opts = nil
+    if @tag && @tag[:closed!]
+      go_up
+    end
+
     if @tag && @tag[:tag_name] == :_
 
       # Ex:

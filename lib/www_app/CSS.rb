@@ -257,7 +257,7 @@ class WWW_App
         #     _link {
         #
         create :group
-        create :_
+        create :_, :closed! => true
 
       when ancestor?(:groups) && @tag[:closed]
         #
@@ -268,7 +268,7 @@ class WWW_App
         #     _link { ... }
         #
         create :group
-        create :_!
+        create :_!, :closed! => true
 
       when (tag?(:_) || tag?(:_!)) && @tag[:pseudo]
         # WHEN:
@@ -276,7 +276,7 @@ class WWW_App
         #     _link / _visited
         tag_name = @tag[:tag_name]
         go_up
-        create tag_name
+        create tag_name, :closed! => true
 
       when @tag[:pseudo] && !@tag[:closed]
         puts @tag
@@ -295,12 +295,14 @@ class WWW_App
     def alter_css_property name, *args
       if !@tag
         self._
+        @tag[:closed!] = true
       end
 
       if tag?(:style)
         create :group
         create :_
         go_up
+        @tag[:closed!] = true
       end
 
       @tag[:css] ||= {}

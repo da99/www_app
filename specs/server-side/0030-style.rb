@@ -1,20 +1,6 @@
 
 describe ":style block" do
 
-  it "does not render empty style classes: div {  }" do
-      target :style, <<-EOF
-        div a {
-          color: #fff;
-        }
-      EOF
-
-      actual do
-        style {
-          div { a { color '#fff' } }
-        }
-      end
-  end
-
   %w[link visited hover].each { |name|
     it "adds :#{name} pseudo-class" do
       target :style, <<-EOF
@@ -32,6 +18,20 @@ describe ":style block" do
       end
     end # === it
   }
+
+  it "does not render empty style classes: div {  }" do
+      target :style, <<-EOF
+        div a {
+          color: #fff;
+        }
+      EOF
+
+      actual do
+        style {
+          div { a { color '#fff' } }
+        }
+      end
+  end
 
   it "the default selector is the parent of :style" do
     target :style, <<-EOF
@@ -56,6 +56,27 @@ describe ":style block" do
       }
     }
   end # === it
+
+  it "does not add elements on default selector" do
+    target :style, <<-EOF
+      body {
+        border: 1px solid #000;
+      }
+
+      a:link, a:visited {
+        color: #fff;
+      }
+    EOF
+
+    actual {
+      style {
+        border '1px solid #000'
+        a._link / a._visited {
+          color '#fff'
+        }
+      }
+    }
+  end # === it does not add elements on default selector
 
   it "does not add anything to :body" do
     target :body, <<-EOF
