@@ -189,7 +189,6 @@ class WWW_App
                 end
 
               when type == :tag
-
                 id = metaphor[:id]
                 name = if id
                          '#' << Clean.html_id(id).to_s

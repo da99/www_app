@@ -97,40 +97,28 @@ class WWW_App
     return [tags, tag, syms]
   end
 
-  def de_ref tag, sym = nil
-    t      = tag
+  def de_ref tag
     t_name = tag[:tag_name]
+    return tag unless t_name == :_
 
-    if t_name == :_
+    # === Remove unneeded values from tag:
+    dup    = tag.dup
+    dup.delete :tag_name
+    dup.delete :parent
 
-      if t_name == :_
-        r = tag
-        while r && [:_, :style, :group].freeze.include?(r[:tag_name])
-          r = r[:parent]
-        end
-        r ||= {}.freeze
-      else
-        r = tag[:parent] || {}.freeze
-      end
-
-      t = {
-        :tag_name => r[:tag_name] || :body,
-        :id       => tag[:id] || r[:id],
-        :class    => tag[:class] || r[:class],
-        :parent   => r[:parent],
-        :pseudo   => tag[:pseudo] || r[:pseudo]
-      }
+    # === Find the true parent:
+    parent = tag
+    while parent && [:_, :style, :group].freeze.include?(parent[:tag_name])
+      parent = parent[:parent]
     end
 
-    case sym
-    when :tag_name, :id
-      t && t[sym]
-    when nil
-      t
-    else
-      fail ::ArgumentError, "Unknown args: #{sym.inspect}"
-    end
-  end
+    # === Merge, Freeze, and Return:
+    t = {}
+    t.merge! parent
+    t.merge! dup
+    t.freeze
+    t
+  end # === def de_ref
 
   # Ex:
   #
