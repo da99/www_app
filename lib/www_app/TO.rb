@@ -167,18 +167,20 @@ class WWW_App
     def to_html *args
       return @mustache.render(*args) if instance_variable_defined?(:@mustache)
 
-      final  = ""
-      indent = 0
-      todo   = @tags.dup
-      last   = nil
-      stacks = {:js=>[], :script_tags=>[]}
+      final     = ""
+      indent    = 0
+      todo      = @tags.dup
+      last      = nil
+      stacks    = {:js=>[], :script_tags=>[]}
       last_open = nil
 
+      script_libs_added = false
+
       doc = [
-        doc_type   = {:tag_name => :doc_type,   :text     => "<!DOCTYPE html>"},
-        html       = {:tag_name=>:html, :children=>[
-          head     = {:tag_name=>:head, :lang=>'en', :children=>[]},
-          body     = {:tag_name=>:body, :children=>[]}
+        doc_type   = {:tag_name=>:doc_type , :text => "<!DOCTYPE html>"},
+        html       = {:tag_name=>:html     , :children=>[
+          head     = {:tag_name=>:head     , :lang=>'en', :children=>[]},
+          body     = {:tag_name=>:body     , :children=>[]}
         ]}
       ]
       style_tags = {:tag_name => :style_tags, :children => []}
@@ -241,9 +243,8 @@ class WWW_App
         style_tags[:children] << body
       end
 
-      is_fragment = stacks[:js].empty? && style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
+      is_fragment = stacks[:script_tags].empty? && stacks[:js].empty? && style_tags[:children].empty? && head[:children].empty? && body.values_at(:css, :id, :class).compact.empty?
 
-      body[:children] << {:tag_name=>:js_to_script_tag}
       if is_fragment
         doc = body[:children]
 
@@ -414,12 +415,23 @@ class WWW_App
         when t_name == :_       # =============== :_ tag ========
           nil # do nothing
 
+        when t_name == :js
+          next
+
         when t_name == :script  # =============== :script tag ===
+
           attrs = tag.select { |k, v|
             k == :src || k == :type || k == :class
           }
 
-          new_todo = [
+          new_todo = []
+
+          if attrs[:src] && !script_libs_added
+            new_todo << {:tag_name=>:js_to_script_tag}
+            script_libs_added = true
+          end
+
+          new_todo.concat [
             :clean_attrs, attrs, tag,
             :open, :script,
           ]
@@ -435,38 +447,6 @@ class WWW_App
           ].concat(todo)
 
           todo = new_todo
-
-        when t_name && ::WWW_App::HTML::TAGS.include?(t_name) # === HTML tags =====
-          attrs = {}
-          attrs.default KEY_REQUIRED
-
-          new_todo = []
-          t2a = ::WWW_App::HTML::TAGS_TO_ATTRIBUTES
-
-          tag.each { |attr_name, v|
-            if t2a[:all].include?(attr_name) || (t2a[tag[:tag_name]] && t2a[tag[:tag_name]].include?(attr_name))
-              attrs[attr_name] = v
-            end
-          }
-
-          if !attrs.empty?
-            new_todo.concat [:clean_attrs, attrs, tag]
-          end
-
-          new_todo.concat [:open, tag[:tag_name]]
-
-          if tag[:children] && !tag[:children].empty?
-            new_todo.concat tag[:children]
-            if tag[:children].detect { |t| HTML::TAGS.include?(t[:tag_name]) }
-              new_todo << :new_line
-            end
-          end
-          new_todo.concat [:close, tag[:tag_name]]
-          todo = new_todo.concat(todo)
-
-        when t_name == :js
-          next
-
 
         when t_name == :js_to_script_tag
           next if stacks[:js].empty? && stacks[:script_tags].empty?
@@ -631,7 +611,6 @@ class WWW_App
           ].concat(todo)
 
         when tag == :script # ============
-
           h = vals
 
           if h[:tag] == :script && h[:content] && !h[:content].empty?
@@ -699,6 +678,42 @@ class WWW_App
           else
             html
           end # === if
+
+        when t_name && ::WWW_App::HTML::TAGS.include?(t_name) # === HTML tags =====
+
+          # ================================
+          # === Save this for last to allow
+          # certain tags
+          # to be over-riddent,
+          # like :script
+          # ================================
+
+          attrs = {}
+          attrs.default KEY_REQUIRED
+
+          new_todo = []
+          t2a = ::WWW_App::HTML::TAGS_TO_ATTRIBUTES
+
+          tag.each { |attr_name, v|
+            if t2a[:all].include?(attr_name) || (t2a[tag[:tag_name]] && t2a[tag[:tag_name]].include?(attr_name))
+              attrs[attr_name] = v
+            end
+          }
+
+          if !attrs.empty?
+            new_todo.concat [:clean_attrs, attrs, tag]
+          end
+
+          new_todo.concat [:open, tag[:tag_name]]
+
+          if tag[:children] && !tag[:children].empty?
+            new_todo.concat tag[:children]
+            if tag[:children].detect { |t| HTML::TAGS.include?(t[:tag_name]) }
+              new_todo << :new_line
+            end
+          end
+          new_todo.concat [:close, tag[:tag_name]]
+          todo = new_todo.concat(todo)
 
         else
           fail "Unknown: #{tag.inspect[0,30]}"

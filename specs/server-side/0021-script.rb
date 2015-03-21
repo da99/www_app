@@ -9,18 +9,29 @@ describe :script do
     }.message.should.match /example\.org/
   end
 
+  it "puts custom script files w/ :src at the after vendor files and www_app.js" do
+    actual = WWW_App.new {
+      p { 'paragraph' }
+      script 'my_script.js'
+    }.to_html
+
+    script_srcs(actual).last.should == 'my_script.js'
+  end # === it puts custom script files w/ :src at the after vendor files and www_app.js
+
   it "allows a relative :src" do
-    target %^<script src="&#47;file.js"></script>^
-    actual {
+    actual = WWW_App.new {
       script('/file.js')
-    }
+    }.to_html
+
+    script_srcs(actual).last.should == %^&#47;file.js^
   end
 
   it "escapes slashes in attr :src" do
-    target %^<script src="&#47;dir&#47;file.js"></script>^
-    actual {
+    actual = WWW_App.new {
       script('/dir/file.js')
-    }
+    }.to_html
+
+    script_srcs(actual).last.should == %^&#47;dir&#47;file.js^
   end
 
   it "fails w/ ArgumentError if passed a symbol" do
@@ -40,25 +51,24 @@ describe :script do
 
   it "includes client-side script files" do
     actual = WWW_App.new {
-      div {
-        on :click do
-          add_class :happy
-        end
-      }
+      div { }
+      script 'my.js'
     }.to_html
-    actual.scan(%r@<script src="([^"]+)"></script>@).flatten.
-    should == Dir.glob('lib/public/*.js').sort.map { |f|
-      Escape_Escape_Escape.relative_href "/www_app-#{File.read('VERSION').strip}/#{File.basename f}"
-    }
+
+    targets = (
+      Dir.glob('lib/public/**/*.js').map { |f|
+        href = "/www_app-#{File.read('VERSION').strip}/#{f}".sub('/lib/public', '')
+        Escape_Escape_Escape.relative_href href
+      } + ['my.js']
+    )
+
+    script_srcs(actual).sort.should == targets.sort
   end # === it includes client-side script files
 
   it "is rendered inside a full document" do
     actual = WWW_App.new {
-      div {
-        on(:click) {
-          add_class :happy
-        }
-      }
+      div { }
+      script 'my.js'
     }.to_html
 
     actual['<body>'].should == '<body>'
@@ -76,13 +86,5 @@ describe :script do
       end
     end
   end # === it allows rendering of child elements
-
-  it "puts custom script files w/ :src at the after vendor files and www_app.js" do
-    actual = WWW_App.new {
-      p { 'paragraph' }
-      script 'my_script.js'
-    }.to_html
-    actual.scan(%r!<script src="([^"]+)"></script>!).last.should == 'my_script.js'
-  end # === it puts custom script files w/ :src at the after vendor files and www_app.js
 
 end # === describe :JS ===

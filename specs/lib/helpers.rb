@@ -44,6 +44,10 @@ def script html
   get_content 'script', html
 end
 
+def script_srcs str
+  str.scan(%r@<script src="([^"]+)"></script>@).flatten
+end
+
 def body html
   get_content 'body', html
 end

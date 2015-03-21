@@ -25,13 +25,7 @@ class WWW_App
       end
 
       def on name, &blok
-        self << :on
-        code = capture {
-          instance_eval &blok
-        }
-        self << [name]
-        self << code
-        self
+        raise ":on is no longer being used."
       end
 
       def raw_code
