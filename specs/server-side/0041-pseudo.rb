@@ -7,7 +7,9 @@ describe "pseudo classes" do
     EOF
     actual do
       a.id(:main).href("/test") { 
-        _link { color '#fff' }
+        style {
+          _link { color '#fff' }
+        }
         "test"
       }
     end
@@ -21,7 +23,9 @@ describe "pseudo classes" do
     EOF
     actual do
       a.id(:main).href("/test") { 
-        _link { color '#ffc' }
+        style {
+          _link { color '#ffc' }
+        }
         "test"
       }
     end
@@ -32,14 +36,17 @@ describe "pseudo classes" do
       a:link, a:visited {
         color: #fff;
       }
+
       a:hover {
         color: #ccc;
       }
     EOF
     actual do
-      a {
-        _link / _visited   { color '#fff' }
-        _hover { color '#ccc' }
+      style {
+        a {
+          _link / _visited   { color '#fff' }
+          _hover { color '#ccc' }
+        }
       }
     end
   end # === it allows multiple pseudos when used inside a style tag

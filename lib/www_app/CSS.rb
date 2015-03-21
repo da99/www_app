@@ -246,19 +246,43 @@ class WWW_App
     private # ==================================
 
     def pseudo name
+      origin = @tag
       case
+
+      when tag?(:style) 
+        #
+        # WHEN:
+        #
+        #   style {
+        #     _link {
+        #
+        create :group
+        create :_
+
       when ancestor?(:groups) && @tag[:closed]
-        # Ex:
+        #
+        # WHEN:
+        #
         #   style {
         #     div   { ... }
         #     _link { ... }
+        #
         create :group
         create :_!
 
+      when (tag?(:_) || tag?(:_!)) && @tag[:pseudo]
+        # WHEN:
+        #   style {
+        #     _link / _visited
+        tag_name = @tag[:tag_name]
+        go_up
+        create tag_name
+
       when @tag[:pseudo] && !@tag[:closed]
+        puts @tag
         # Ex:
         #   a._link._visited { ... }
-        fail "Applying two pseudos at the same element."
+        fail "Applying two pseudos at the same element: #{@tag[:pseudo].inspect} #{name.inspect}"
 
       end # === case
 
