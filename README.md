@@ -32,7 +32,7 @@ WWW_App.new {
       color '#f88'
     }
 
-    div.id(:main)._.div.^(:drowsy) / a.^(:excited)._link {
+    div.id(:main).__.div.^(:drowsy) / a.^(:excited)._link {
       border '1px dashed grey'
       div.^(:mon) / div.^(:tues) {
         border '1px dashed weekday'
