@@ -111,6 +111,9 @@ class WWW_App
     while parent && [:_, :style, :group].freeze.include?(parent[:tag_name])
       parent = parent[:parent]
     end
+    if !parent
+      parent = {:tag_name=>:body}
+    end
 
     # === Merge, Freeze, and Return:
     t = {}
