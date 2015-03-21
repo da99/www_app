@@ -33,6 +33,30 @@ describe ":style block" do
     end # === it
   }
 
+  it "the default selector is the parent of :style" do
+    target :style, <<-EOF
+      body {
+        color: #fff;
+      }
+
+      div {
+        border: 1px solid #000;
+      }
+    EOF
+
+    actual {
+      style {
+        color '#fff'
+      }
+
+      div {
+        style {
+          border '1px solid #000'
+        }
+      }
+    }
+  end # === it
+
   it "does not add anything to :body" do
     target :body, <<-EOF
       <p>empty</p>

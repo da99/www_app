@@ -296,6 +296,13 @@ class WWW_App
       if !@tag
         self._
       end
+
+      if tag?(:style)
+        create :group
+        create :_
+        go_up
+      end
+
       @tag[:css] ||= {}
       @tag[:css][name] = args.size == 1 ? args.first : args
       self

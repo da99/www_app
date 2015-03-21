@@ -550,7 +550,6 @@ class WWW_App
           ].concat(todo)
 
         when tag == :flat_style_groups
-
           indent += 2
           css_final = ""
           flatten   = todo.shift
