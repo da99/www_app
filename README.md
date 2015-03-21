@@ -3,9 +3,15 @@
 WWW\_App:
 ---------
 
-Create HTML pages using just Ruby: HTML/CSS/JS.
-It's not done yet.
+Turn Ruby into HTML and CSS.
 
+I was going to put a JS features,
+  but I found out that I don't need them
+  thanks to [Turu](https://github.com/da99/turu).
+
+NOTE:
+------------
+This is not ready.
 
 Ruby:
 --------------
@@ -24,11 +30,6 @@ WWW_App.new {
   style {
     a._link / a._visited / a._hover { 
       color '#f88'
-    }
-
-    a {
-      _link / _visited   { color '#fff' }
-      _hover { color '#ccc' }
     }
 
     div.id(:main)._.div.^(:drowsy) / a.^(:excited)._link {
@@ -56,21 +57,19 @@ WWW_App.new {
       }
     }
 
-    p { 'Click the button to make me scared.' }
+    p { "I'm a paragraph." }
 
-    button {
-      parent    'div'
-      add_class :scary
-
-      'Scary-ify'
+    p {
+      text %^
+        I'm also
+      ^.strip
+      br
+      text ' a paragraph.'
     }
-
   }
 
 }.to_html
 ```
-
-It generates the CSS, JS, and HTML.
 
 Security:
 -----------
@@ -102,11 +101,7 @@ More info at:  [http://html5doctor.com/cite-and-blockquote-reloaded/](http://htm
 because it turns out people do not want to create programs, they just want to customize them:
 [https://www.youtube.com/watch?v=9nd9DwCdQR0#t=857](https://www.youtube.com/watch?v=9nd9DwCdQR0#t=857)
 
-
-Fun fact:
------
-
-[JSON Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet. WWW\_Applet was then changed to WWW\_App.
+3) [JSON Applet](http://github.com/da99/json_applet) was changed to WWW\_Applet. WWW\_Applet was then changed to WWW\_App.
 
 
 

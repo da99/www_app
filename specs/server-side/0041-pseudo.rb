@@ -27,5 +27,22 @@ describe "pseudo classes" do
     end
   end # === it uses :id in :style tag if specified
 
+  it "allows multiple pseudos" do
+    target :style, <<-EOF
+      a:link, a:visited {
+        color: #fff;
+      }
+      a:hover {
+        color: #ccc;
+      }
+    EOF
+    actual do
+      a {
+        _link / _visited   { color '#fff' }
+        _hover { color '#ccc' }
+      }
+    end
+  end # === it allows multiple pseudos when used inside a style tag
+
 end # === describe :pseudo_classes
 
