@@ -32,6 +32,11 @@ WWW_App.new {
       color '#f88'
     }
 
+    a {
+      _link / _visited   { color '#fff' }
+      _hover { color '#ccc' }
+    }
+
     div.id(:main).__.div.^(:drowsy) / a.^(:excited)._link {
       border '1px dashed grey'
       div.^(:mon) / div.^(:tues) {
