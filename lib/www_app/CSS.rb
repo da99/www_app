@@ -177,8 +177,10 @@ class WWW_App
 
               when type == :full && parent?(metaphor, :group)
                 grand_parent = metaphor[:parent][:parent]
-                grand_css = grand_parent && css_selector(grand_parent, :full)
-                if grand_css
+                grand_css    = grand_parent && css_selector(grand_parent, :full)
+                use_grand    = !(metaphor[:__] && metaphor[:__children].detect { |e| tag?(e, :_) })
+
+                if grand_css && use_grand
                   grand_css.split(COMMA).map { |css|
                     css << SPACE << css_selector(metaphor, :tag)
                   }.join COMMA
