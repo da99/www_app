@@ -24,10 +24,6 @@ class WWW_App
         self
       end
 
-      def on name, &blok
-        raise ":on is no longer being used."
-      end
-
       def raw_code
         @js
       end
@@ -49,27 +45,7 @@ class WWW_App
         new
       end
 
-    end # === class
-
-    def parent name
-      js :parent, [name]
-    end
-
-    def js func, args
-      @tag[:js] ||= []
-      @tag[:js] << [func, args]
-      self
-    end
-
-    def on name, &blok
-      fail "Block required." unless blok
-
-      val = JavaScript::DSL.new {
-        on(name, &blok)
-      }.raw_code
-      create :js, :value=>val, :closed=>true
-      go_up
-    end
+    end # === class DSL
 
   end # === module JavaScript
 end # === class WWW_App

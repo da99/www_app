@@ -199,27 +199,15 @@ class WWW_App
       end
     end
 
-    def script *classes
-      attrs = {}
-      classes.select! { |u|
-        case
-        when u.is_a?(String) && u['.js'.freeze]
-          attrs[:src] = u
-          false
-        when u.is_a?(String)
-          attrs[:type] = u
-          false
-        else
-          true
-        end
-      }
+    def script src = nil
 
-      if attrs[:src]
-        return create(:script, :src=>attrs[:src]) { }
+      if src.is_a?(String) && src['.js'.freeze]
+        return create(:script, :src=>src) { }
       end
 
-      attrs[:class] = classes unless classes.empty?
-      attrs[:type]  ||= "text/hogan"
+      attrs = {
+        :type => src || "text/mustache"
+      }
 
       create :script, attrs
       close { yield } if block_given?

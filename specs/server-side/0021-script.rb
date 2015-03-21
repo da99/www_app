@@ -34,12 +34,12 @@ describe :script do
     script_srcs(actual).last.should == %^&#47;dir&#47;file.js^
   end
 
-  it "fails w/ ArgumentError if passed a symbol" do
-    should.raise(ArgumentError) {
-      actual do
-        script(:help)
+  it "allowed to have a :class attribute" do
+    WWW_App.new {
+      script.^(:append) do
+        div {}
       end
-    }.message.should.match /\:help/
+    }.to_html.should.match /<script type="text\/mustache" class="append"/
   end
 
   it "renders :type when given a block" do
