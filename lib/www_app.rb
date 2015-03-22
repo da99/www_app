@@ -59,14 +59,16 @@ class WWW_App
     fail ::ArgumentError, "Methods already defined:\n#{MULTI_DEFINED_METHS.inspect}"
   end
 
+  protected
+  attr_reader :blok
+
   private # ===============================================
 
   def initialize &blok
     @html_ids = {}
     @tags     = []
     @tag      = nil
-
-    instance_eval &blok
+    @blok     = blok
   end
 
   def SPACES indent
@@ -95,6 +97,10 @@ class WWW_App
     tags ||= @tags.dup
     tag  ||= @tag
     return [tags, tag, syms]
+  end
+
+  def use www_app
+    instance_eval &(www_app.blok)
   end
 
   def de_ref tag

@@ -144,6 +144,7 @@ class WWW_App
     }
 
     def to_raw_text
+      instance_eval(&@blok) if @tags.empty?
       str    = ""
       indent = 0
       print_tag = lambda { |t|
@@ -166,6 +167,7 @@ class WWW_App
 
     def to_html *args
       return @mustache.render(*args) if instance_variable_defined?(:@mustache)
+      instance_eval(&@blok) if @tags.empty?
 
       final     = ""
       indent    = 0
