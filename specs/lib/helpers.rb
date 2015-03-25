@@ -30,7 +30,7 @@ def strip_each_line str
 end
 
 def get_content tag, html
-  ( html.match(/\<#{tag}\>(.+)\<\/#{tag}\>/)[1] || '' ).
+  ( html.match(/\<#{tag}\>(.+)\<\/#{tag}\>/m)[1] || '' ).
     split("\n").
     map(&:strip).
     join "\n"

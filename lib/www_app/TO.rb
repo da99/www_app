@@ -203,6 +203,9 @@ class WWW_App
         when t_name == :style
           style_tags[:children] << t
 
+        when t_name == :link
+          head[:children] << t
+
         when t_name == :_ && !parent
           body[:css] = (body[:css] || {}).merge(t[:css]) if t[:css]
           body[:class] = (body[:class] || []).concat(t[:class]) if t[:class]
@@ -382,6 +385,10 @@ class WWW_App
             Clean.html(tag[:value])
           )
 
+        when t_name == :link
+          final << (
+            %^#{SPACES(indent)}<link type="text/css" rel="stylesheet" href="#{::Escape_Escape_Escape.relative_href tag[:href]}" />^
+          )
 
         when t_name == :meta
           case
@@ -394,7 +401,7 @@ class WWW_App
           end
 
           final << (
-            %^#{SPACES(indent)}<meta #{key_name}="#{key_content}" content="#{content}" />^
+            %^#{SPACES(indent)}<meta #{key_name}="#{key_content}" content="#{content}" />\n^
           )
 
         when t_name == :html       # === :html tag ================
