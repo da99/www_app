@@ -90,7 +90,7 @@ class WWW_App
     def title str = :none
       fail ":title not allowed here" if parent
       if !block_given? && str != :none
-        create { text str }
+        create(:title) { text str }
       else
         create :title do
           yield
