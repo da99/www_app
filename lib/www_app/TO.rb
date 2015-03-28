@@ -483,17 +483,19 @@ class WWW_App
             ]
           }
 
-          clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
-          content = <<-EOF
-            \n#{SPACES(indent)}WWW_App.run( #{::Escape_Escape_Escape.json_encode(clean_vals)} );
-          EOF
+          if !stacks[:js].empty?
+            clean_vals = stacks[:js].map { |raw_x| stacks[:clean_text].call(raw_x) }
+            content = <<-EOF
+            \n#{SPACES(indent)}WWW_App.run( #{::Escape_Escape_Escape.json_encode(code: clean_vals)} );
+            EOF
 
-          new_todo.concat [
-            :clean_attrs, {:type=>'application/javascript'}, script_tag,
-            :open, :script,
-            {:tag_name=>:text, :skip_escape=>true, :value=> content },
-            :close, :script
-          ]
+            new_todo.concat [
+              :clean_attrs, {:type=>'application/javascript'}, script_tag,
+              :open, :script,
+              {:tag_name=>:text, :skip_escape=>true, :value=> content },
+              :close, :script
+            ]
+          end
 
           todo = new_todo.concat(todo)
 
