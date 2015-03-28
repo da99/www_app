@@ -373,10 +373,12 @@ class WWW_App
 
     @tag = new
 
-    @tag.merge!(opts) if opts
+    @tag.merge!(opts) if opts.is_a?(::Hash)
 
     if block_given?
       close { yield }
+    elsif opts.is_a?(::String)
+      close { text opts }
     end
 
     self

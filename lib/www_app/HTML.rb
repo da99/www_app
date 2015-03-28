@@ -58,8 +58,8 @@ class WWW_App
 
     TAGS.each { |name|
       eval <<-EOF, nil, __FILE__, __LINE__ + 1
-        def #{name}
-          create(:#{name})
+        def #{name} str = :none
+          create(:#{name}, str)
           block_given? ?
             close { yield } :
             self
@@ -87,10 +87,14 @@ class WWW_App
       create(:meta, *args)
     end
 
-    def title
+    def title str = :none
       fail ":title not allowed here" if parent
-      create :title do
-        yield
+      if !block_given? && str != :none
+        create { text str }
+      else
+        create :title do
+          yield
+        end
       end
     end
 

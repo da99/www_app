@@ -10,6 +10,13 @@ describe :text do
     end
   end # === it prints a string if value is a hash: {:type=>:string, ...}
 
+  it "prints a string passed to it as a single argument" do
+    target :body, %^<p>string string</p>^
+    actual do
+      p "string string"
+    end
+  end # === it prints a string passed to it as a single argument
+
 end # === describe "string content"
 
 describe :raw_text do
