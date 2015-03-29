@@ -600,7 +600,7 @@ class WWW_App
                       end
 
                     when ::WWW_App::CSS::PROPERTIES.include?(raw_k)
-                      Clean.css_value raw_val
+                      Clean.css raw_k, raw_val
 
                     else
                       fail "Invalid css attr: #{name.inspect}"

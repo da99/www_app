@@ -12,8 +12,8 @@ describe :css do
     }.message.should.match /hi;o/
   end
 
-  it "raises Invalid if css value has invalid chars: something *" do
-    should.raise(Escape_Escape_Escape::Invalid) {
+  it "raises ArgumentError if css value has invalid chars: something *" do
+    should.raise(ArgumentError) {
       actual do
         div {
           background 'something *'
@@ -30,8 +30,8 @@ describe :css do
     }.message.should.match /s\*s/
   end
 
-  it "raises Invalid if contains 'expression:'" do
-    should.raise(Escape_Escape_Escape::Invalid) {
+  it "raises ArgumentError if contains 'expression:'" do
+    should.raise(ArgumentError) {
       actual do
         div {
           background 'solid expression:'
@@ -40,8 +40,8 @@ describe :css do
     }.message.should.match /expression:/
   end
 
-  it "raises Invalid if contains 'expression&'" do
-    should.raise(Escape_Escape_Escape::Invalid) {
+  it "raises ArgumentError if contains 'expression&'" do
+    should.raise(ArgumentError) {
       actual do
         div {
           background 'solid expression&'
