@@ -51,6 +51,7 @@ inotifywait -q -m -e close_write,close --exclude .git/ -r .  | while read CHANGE
         output=${new_log/"$old_log"}
         for i in $output; do
           code="$(echo "$i" | cut -d' ' -f9 || echo '')"
+          path="$(echo "$i" | cut -d' ' -f7 || echo '')"
           if [[ ! -z "$code" && "$code" =~ $re ]]; then
             if [[ "$code" -gt 199 && "$code" -lt 300 ]]; then
               color="$Green"
@@ -64,7 +65,8 @@ inotifywait -q -m -e close_write,close --exclude .git/ -r .  | while read CHANGE
             if [[ "$code" -gt 499 ]]; then
               color="$BRed"
             fi
-            echo -e "${color}$i${Color_Off}"
+            color_code="${i/"$code"/"${color}${code}${Color_Off}"}"
+            echo -e "${color_code/"$path "/"${color}$path ${Color_Off}"}"
           else
             if [[ ! ( "$i" == *ruby* ) ]]; then
               if [[ "$i" =~ ':in ' ]]; then
