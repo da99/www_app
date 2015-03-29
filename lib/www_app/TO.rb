@@ -355,6 +355,9 @@ class WWW_App
                                when tag_name == :style && attr == :type
                                  'text/css'
 
+                               when tag_name == :label && attr == :for && val.is_a?(::Symbol)
+                                 Clean.html(val.to_s)
+
                                when ::WWW_App::HTML::TAGS_TO_ATTRIBUTES[tag_name].include?(attr)
                                  Clean.html(val)
 

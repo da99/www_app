@@ -21,6 +21,8 @@ class WWW_App
 
       link
 
+      label
+
       script
     ].map(&:to_sym)
 
@@ -30,6 +32,7 @@ class WWW_App
       :form        => [:action, :method, :accept_charset],
       :input       => [:type, :name, :value],
       :style       => [:type],
+      :label       => [:for],
       :script      => [:type, :src, :language],
       :link        => [:rel, :type, :sizes, :href, :title],
       :meta        => [:name, :http_equiv, :property, :content, :charset],

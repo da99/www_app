@@ -18,5 +18,20 @@ describe :forms do
     }.message.should.match /google.com/
   end
 
+
+  describe :label do
+
+    it "allows :for attribute" do
+      target :body, <<-EOF
+        <label for="me">Title</label>
+      EOF
+      actual {
+        label.for(:me) { 'Title' }
+      }
+    end # === it allows :for attribute
+
+  end # === describe :label
+
 end # === describe :forms ===
+
 
