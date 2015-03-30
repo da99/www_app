@@ -169,6 +169,19 @@ describe :css do
     }
   end
 
+  it "turns numbers into strings" do
+    target :style, %^
+      div {
+        margin: 0;
+      }
+    ^
+    actual {
+      div {
+        margin 0
+      }
+    }
+  end # === it turns numbers into strings
+
 end # === sanitize css selectors
 
 
