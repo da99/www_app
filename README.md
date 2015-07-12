@@ -4,6 +4,11 @@ This was an experiment that I have finished (... given up on).
 I have decided this is not the right approach to generating HTML + CSS +JS.
 Instead, I will be using [Erector](http://erector.github.io/) and [Stylus](http://stylus-lang.com/).
 
+If you still want to use one language for (HTML, CSS, JS) then you should
+use [RiotJS](https://muut.com/riotjs/). It's WWW\_App done right... and hugely
+must better.
+
+My other alternative:
 What I do is "compile" all Erector/Ruby (into HTML) and Stylus (into CSS).
 I upload that to the server.
 Then I used [Hogan.js](http://twitter.github.io/hogan.js/) on the client-side as
