@@ -1,4 +1,13 @@
 
+This was an experiment.
+-----------------------
+I have decided this is not the right approach to generating HTML + CSS +JS.
+Instead, I will be using [Erector](http://erector.github.io/) and [Stylus](http://stylus-lang.com/).
+
+What I do is "compile" all Erector/Ruby (into HTML) and Stylus (into CSS).
+I upload that to the server.
+Then I used [Hogan.js](http://twitter.github.io/hogan.js/) on the client-side as
+templates with data coming in from AJAX calls.
 
 WWW\_App:
 ---------
@@ -8,10 +17,6 @@ Turn Ruby into HTML and CSS.
 I was going to put a JS features,
   but I found out that I don't need them
   thanks to [Turu](https://github.com/da99/turu).
-
-NOTE:
-------------
-This is not ready.
 
 Ruby:
 --------------
