@@ -1,5 +1,5 @@
 
-This was an experiment.
+This was an experiment that I have finished (... given up on).
 -----------------------
 I have decided this is not the right approach to generating HTML + CSS +JS.
 Instead, I will be using [Erector](http://erector.github.io/) and [Stylus](http://stylus-lang.com/).
@@ -8,6 +8,20 @@ What I do is "compile" all Erector/Ruby (into HTML) and Stylus (into CSS).
 I upload that to the server.
 Then I used [Hogan.js](http://twitter.github.io/hogan.js/) on the client-side as
 templates with data coming in from AJAX calls.
+
+Thoughts on Ruby for everything:
+--------------------------------
+1) Using Ruby for CSS is not as easy as writing Stylus or LESS code.
+This is a preference. You might fid things differently.
+
+2) Sometimes using a library is better, sometimes it is not.
+In this case, Erector is far better than anything I could have written
+in terms of usability (as defined by Joel Spolsky in "User Interface Design
+    for Programmers").
+
+3) My needs changed: "Pre-compiling" Ruby into HTML on the dev side
+lets me not worry about speed and efficiency. In the end, NGINX will
+server text/html files, much faster than Ruby or IOjs.
 
 WWW\_App:
 ---------
