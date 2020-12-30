@@ -5,7 +5,7 @@ I have decided this is not the right approach to generating HTML + CSS +JS.
 Instead, I will be using [Erector](http://erector.github.io/) and [Stylus](http://stylus-lang.com/).
 
 If you still want to use one language for (HTML, CSS, JS) then you should
-use [RiotJS](https://muut.com/riotjs/). It's WWW\_App done right... and hugely
+use [RiotJS](https://riot.js.org/). It's WWW\_App done right... and hugely
 must better.
 
 My other alternative:
